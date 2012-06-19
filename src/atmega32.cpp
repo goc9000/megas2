@@ -114,7 +114,7 @@ static inline bool is_PORT_port(uint8_t port)
 static inline int pin_for_port(uint8_t port)
 {
     if (is_data_port(port)) {
-        return MEGA32_PIN_A + 8 * ((PORT_PINA - port)/3);
+        return MEGA32_PIN_A + 8 * ((PORT_PORTA - port)/3);
     }
 
     return -1;
@@ -1096,6 +1096,24 @@ void Atmega32::_handleDataPortRead(uint8_t port, int8_t bit, uint8_t &value)
 
 void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
 {
+    int pin = pin_for_port(port);
+    
+    if (is_PIN_port(port)) {
+        fail("Tried to write to PIN port");
+    } else if (is_PORT_port(port)) {
+        uint8_t mask = this->ports[port-1]; // read corresponding DDR register
+        
+        // copy data to PIN buffer (for pins set as output)
+        this->ports[port-2] = (this->ports[port-2] & ~mask) | (value & mask);
+        
+        for (uint8_t i = 0; i < 8; i++)
+            if (bit_is_set(mask, i) && (bit_is_set(value, i) != bit_is_set(prev_val, i)))
+                this->_triggerPinMonitors(pin + i, bit_is_set(value, i));
+    } else if (is_DDR_port(port)) {
+        for (uint8_t i = 0; i < 8; i++)
+            if (bit_is_set(value, i) && !bit_is_set(prev_val, i))
+                this->_triggerPinMonitors(pin + i, bit_is_set(this->ports[port+1], i));
+    }
 }
 
 void Atmega32::_twiInit()
@@ -1118,6 +1136,7 @@ void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t
 {
     switch (port) {
         case PORT_TWSR:
+            // reject writes to read-only bits
             value = (prev_val & 0xfc) + (value & 0x03);
             break;
         case PORT_TWCR:
@@ -1260,6 +1279,7 @@ void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t
 {
     switch (port) {
         case PORT_SPSR:
+            // reject writes to read-only bits
             value = (prev_val & 0xfe) + (value & 0x01);
             break;
         case PORT_SPDR:
@@ -1278,6 +1298,12 @@ void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t
 bool Atmega32::_spiIsEnabled()
 {
     return bit_is_set(this->ports[PORT_SPCR], B_SPE);
+}
+
+void Atmega32::spiSlaveSelect(bool select)
+{
+    if (select)
+        fail("Slave behavior on SPI not supported for ATMEGA32");
 }
 
 bool Atmega32::spiReceiveData(uint8_t &data)

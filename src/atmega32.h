@@ -39,6 +39,7 @@ public:
     virtual bool i2cQueryData(uint8_t &data);
     virtual void i2cReceiveStop();
 
+    virtual void spiSlaveSelect(bool select);
     virtual bool spiReceiveData(uint8_t &data);
 private:
     uint16_t flash[MEGA32_FLASH_SIZE];
