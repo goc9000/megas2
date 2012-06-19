@@ -43,6 +43,18 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_SPCR         0x0d
 #define PORT_SPSR         0x0e
 #define PORT_SPDR         0x0f
+#define PORT_PIND         0x10
+#define PORT_DDRD         0x11
+#define PORT_PORTD        0x12
+#define PORT_PINC         0x13
+#define PORT_DDRC         0x14
+#define PORT_PORTC        0x15
+#define PORT_PINB         0x16
+#define PORT_DDRB         0x17
+#define PORT_PORTB        0x18
+#define PORT_PINA         0x19
+#define PORT_DDRA         0x1a
+#define PORT_PORTA        0x1b
 #define PORT_TWCR         0x36
 
 // Bit values
@@ -78,6 +90,35 @@ static char const * const PORT_NAMES[0x40] = {
 #define TWI_STATUS_R_DATA_ACK  0x50
 #define TWI_STATUS_R_DATA_NACK 0x58
 #define TWI_STATUS_IDLE        0xf8
+
+static inline bool is_data_port(uint8_t port)
+{
+    return ((port >= PORT_PIND) && (port <= PORT_PORTA));
+}
+
+static inline bool is_PIN_port(uint8_t port)
+{
+    return is_data_port(port) && (((port - PORT_PIND) % 3) == 0);
+}
+
+static inline bool is_DDR_port(uint8_t port)
+{
+    return is_data_port(port) && (((port - PORT_PIND) % 3) == 1);
+}
+
+static inline bool is_PORT_port(uint8_t port)
+{
+    return is_data_port(port) && (((port - PORT_PIND) % 3) == 2);
+}
+
+static inline int pin_for_port(uint8_t port)
+{
+    if (is_data_port(port)) {
+        return MEGA32_PIN_A + 8 * ((PORT_PINA - port)/3);
+    }
+
+    return -1;
+}
 
 static inline bool is_twi_port(uint8_t port)
 {
@@ -977,18 +1018,22 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
     
     if (is_twi_port(port)) {
         this->_twiHandleRead(port, bit, value);
-        return;
-    } else if (is_spi_port(port)) {
-        this->_spiHandleRead(port, bit, value);
-    } else {
-        if (bit < 0) {
-            printf("%04x: IN %s(%02x) == %02x\n", this->last_inst_pc * 2, PORT_NAMES[port], port,
-                value);
-        } else {
-            printf("%04x: IN %s(%02x).%d == %02x\n", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
-                (value >> bit) & 1);
-        }
     }
+    if (is_spi_port(port)) {
+        this->_spiHandleRead(port, bit, value);
+    }
+    if (is_data_port(port)) {
+        this->_handleDataPortRead(port, bit, value);
+    }
+    /*
+    if (bit < 0) {
+        printf("%04x: IN %s(%02x) == %02x\n", this->last_inst_pc * 2, PORT_NAMES[port], port,
+            value);
+    } else {
+        printf("%04x: IN %s(%02x).%d == %02x\n", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
+            (value >> bit) & 1);
+    }
+    */
 }
 
 void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
@@ -998,17 +1043,21 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t pr
         
     if (is_twi_port(port)) {
         this->_twiHandleWrite(port, bit, value, prev_val);
-    } else if (is_spi_port(port)) {
-        this->_spiHandleWrite(port, bit, value, prev_val);
-    } else {
-        if (bit < 0) {
-            printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->last_inst_pc * 2, PORT_NAMES[port], port,
-                value, prev_val);
-        } else {
-            printf("%04x: OUT %s(%02x).%d <- %d (was %d)\n", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
-                (value >> bit) & 1, (prev_val >> bit) & 1);
-        }
     }
+    if (is_spi_port(port)) {
+        this->_spiHandleWrite(port, bit, value, prev_val);
+    }
+    if (is_data_port(port)) {
+        this->_handleDataPortWrite(port, bit, value, prev_val);
+    }
+    /*
+    if (bit < 0) {
+        printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->last_inst_pc * 2, PORT_NAMES[port], port,
+            value, prev_val);
+    } else {
+        printf("%04x: OUT %s(%02x).%d <- %d (was %d)\n", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
+            (value >> bit) & 1, (prev_val >> bit) & 1);
+    }*/
 }
 
 void Atmega32::addPinMonitor(int pin, PinMonitor* monitor)
@@ -1040,46 +1089,13 @@ void Atmega32::_triggerPinMonitors(int pin, int value)
     }
 }
 
-void Atmega32::i2cReceiveStart()
+
+void Atmega32::_handleDataPortRead(uint8_t port, int8_t bit, uint8_t &value)
 {
-    fail("Slave behavior on I2C not supported for ATMEGA32");
 }
 
-void Atmega32::i2cReceiveStop()
+void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
 {
-    fail("Slave behavior on I2C not supported for ATMEGA32");
-}
-
-bool Atmega32::i2cReceiveAddress(uint8_t address, bool write)
-{
-    fail("Slave behavior on I2C not supported for ATMEGA32");
-    
-    return false;
-}
-
-bool Atmega32::i2cReceiveData(uint8_t data)
-{
-    if (this->twi_has_floor) {
-        if (this->twi_xmit_mode)
-            fail("ATMEGA32 Received I2C data while transmitting!");
-        
-        this->ports[PORT_TWDR] = data;
-        
-        printf("*** ATMEGA receives: %02x\n", data);
-        return true;
-    }
-    
-    fail("Slave behavior on I2C not supported for ATMEGA32");
-    
-    
-    return false;
-}
-
-bool Atmega32::i2cQueryData(uint8_t &data)
-{
-    fail("Slave behavior on I2C not supported for ATMEGA32");
-    
-    return false;
 }
 
 void Atmega32::_twiInit()
@@ -1173,6 +1189,48 @@ void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t
 void Atmega32::_twiStatus(uint8_t status)
 {
     this->ports[PORT_TWSR] = status | (this->ports[PORT_TWSR] & 0x03);
+}
+
+void Atmega32::i2cReceiveStart()
+{
+    fail("Slave behavior on I2C not supported for ATMEGA32");
+}
+
+void Atmega32::i2cReceiveStop()
+{
+    fail("Slave behavior on I2C not supported for ATMEGA32");
+}
+
+bool Atmega32::i2cReceiveAddress(uint8_t address, bool write)
+{
+    fail("Slave behavior on I2C not supported for ATMEGA32");
+    
+    return false;
+}
+
+bool Atmega32::i2cReceiveData(uint8_t data)
+{
+    if (this->twi_has_floor) {
+        if (this->twi_xmit_mode)
+            fail("ATMEGA32 Received I2C data while transmitting!");
+        
+        this->ports[PORT_TWDR] = data;
+        
+        printf("*** ATMEGA receives: %02x\n", data);
+        return true;
+    }
+    
+    fail("Slave behavior on I2C not supported for ATMEGA32");
+    
+    
+    return false;
+}
+
+bool Atmega32::i2cQueryData(uint8_t &data)
+{
+    fail("Slave behavior on I2C not supported for ATMEGA32");
+    
+    return false;
 }
 
 void Atmega32::_spiInit()

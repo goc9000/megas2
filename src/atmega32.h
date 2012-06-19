@@ -111,6 +111,9 @@ private:
     void _onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
 
     void _triggerPinMonitors(int pin, int value);
+
+    void _handleDataPortRead(uint8_t port, int8_t bit, uint8_t &value);
+    void _handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
     
     void _twiInit();
     void _twiHandleRead(uint8_t port, int8_t bit, uint8_t &value);
