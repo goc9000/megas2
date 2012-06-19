@@ -1,9 +1,18 @@
 #ifndef _H_ATMEGA32_H
 #define _H_ATMEGA32_H
 
+#include <vector>
+
+#include "pin_monitor.h"
 #include "i2c_device.h"
 #include "spi_device.h"
 #include "device.h"
+
+#define MEGA32_PIN_A       0x00
+#define MEGA32_PIN_B       0x08
+#define MEGA32_PIN_C       0x10
+#define MEGA32_PIN_D       0x18
+#define MEGA32_PIN_COUNT   0x20
 
 // Flash size is in 16-bit words
 #define MEGA32_FLASH_SIZE  0x4000
@@ -20,6 +29,9 @@ public:
     void step();
     
     virtual sim_time_t nextEventTime();
+
+    void addPinMonitor(int pin, PinMonitor* monitor);
+    void removePinMonitor(int pin, PinMonitor* monitor);
     
     virtual void i2cReceiveStart();
     virtual bool i2cReceiveAddress(uint8_t address, bool write);
@@ -34,6 +46,8 @@ private:
     uint8_t ram[MEGA32_RAM_SIZE]; // note: includes regs and I/O space
     int pc;
     int last_inst_pc;
+
+    vector<PinMonitor *> pin_monitors[MEGA32_PIN_COUNT];
     
     bool twi_has_floor;
     bool twi_start_just_sent;
@@ -95,6 +109,8 @@ private:
     
     void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
     void _onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
+
+    void _triggerPinMonitors(int pin, int value);
     
     void _twiInit();
     void _twiHandleRead(uint8_t port, int8_t bit, uint8_t &value);

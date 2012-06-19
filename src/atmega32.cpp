@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <algorithm>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -1012,6 +1013,35 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t pr
             printf("%04x: OUT %s(%02x).%d <- %d (was %d)\n", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
                 (value >> bit) & 1, (prev_val >> bit) & 1);
         }
+    }
+}
+
+void Atmega32::addPinMonitor(int pin, PinMonitor* monitor)
+{
+    if ((pin < 0) || (pin >= MEGA32_PIN_COUNT))
+        fail("No such pin in ATMEGA32 (no. %02x)", pin);
+    
+    this->pin_monitors[pin].push_back(monitor);
+}
+
+void Atmega32::removePinMonitor(int pin, PinMonitor* monitor)
+{
+    if ((pin < 0) || (pin >= MEGA32_PIN_COUNT))
+        fail("No such pin in ATMEGA32 (no. %02x)", pin);
+    
+    vector<PinMonitor *>::iterator it = find(this->pin_monitors[pin].begin(), this->pin_monitors[pin].end(), monitor);
+    
+    this->pin_monitors[pin].erase(it);
+}
+
+void Atmega32::_triggerPinMonitors(int pin, int value)
+{
+    vector<PinMonitor *>::iterator it = this->pin_monitors[pin].begin();
+    vector<PinMonitor *>::iterator end = this->pin_monitors[pin].end();
+
+    while (it != end) {
+        (*it)->onPinChanged(pin, value);
+        it++;
     }
 }
 
