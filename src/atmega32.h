@@ -2,6 +2,7 @@
 #define _H_ATMEGA32_H
 
 #include "i2c_device.h"
+#include "spi_device.h"
 #include "device.h"
 
 // Flash size is in 16-bit words
@@ -11,7 +12,7 @@
 #define MEGA32_IO_BASE     0x0020   
 #define MEGA32_SRAM_BASE   0x0060
 
-class Atmega32 : public Device, public I2cDevice {
+class Atmega32 : public Device, public I2cDevice, public SpiDevice {
 public:
     Atmega32();
     void load_program_from_elf(const char *filename);
@@ -25,6 +26,8 @@ public:
     virtual bool i2cReceiveData(uint8_t data);
     virtual bool i2cQueryData(uint8_t &data);
     virtual void i2cReceiveStop();
+
+    virtual bool spiReceiveData(uint8_t &data);
 private:
     uint16_t flash[MEGA32_FLASH_SIZE];
     
@@ -35,6 +38,8 @@ private:
     bool twi_has_floor;
     bool twi_start_just_sent;
     bool twi_xmit_mode;
+
+    bool spi_stat_read;
     
     // shortcuts
     uint8_t *ports;
@@ -99,6 +104,7 @@ private:
     void _spiInit();
     void _spiHandleRead(uint8_t port, int8_t bit, uint8_t &value);
     void _spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
+    bool _spiIsEnabled();
 };
 
 #endif

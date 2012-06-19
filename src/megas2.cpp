@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "i2c_bus.h"
+#include "spi_bus.h"
 #include "atmega32.h"
 #include "ds1307.h"
 #include "fail.h"
@@ -22,10 +23,13 @@ int main(int argc, char **argv)
         Atmega32 mcu;
         Ds1307 rtc(0x68);
         I2cBus i2c_bus;
+        SpiBus spi_bus;
         
         rtc.connectToI2cBus(&i2c_bus);
-        
         mcu.connectToI2cBus(&i2c_bus);
+        
+        mcu.connectToSpiBus(&spi_bus);
+
         mcu.load_program_from_elf(argv[1]);
 
         while (true)

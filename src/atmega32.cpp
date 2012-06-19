@@ -48,6 +48,11 @@ static char const * const PORT_NAMES[0x40] = {
 #define B_TWSTA         5
 #define B_TWSTO         4
 #define B_TWEN          2
+#define B_SPIF          7
+#define B_SPIE          7
+#define B_SPE           6
+#define B_DORD          5
+#define B_MSTR          4
 
 // SREG flags
 #define FLAG_I          7
@@ -112,7 +117,7 @@ void Atmega32::load_program_from_elf(const char *filename)
     bool found = false;
 
     if (elf_version(EV_CURRENT) == EV_NONE)
-        fail("Connot init ELF library: %s", elf_errmsg(-1));
+        fail("Cannot init ELF library: %s", elf_errmsg(-1));
     if ((fd = open(filename, O_RDONLY, 0)) < 0)
         fail("Cannot open file '%s'", filename);
     if (!(elf = elf_begin(fd, ELF_C_READ, NULL)))
@@ -1150,26 +1155,51 @@ void Atmega32::_spiInit()
     this->ports[PORT_SPCR] = 0x00;
     this->ports[PORT_SPSR] = 0x00;
     this->ports[PORT_SPDR] = 0xff;
+
+    this->spi_stat_read = false;
 }
 
 void Atmega32::_spiHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
-    if (bit < 0) {
-        fail("%04x: SPI-IN %s(%02x) == %02x", this->last_inst_pc * 2, PORT_NAMES[port], port,
-            value);
-    } else {
-        fail("%04x: SPI-IN %s(%02x).%d == %02x", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
-            (value >> bit) & 1);
+    switch (port) {
+        case PORT_SPSR:
+            if (bit_is_set(value, B_SPIF))
+                this->spi_stat_read = true;
+        case PORT_SPDR:
+            if (this->spi_stat_read) {
+                clear_bit(this->ports[PORT_SPSR], B_SPIF);
+                this->spi_stat_read = false;
+            }
     }
 }
 
 void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
 {
-    if (bit < 0) {
-        fail("%04x: SPI-OUT %s(%02x) <- %02x (was %02x)", this->last_inst_pc * 2, PORT_NAMES[port], port,
-            value, prev_val);
-    } else {
-        fail("%04x: SPI-OUT %s(%02x).%d <- %d (was %d)", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
-            (value >> bit) & 1, (prev_val >> bit) & 1);
+    switch (port) {
+        case PORT_SPSR:
+            value = (prev_val & 0xfe) + (value & 0x01);
+            break;
+        case PORT_SPDR:
+            if (!this->_spiIsEnabled())
+                return;
+
+            this->spi_stat_read = false;
+
+            this->_spiSendData(value);
+
+            set_bit(this->ports[PORT_SPSR], B_SPIF);
+            break;
     }
+}
+
+bool Atmega32::_spiIsEnabled()
+{
+    return bit_is_set(this->ports[PORT_SPCR], B_SPE);
+}
+
+bool Atmega32::spiReceiveData(uint8_t &data)
+{
+    fail("Slave behavior on SPI not supported for ATMEGA32");
+
+    return false;
 }
