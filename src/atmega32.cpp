@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "bit_macros.h"
 #include "fail.h"
 #include "gelf.h"
 #include "atmega32.h"
@@ -77,12 +78,6 @@ static char const * const PORT_NAMES[0x40] = {
 #define TWI_STATUS_R_DATA_ACK  0x50
 #define TWI_STATUS_R_DATA_NACK 0x58
 #define TWI_STATUS_IDLE        0xf8
-
-#define low_byte(value) ((value) & 0xff)
-#define high_byte(value) (((value) >> 8) & 0xff)
-#define bit_is_set(value,bit) (((value) >> (bit)) & 1)
-#define set_bit(lval,bit) do { lval |= (1 << (bit)); } while (0)
-#define clear_bit(lval,bit) do { lval &= ~(1 << (bit)); } while (0)
 
 static inline bool is_twi_port(uint8_t port)
 {
