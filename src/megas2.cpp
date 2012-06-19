@@ -8,7 +8,9 @@
 #include "spi_bus.h"
 #include "atmega32.h"
 #include "ds1307.h"
+#include "sd_card.h"
 #include "fail.h"
+#include "ss_pin_monitor.h"
 
 using namespace std;
 
@@ -22,6 +24,7 @@ int main(int argc, char **argv)
 
         Atmega32 mcu;
         Ds1307 rtc(0x68);
+        SdCard sd_card;
         I2cBus i2c_bus;
         SpiBus spi_bus;
         
@@ -29,6 +32,8 @@ int main(int argc, char **argv)
         mcu.connectToI2cBus(&i2c_bus);
         
         mcu.connectToSpiBus(&spi_bus);
+        sd_card.connectToSpiBus(&spi_bus);
+        mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
 
         mcu.load_program_from_elf(argv[1]);
 
