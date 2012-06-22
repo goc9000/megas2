@@ -127,6 +127,9 @@ private:
     void _spiHandleRead(uint8_t port, int8_t bit, uint8_t &value);
     void _spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
     bool _spiIsEnabled();
+
+    void _dumpRegisters();
+    void _dumpSram();
 };
 
 #endif
