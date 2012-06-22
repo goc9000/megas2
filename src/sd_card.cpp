@@ -101,8 +101,6 @@ void SdCard::reset()
 
 void SdCard::spiSlaveSelect(bool select)
 {
-    printf("SDCARD select=%d\n", select);
-    
     if (!this->spi_selected && select) {
         this->idle = true;
     }
@@ -141,11 +139,6 @@ uint8_t SdCard::_handleSpiData(uint8_t data)
         if (this->substate < 6)
             return 0xff;
         
-printf("SD card received command:");
-for (int i = 0; i < 6; i++)
-    printf(" %02x", this->cmd_buffer[i]);
-printf("\n");
-    
         this->receiving_command = false;
         
         if (!bit_is_set(this->cmd_buffer[5], 0))
@@ -305,8 +298,6 @@ void SdCard::_prepareR1Response()
     this->responding = true;
     
     this->flags &= 0xff00;
-    
-    printf("SD card R1 response: %02x\n", this->response[0]);
 }
 
 void SdCard::_prepareDataResponse(bool crc_error, bool write_error)
@@ -321,8 +312,6 @@ void SdCard::_prepareDataResponse(bool crc_error, bool write_error)
     this->response_length = 1;
     this->substate = 0;
     this->responding = true;
-    
-    printf("SD card data response: %02x\n", this->response[0]);
 }
 
 void SdCard::_readBlockFromBackingFile(uint8_t *buffer, unsigned offset, unsigned length)
