@@ -16,6 +16,7 @@ public:
     bool spiReceiveData(uint8_t &data);
 private:
     FILE *backing_file;
+    unsigned backing_file_len;
     unsigned capacity;
 
     bool spi_selected;
@@ -26,6 +27,7 @@ private:
     bool expecting_acmd;
     bool responding;
     bool responding_with_data;
+    bool receiving_write_data;
     int substate;
     uint16_t flags;
     
@@ -34,6 +36,9 @@ private:
     int response_length;
     uint8_t read_block_buffer[512];
     uint16_t read_block_crc;
+    unsigned write_block_addr; 
+    uint8_t write_block_buffer[512];
+    uint16_t write_block_crc;
     
     bool crc_enabled;
     uint16_t block_size;
@@ -42,7 +47,10 @@ private:
     void _execCommand(uint8_t command, uint32_t param);
     void _execAppCommand(uint8_t command, uint32_t param);
     void _prepareR1Response();
-    void _readBlockFromBackingFile(uint8_t *buffer, int offset, int length);
+    void _prepareDataResponse(bool crc_error, bool write_error);
+    void _readBlockFromBackingFile(uint8_t *buffer, unsigned offset, unsigned length);
+    bool _writeBlockToBackingFile(uint8_t *buffer, unsigned offset, unsigned length);
+    void _expandBackingFile(unsigned minimum_size);
 };
 
 #endif

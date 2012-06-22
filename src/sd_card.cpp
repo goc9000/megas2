@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 #include <cstdlib>
 
 #include "bit_macros.h"
@@ -12,6 +13,7 @@ using namespace std;
 #define CMD_GO_IDLE_STATE          0x40
 #define CMD_SET_BLOCKLEN           0x50
 #define CMD_READ_SINGLE_BLOCK      0x51
+#define CMD_WRITE_SINGLE_BLOCK     0x58
 #define CMD_APP_CMD                0x77
 
 #define ACMD_SD_SEND_OP_CMD        0x69
@@ -74,6 +76,9 @@ SdCard::SdCard(const char *backing_file_name, unsigned capacity)
     this->backing_file = fopen(backing_file_name, "rb+");
     if (!this->backing_file)
         fail("Cannot open SD card backing file '%s'", backing_file_name);
+    if (fseek(this->backing_file, 0, SEEK_END) < 0)
+        fail("Cannot seek in SD card backing file '%s'", backing_file_name);
+    this->backing_file_len = ftell(this->backing_file);
     
     this->spi_selected = false;
     this->reset();
@@ -171,8 +176,8 @@ printf("\n");
         
         if (this->substate == this->response_length) {
             this->responding = false;
-            this->idle = !this->responding_with_data;
-            if (this->responding_with_data)
+            this->idle = !this->responding_with_data && !this->receiving_write_data;
+            if (this->responding_with_data || this->receiving_write_data)
                 this->substate = 0;
         }
         
@@ -200,6 +205,36 @@ printf("\n");
         return data;
     }
     
+    if (this->receiving_write_data) {
+        if (this->substate == 0) {
+            if (data == 0xff)
+                return 0xff;
+            if (data == 0xfe) {
+                this->substate = 1;
+                return 0xff;
+            }
+            fail("SD card received %02x while expecting data for writing", data);
+        } else if (this->substate <= this->block_size) {
+            this->write_block_buffer[this->substate-1] = data;
+            this->substate++;
+        } else if (this->substate == this->block_size+1) {
+            this->write_block_crc = data << 8;
+            this->substate++;
+        } else {
+            this->write_block_crc += data;
+            
+            bool crc_error = this->crc_enabled &&
+                (this->write_block_crc != compute_crc16(this->write_block_buffer, this->block_size));
+            bool write_error = !this->_writeBlockToBackingFile(
+                this->write_block_buffer, this->write_block_addr, this->block_size);
+            
+            this->_prepareDataResponse(crc_error, write_error);
+            this->receiving_write_data = false;
+        }
+        
+        return 0xff;
+    }
+    
     fail("Received SD command in unexpected state");
     
     return 0xff;
@@ -211,6 +246,7 @@ void SdCard::_execCommand(uint8_t command, uint32_t param)
         fail("SD card received command %02x in SD mode instead of GO_IDLE_STATE", command);
     
     this->responding_with_data = false;
+    this->receiving_write_data = false;
     
     switch (command) {
         case CMD_GO_IDLE_STATE:
@@ -233,6 +269,14 @@ void SdCard::_execCommand(uint8_t command, uint32_t param)
             this->_readBlockFromBackingFile(this->read_block_buffer, param, this->block_size);
             this->read_block_crc = compute_crc16(this->read_block_buffer, this->block_size);
             this->responding_with_data = true;
+            break;
+        case CMD_WRITE_SINGLE_BLOCK:
+            if (param & 511)
+                fail("SD card write address not aligned (=%08x)", param);
+            if (param + this->block_size >= capacity)
+                fail("Out of range write to SD card (addr=%08x)", param);
+            this->write_block_addr = param;
+            this->receiving_write_data = true;
             break;
         default:
             fail("Unrecognized SD command: %02x %08x\n", command, param);
@@ -265,10 +309,59 @@ void SdCard::_prepareR1Response()
     printf("SD card R1 response: %02x\n", this->response[0]);
 }
 
-void SdCard::_readBlockFromBackingFile(uint8_t *buffer, int offset, int length)
+void SdCard::_prepareDataResponse(bool crc_error, bool write_error)
+{
+    if (crc_error)
+        this->response[0] = 0x0b;
+    else if (write_error)
+        this->response[0] = 0x0d;
+    else
+        this->response[0] = 0x05;
+    
+    this->response_length = 1;
+    this->substate = 0;
+    this->responding = true;
+    
+    printf("SD card data response: %02x\n", this->response[0]);
+}
+
+void SdCard::_readBlockFromBackingFile(uint8_t *buffer, unsigned offset, unsigned length)
 {
     memset(buffer, 0xff, length);
     
-    fseek(this->backing_file, SEEK_SET, offset);
-    fread(buffer, 1, length, this->backing_file);
+    if (offset >= this->backing_file_len)
+        return;
+    
+    fseek(this->backing_file, offset, SEEK_SET);
+    int count = fread(buffer, 1, length, this->backing_file);
+    
+    if (count < 0)
+        fail("Error reading from SD card backing file");
+}
+
+bool SdCard::_writeBlockToBackingFile(uint8_t *buffer, unsigned offset, unsigned length)
+{
+    this->_expandBackingFile(offset+length);
+    
+    fseek(this->backing_file, offset, SEEK_SET);
+    if (fwrite(buffer, length, 1, this->backing_file) != 1)
+        fail("Error writing to SD card backing file");
+    
+    return true;
+}
+
+void SdCard::_expandBackingFile(unsigned minimum_size)
+{
+    uint8_t buf[65536];
+    
+    memset(buf, 0xff, 65536);
+    
+    while (this->backing_file_len < minimum_size) {
+        unsigned count = min(65536U, minimum_size - this->backing_file_len);
+        
+        fseek(this->backing_file, 0, SEEK_END);
+        if (fwrite(buf, count, 1, this->backing_file) != 1)
+            fail("Error expanding SD card backing file");
+        this->backing_file_len += count;
+    }
 }
