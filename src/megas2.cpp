@@ -17,14 +17,14 @@ using namespace std;
 int main(int argc, char **argv)
 {
     try {
-        if (argc < 2) {
-            printf("Invocation: %s <file.elf>\n", argv[0]);
+        if (argc < 3) {
+            printf("Invocation: %s <program.elf> <sdcard.bin>\n", argv[0]);
             exit(EXIT_SUCCESS);
         }
 
         Atmega32 mcu;
         Ds1307 rtc(0x68);
-        SdCard sd_card;
+        SdCard sd_card(argv[2], 256*1024*1024);
         I2cBus i2c_bus;
         SpiBus spi_bus;
         

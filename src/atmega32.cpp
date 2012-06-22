@@ -216,6 +216,17 @@ void Atmega32::step()
 {
     this->last_inst_pc = this->pc;
     
+    /*
+if (this->pc *2 == 0x4a8c) {
+    for (int i=0; i < 1024; i++) {
+        if (i % 32 == 0) printf("%04x: ", i);
+        printf("%02x ", this->ram[MEGA32_SRAM_BASE + i]);
+        if (i % 32 == 31) printf("\n");
+    }
+    fail("reached");
+}*/
+  
+    
     uint16_t op = this->_fetchNextOpcode();
     
     if (!op) { // NOP
