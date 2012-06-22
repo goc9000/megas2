@@ -5,6 +5,8 @@
 
 class Device {
 public:
+    virtual void reset(void) = 0;
+
     virtual sim_time_t nextEventTime(void) = 0;
 };
 

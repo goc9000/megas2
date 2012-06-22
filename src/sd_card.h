@@ -10,7 +10,7 @@
 class SdCard : public Device, public SpiDevice {
 public:
     SdCard(const char *backing_file_name, unsigned capacity);
-    void reset();
+    virtual void reset();
     virtual sim_time_t nextEventTime();
     void spiSlaveSelect(bool select);
     bool spiReceiveData(uint8_t &data);

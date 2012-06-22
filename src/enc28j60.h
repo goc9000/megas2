@@ -9,7 +9,7 @@
 class Enc28J60 : public Device, public SpiDevice {
 public:
     Enc28J60();
-    void reset();
+    virtual void reset();
     virtual sim_time_t nextEventTime();
     void spiSlaveSelect(bool select);
     bool spiReceiveData(uint8_t &data);

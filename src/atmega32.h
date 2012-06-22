@@ -25,9 +25,9 @@ class Atmega32 : public Device, public I2cDevice, public SpiDevice {
 public:
     Atmega32();
     void load_program_from_elf(const char *filename);
-    void reset();
     void step();
     
+    virtual void reset();
     virtual sim_time_t nextEventTime();
 
     void addPinMonitor(int pin, PinMonitor* monitor);

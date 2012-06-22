@@ -12,6 +12,7 @@
 #include "enc28j60.h"
 #include "fail.h"
 #include "ss_pin_monitor.h"
+#include "reset_pin_monitor.h"
 
 using namespace std;
 
@@ -37,6 +38,7 @@ int main(int argc, char **argv)
         sd_card.connectToSpiBus(&spi_bus);
         mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
         enc28j60.connectToSpiBus(&spi_bus);
+        mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
         mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
 
         mcu.load_program_from_elf(argv[1]);

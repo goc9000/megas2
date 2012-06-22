@@ -8,7 +8,6 @@ SlaveSelectPinMonitor::SlaveSelectPinMonitor(SpiDevice *device, bool active_low)
     this->active_low = active_low;
 }
 
-#include "fail.h"
 void SlaveSelectPinMonitor::onPinChanged(int pin, int value)
 {
     this->device->spiSlaveSelect(value ^ active_low);
