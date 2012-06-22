@@ -25,14 +25,10 @@ static char const * const PORT_NAMES[0x40] = {
 };
 
 // Registers
-#define REG_XL            0x1a
-#define REG_XH            0x1b
-#define REG_YL            0x1c
-#define REG_YH            0x1d
-#define REG_ZL            0x1e
-#define REG_ZH            0x1f
-#define REG_SPL           0x5d
-#define REG_SPH           0x5e
+#define REG16_X           0x1a
+#define REG16_Y           0x1c
+#define REG16_Z           0x1e
+#define REG16_SP          0x5d
 #define REG_SREG          0x5f
 
 // Ports
@@ -216,17 +212,6 @@ void Atmega32::step()
 {
     this->last_inst_pc = this->pc;
     
-    /*
-if (this->pc *2 == 0x4a8c) {
-    for (int i=0; i < 1024; i++) {
-        if (i % 32 == 0) printf("%04x: ", i);
-        printf("%02x ", this->ram[MEGA32_SRAM_BASE + i]);
-        if (i % 32 == 31) printf("\n");
-    }
-    fail("reached");
-}*/
-  
-    
     uint16_t op = this->_fetchNextOpcode();
     
     if (!op) { // NOP
@@ -284,8 +269,7 @@ void Atmega32::_execMovW(uint16_t &opcode)
         unsigned : 8;
     } *ins = (inst *)&opcode;
     
-    this->_writeReg(ins->d_h * 2 + 0, this->_readReg(ins->r_h * 2 + 0));
-    this->_writeReg(ins->d_h * 2 + 1, this->_readReg(ins->r_h * 2 + 1));
+    this->_write16BitReg(ins->d_h * 2, this->_read16BitReg(ins->r_h * 2));
 }
 
 void Atmega32::_execMultiplications(uint16_t &opcode)
@@ -453,12 +437,12 @@ void Atmega32::_execLdd(uint16_t &opcode)
     
     uint8_t q = (ins->q_h << 5) + (ins->q_m << 3) + ins->q_l; 
     
-    this->_doLoadStore(ins->use_y ? REG_YL : REG_ZL, q, ins->d, 0, ins->store);
+    this->_doLoadStore(ins->use_y ? REG16_Y : REG16_Z, q, ins->d, 0, ins->store);
 }
 
 void Atmega32::_execRegMemOp(uint16_t &opcode)
 {
-    uint8_t const IND_REGS[4] = { REG_ZL, 0, REG_YL, REG_XL };
+    uint8_t const IND_REGS[4] = { REG16_Z, 0, REG16_Y, REG16_X };
     
     struct inst {
         unsigned opcode : 4;
@@ -611,7 +595,7 @@ void Atmega32::_execIndirectJump(uint16_t &opcode)
     if (ins->call)
         this->_pushWord(this->pc);
     
-    this->_doJump(*(uint16_t *)(this->ram + REG_ZL));
+    this->_doJump(this->_read16BitReg(REG16_Z));
 }
 
 void Atmega32::_execReturn(uint16_t &opcode)
@@ -680,7 +664,7 @@ void Atmega32::_execWordImmOp(uint16_t &opcode)
     
     int d = 24 + (2 * ins->d);
     
-    uint16_t d_val = (this->_readReg(d+1) << 8) + this->_readReg(d);
+    uint16_t d_val = this->_read16BitReg(d);
     uint16_t value = (ins->val_h << 4) + ins->val_l;
     uint16_t result;
     
@@ -700,8 +684,7 @@ void Atmega32::_execWordImmOp(uint16_t &opcode)
     this->_setFlag(FLAG_Z, !result);
     this->_setFlag(FLAG_S, this->_getFlag(FLAG_N) ^ this->_getFlag(FLAG_V));
     
-    this->_writeReg(d, low_byte(result));
-    this->_writeReg(d+1, high_byte(result));
+    this->_write16BitReg(d, result);
 }
 
 void Atmega32::_execIoBitOp(uint16_t &opcode)
@@ -884,11 +867,21 @@ uint8_t Atmega32::_readReg(uint8_t reg)
     return this->ram[reg];
 }
 
+uint16_t Atmega32::_read16BitReg(uint8_t reg)
+{
+    return (this->ram[reg+1] << 8) + this->ram[reg];
+}
+
 void Atmega32::_writeReg(uint8_t reg, uint8_t value)
 {
     this->ram[reg] = value;
 }
 
+void Atmega32::_write16BitReg(uint8_t reg, uint16_t value)
+{
+    this->ram[reg] = low_byte(value);
+    this->ram[reg+1] = high_byte(value);
+}
 bool Atmega32::_readRegBit(uint8_t reg, uint8_t bit)
 {
     return bit_is_set(this->ram[reg], bit);
@@ -970,16 +963,16 @@ void Atmega32::_writeMem(int addr, uint8_t value)
 
 void Atmega32::_push(uint8_t value)
 {
-    uint16_t *sp = (uint16_t *)(this->ram + REG_SPL);
-    
-    this->_writeMem((*sp)--, value);
+    uint16_t sp = this->_read16BitReg(REG16_SP);
+    this->_writeMem(sp, value);
+    this->_write16BitReg(REG16_SP, sp-1);
 }
 
 uint8_t Atmega32::_pop()
 {
-    uint16_t *sp = (uint16_t *)(this->ram + REG_SPL);
- 
-    uint8_t value = this->_readMem(++(*sp));
+    uint16_t sp = this->_read16BitReg(REG16_SP);
+    uint8_t value = this->_readMem(++sp);
+    this->_write16BitReg(REG16_SP, sp);
 
     return value;
 }
@@ -997,34 +990,40 @@ uint16_t Atmega32::_popWord()
 
 void Atmega32::_doLoadStore(uint8_t addr_reg, uint16_t displ, uint8_t dest_reg, uint8_t incrementing, bool store)
 {
-    uint16_t *a = (uint16_t *)(this->ram + addr_reg);
+    uint16_t a = this->_read16BitReg(addr_reg);
     
-    if (incrementing == 2) (*a)--;
+    if (incrementing == 2)
+        this->_write16BitReg(addr_reg, --a);
     if (store) {
-        this->_writeMem(*a + displ, this->_readReg(dest_reg));
+        this->_writeMem(a + displ, this->_readReg(dest_reg));
     } else {
-        this->_writeReg(dest_reg, this->_readMem(*a + displ));
+        this->_writeReg(dest_reg, this->_readMem(a + displ));
     }
-    if (incrementing == 1) (*a)++;
+    if (incrementing == 1)
+        this->_write16BitReg(addr_reg, a+1);
 }
 
 void Atmega32::_loadProgMem(uint8_t dest_reg, bool post_increment, bool extended)
 {
-    uint16_t *z = (uint16_t *)(this->ram + REG_ZL);
+    uint16_t z = this->_read16BitReg(REG16_Z);
     
     if (extended)
         fail("Extended LPM not supported");
     
-    if (*z >= 2*MEGA32_FLASH_SIZE)
-        fail("LPM from invalid program memory address (%04x)", *z);
+    if (z >= 2*MEGA32_FLASH_SIZE)
+        fail("LPM from invalid program memory address (%04x)", z);
     
-    this->ram[dest_reg] = ((uint8_t *)this->flash)[*z];
-    if (post_increment) (*z)++;
+    this->ram[dest_reg] = (z & 1) ?
+        high_byte(this->flash[z >> 1]) :
+        low_byte(this->flash[z >> 1]);
+    
+    if (post_increment)
+        this->_write16BitReg(REG16_Z, z+1);
 }
 
 void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
 {
-    if (port >= REG_SPL-MEGA32_IO_BASE)
+    if (port >= REG16_SP-MEGA32_IO_BASE)
         return;
     
     if (is_twi_port(port)) {
@@ -1049,7 +1048,7 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
 
 void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
 {
-    if (port >= REG_SPL-MEGA32_IO_BASE)
+    if (port >= REG16_SP-MEGA32_IO_BASE)
         return;
         
     if (is_twi_port(port)) {

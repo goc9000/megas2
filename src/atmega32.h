@@ -92,7 +92,9 @@ private:
     void _setFlag(uint8_t bit, bool set);
     bool _getFlag(uint8_t bit);
     uint8_t _readReg(uint8_t reg);
+    uint16_t _read16BitReg(uint8_t reg);
     void _writeReg(uint8_t reg, uint8_t value);
+    void _write16BitReg(uint8_t reg, uint16_t value);
     bool _readRegBit(uint8_t reg, uint8_t bit);
     void _writeRegBit(uint8_t reg, uint8_t bit, bool value);
     uint8_t _readPort(uint8_t port);
