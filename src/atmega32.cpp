@@ -575,7 +575,7 @@ void Atmega32::_execSingleRegOp(uint16_t &opcode)
             fail("Unsupported single-reg instruction %04x", opcode);
     }
     
-    if (ins->opcode == 0x02) {
+    if (ins->opcode != 0x02) {
         this->_setFlag(FLAG_Z, !res);
         this->_setFlag(FLAG_N, bit_is_set(res, 7));
         this->_setFlag(FLAG_S, this->_getFlag(FLAG_N) ^ this->_getFlag(FLAG_V));
