@@ -44,6 +44,12 @@ private:
     uint16_t block_size;
     
     uint8_t _handleSpiData(uint8_t data);
+    uint8_t _handleCommandInIdle(uint8_t data);
+    uint8_t _handleReceivingCommand(uint8_t data);
+    uint8_t _handleResponding(uint8_t data);
+    uint8_t _handleRespondingWithData(uint8_t data);
+    uint8_t _handleReceivingWriteData(uint8_t data);
+    
     void _execCommand(uint8_t command, uint32_t param);
     void _execAppCommand(uint8_t command, uint32_t param);
     void _prepareR1Response();

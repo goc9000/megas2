@@ -120,115 +120,131 @@ bool SdCard::spiReceiveData(uint8_t &data)
 
 uint8_t SdCard::_handleSpiData(uint8_t data)
 {
-    if (this->idle) {
-        if (data == 0xff)
-            return 0xff;
-        if ((data & 0xc0) != 0x40)
-            fail("Command sent to SD card does not begin with '01'");
-        
-        this->cmd_buffer[0] = data;
-        this->substate = 1;
-        this->idle = false;
-        this->receiving_command = true;
-        
-        return 0xff;
-    }
-    
-    if (this->receiving_command) {
-        this->cmd_buffer[this->substate++] = data;
-        if (this->substate < 6)
-            return 0xff;
-        
-        this->receiving_command = false;
-        
-        if (!bit_is_set(this->cmd_buffer[5], 0))
-            fail("SD command does not end in '1' bit");
-        if (this->crc_enabled && (compute_crc7(this->cmd_buffer, 5) != (this->cmd_buffer[5] >> 1)))
-            fail("SD command CRC failed");
-        
-        uint32_t param = (this->cmd_buffer[1] << 24) +
-            (this->cmd_buffer[2] << 16) +
-            (this->cmd_buffer[3] << 8) +
-            (this->cmd_buffer[4]);
-        
-        if (this->expecting_acmd) {
-            this->expecting_acmd = false;
-            this->_execAppCommand(this->cmd_buffer[0], param);
-        } else {
-            this->_execCommand(this->cmd_buffer[0], param);
-        }
-        
-        return 0xff;
-    }
-    
-    if (this->responding) {
-        if (data != 0xff)
-            fail("SD card received %02x while responding", data);
-        
-        data = this->response[this->substate++];
-        
-        if (this->substate == this->response_length) {
-            this->responding = false;
-            this->idle = !this->responding_with_data && !this->receiving_write_data;
-            if (this->responding_with_data || this->receiving_write_data)
-                this->substate = 0;
-        }
-        
-        return data;
-    }
-    
-    if (this->responding_with_data) {
-        if (data != 0xff)
-            fail("SD card received %02x while responding with data", data);
-        
-        if (this->substate == 0) {
-            data = 0xfe;
-        } else if ((this->substate >= 1) && (this->substate <= this->block_size)) {
-            data = this->read_block_buffer[this->substate-1];
-        } else if (this->substate == this->block_size+1) {
-            data = high_byte(this->read_block_crc);
-        } else {
-            data = low_byte(this->read_block_crc);
-            this->responding_with_data = false;
-            this->idle = true;
-        }
-        
-        this->substate++;
-        
-        return data;
-    }
-    
-    if (this->receiving_write_data) {
-        if (this->substate == 0) {
-            if (data == 0xff)
-                return 0xff;
-            if (data == 0xfe) {
-                this->substate = 1;
-                return 0xff;
-            }
-            fail("SD card received %02x while expecting data for writing", data);
-        } else if (this->substate <= this->block_size) {
-            this->write_block_buffer[this->substate-1] = data;
-            this->substate++;
-        } else if (this->substate == this->block_size+1) {
-            this->write_block_crc = data << 8;
-            this->substate++;
-        } else {
-            this->write_block_crc += data;
-            
-            bool crc_error = this->crc_enabled &&
-                (this->write_block_crc != compute_crc16(this->write_block_buffer, this->block_size));
-            bool write_error = !this->_writeBlockToBackingFile(
-                this->write_block_buffer, this->write_block_addr, this->block_size);
-            
-            this->_prepareDataResponse(crc_error, write_error);
-            this->receiving_write_data = false;
-        }
-        
-        return 0xff;
-    }
+    if (this->idle)
+        return this->_handleCommandInIdle(data);
+    if (this->receiving_command)
+        return this->_handleReceivingCommand(data);    
+    if (this->responding)
+        return this->_handleResponding(data);    
+    if (this->responding_with_data)
+        return this->_handleRespondingWithData(data);
+    if (this->receiving_write_data)
+        return this->_handleReceivingWriteData(data);
     
     fail("Received SD command in unexpected state");
+    
+    return 0xff;
+}
+
+uint8_t SdCard::_handleCommandInIdle(uint8_t data)
+{
+    if (data == 0xff)
+        return 0xff;
+    if ((data & 0xc0) != 0x40)
+        fail("Command sent to SD card does not begin with '01'");
+    
+    this->cmd_buffer[0] = data;
+    this->substate = 1;
+    this->idle = false;
+    this->receiving_command = true;
+    
+    return 0xff;
+}
+
+uint8_t SdCard::_handleReceivingCommand(uint8_t data)
+{
+    this->cmd_buffer[this->substate++] = data;
+    if (this->substate < 6)
+        return 0xff;
+    
+    this->receiving_command = false;
+    
+    if (!bit_is_set(this->cmd_buffer[5], 0))
+        fail("SD command does not end in '1' bit");
+    if (this->crc_enabled && (compute_crc7(this->cmd_buffer, 5) != (this->cmd_buffer[5] >> 1)))
+        fail("SD command CRC failed");
+    
+    uint32_t param = (this->cmd_buffer[1] << 24) +
+        (this->cmd_buffer[2] << 16) +
+        (this->cmd_buffer[3] << 8) +
+        (this->cmd_buffer[4]);
+    
+    if (this->expecting_acmd) {
+        this->expecting_acmd = false;
+        this->_execAppCommand(this->cmd_buffer[0], param);
+    } else {
+        this->_execCommand(this->cmd_buffer[0], param);
+    }
+    
+    return 0xff;
+}
+
+uint8_t SdCard::_handleResponding(uint8_t data)
+{
+    if (data != 0xff)
+        fail("SD card received %02x while responding", data);
+    
+    data = this->response[this->substate++];
+    
+    if (this->substate == this->response_length) {
+        this->responding = false;
+        this->idle = !this->responding_with_data && !this->receiving_write_data;
+        if (this->responding_with_data || this->receiving_write_data)
+            this->substate = 0;
+    }
+    
+    return data;
+}
+
+uint8_t SdCard::_handleRespondingWithData(uint8_t data)
+{
+    if (data != 0xff)
+        fail("SD card received %02x while responding with data", data);
+    
+    if (this->substate == 0) {
+        data = 0xfe;
+    } else if ((this->substate >= 1) && (this->substate <= this->block_size)) {
+        data = this->read_block_buffer[this->substate-1];
+    } else if (this->substate == this->block_size+1) {
+        data = high_byte(this->read_block_crc);
+    } else {
+        data = low_byte(this->read_block_crc);
+        this->responding_with_data = false;
+        this->idle = true;
+    }
+    
+    this->substate++;
+    
+    return data;
+}
+
+uint8_t SdCard::_handleReceivingWriteData(uint8_t data)
+{
+    if (this->substate == 0) {
+        if (data == 0xff)
+            return 0xff;
+        if (data == 0xfe) {
+            this->substate = 1;
+            return 0xff;
+        }
+        fail("SD card received %02x while expecting data for writing", data);
+    } else if (this->substate <= this->block_size) {
+        this->write_block_buffer[this->substate-1] = data;
+        this->substate++;
+    } else if (this->substate == this->block_size+1) {
+        this->write_block_crc = data << 8;
+        this->substate++;
+    } else {
+        this->write_block_crc += data;
+        
+        bool crc_error = this->crc_enabled &&
+            (this->write_block_crc != compute_crc16(this->write_block_buffer, this->block_size));
+        bool write_error = !this->_writeBlockToBackingFile(
+            this->write_block_buffer, this->write_block_addr, this->block_size);
+        
+        this->_prepareDataResponse(crc_error, write_error);
+        this->receiving_write_data = false;
+    }
     
     return 0xff;
 }
