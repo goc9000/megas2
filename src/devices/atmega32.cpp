@@ -139,7 +139,16 @@ Atmega32::Atmega32()
     this->ports = this->ram + MEGA32_IO_BASE;
     
     memset(this->flash, 0xFF, 2*MEGA32_FLASH_SIZE);
+    
+    this->setFrequency(8000);
+    
     this->reset();
+}
+
+void Atmega32::setFrequency(unsigned frequency_khz)
+{
+    this->frequency_khz = frequency_khz;
+    this->clock_period = ns_to_sim_time(1000000/frequency_khz);
 }
 
 void Atmega32::load_program_from_elf(const char *filename)
@@ -204,9 +213,26 @@ void Atmega32::reset()
     this->_spiInit();
 }
 
+void Atmega32::setSimulationTime(sim_time_t time)
+{
+    sim_time_t delta = time - this->sim_time;
+    
+    this->sim_time = time;
+    this->next_fetch_time += delta;
+}
+
+void Atmega32::act()
+{
+    this->sim_time = this->next_fetch_time;
+    
+    this->step();
+    
+    this->next_fetch_time = this->sim_time + this->clock_period;
+}
+
 sim_time_t Atmega32::nextEventTime()
 {
-    return 0;
+    return this->next_fetch_time;
 }
 
 void Atmega32::step()
@@ -529,7 +555,7 @@ void Atmega32::_execSingleRegOp(uint16_t &opcode)
     
     uint8_t d = ins->d;
     uint8_t d_val = this->_readReg(ins->d);
-    uint8_t res;
+    uint8_t res = 0;
     
     switch (ins->opcode) {
         case 0x00: // COM

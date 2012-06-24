@@ -13,8 +13,64 @@
 #include "devices/sd_card.h"
 #include "devices/enc28j60.h"
 #include "utils/fail.h"
+#include "simulation/simulation.h"
+
+#include <SDL/SDL.h>
+#include <SDL/SDL_gfxPrimitives.h>
 
 using namespace std;
+
+class Console : public SimulatedDevice, public PinMonitor
+{
+public:
+    Console(SDL_Surface *screen)
+    {
+        this->screen = screen;
+        this->next_frame_time = 0;
+    }
+    
+    virtual void setSimulationTime(sim_time_t time)
+    {
+        sim_time_t delta = time - this->sim_time;
+        
+        this->sim_time = time;
+        this->next_frame_time += delta;
+    }
+
+    virtual void act()
+    {
+        this->sim_time = this->next_frame_time;
+        
+        SDL_Event event;
+        
+        if (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                exit(EXIT_SUCCESS);
+        }
+        
+        boxColor(screen, 0, 0, 640, 480, 0x000000ff);
+        boxColor(screen, 16, 16, 32, 32, this->debug_led_lit ? 0xffc000ff : 0x806000ff);
+        
+        SDL_Flip(screen);
+        
+        this->next_frame_time = this->next_frame_time + ms_to_sim_time(20);
+    }
+
+    virtual sim_time_t nextEventTime()
+    {
+        return this->next_frame_time;
+    }
+
+    virtual void onPinChanged(int pin, int value)
+    {
+        debug_led_lit = value;
+    }
+private:
+    sim_time_t next_frame_time;
+    
+    SDL_Surface *screen;
+    bool debug_led_lit;
+};
 
 int main(int argc, char **argv)
 {
@@ -23,7 +79,17 @@ int main(int argc, char **argv)
             printf("Invocation: %s <program.elf> <sdcard.bin>\n", argv[0]);
             exit(EXIT_SUCCESS);
         }
+        
+        SDL_Init(SDL_INIT_VIDEO);
 
+        SDL_Surface *screen = SDL_SetVideoMode(640, 480, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+        if (!screen)
+            fail("Could not initialize SDL display");
+        atexit(SDL_Quit);
+        
+        SDL_WM_SetCaption("MEGAS-2 CHARLIE simulation", 0);
+        
+        Console con(screen);
         Atmega32 mcu;
         Ds1307 rtc(0x68);
         SdCard sd_card(argv[2], 256*1024*1024);
@@ -40,13 +106,18 @@ int main(int argc, char **argv)
         enc28j60.connectToSpiBus(&spi_bus);
         mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
         mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
+        mcu.addPinMonitor(MEGA32_PIN_D+7, &con);
 
         mcu.load_program_from_elf(argv[1]);
-
-        while (true)
-            mcu.step();
         
-        fail("PAF");
+        Simulation sim;
+        sim.addDevice(&mcu);
+        sim.addDevice(&rtc);
+        sim.addDevice(&sd_card);
+        sim.addDevice(&enc28j60);
+        sim.addDevice(&con);
+        
+        sim.run();
     } catch (exception &e) {
         cerr << e.what() << endl;
         return EXIT_FAILURE;

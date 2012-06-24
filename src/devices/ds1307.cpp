@@ -14,14 +14,33 @@ Ds1307::Ds1307(uint8_t i2c_address)
     this->reset();
 }
 
+void Ds1307::setSimulationTime(sim_time_t time)
+{
+    sim_time_t delta = time - this->sim_time;
+    
+    this->sim_time = time;
+    this->next_tick_time += delta;
+}
+
+void Ds1307::act()
+{
+    this->sim_time = this->next_tick_time;
+    
+    printf("Ds1307 ticks!\n");
+    
+    this->next_tick_time = this->sim_time + sec_to_sim_time(1);
+}
+
 sim_time_t Ds1307::nextEventTime()
 {
-    return 0;
+    return this->next_tick_time;
 }
 
 void Ds1307::reset()
 {
     this->i2c_listening = false;
+    
+    this->next_tick_time = this->sim_time + sec_to_sim_time(1);
 }
 
 void Ds1307::i2cReceiveStart()

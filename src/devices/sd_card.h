@@ -6,12 +6,16 @@
 
 #include "glue/spi_device.h"
 #include "devices/device.h"
+#include "simulation/sim_device.h"
 
-class SdCard : public Device, public SpiDevice {
+class SdCard : public Device, public SpiDevice, public SimulatedDevice {
 public:
     SdCard(const char *backing_file_name, unsigned capacity);
     virtual void reset();
+    
+    virtual void act();
     virtual sim_time_t nextEventTime();
+    
     void spiSlaveSelect(bool select);
     bool spiReceiveData(uint8_t &data);
 private:

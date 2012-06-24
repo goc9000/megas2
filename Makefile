@@ -1,13 +1,15 @@
 BIN = ./bin
 SRC = ./src
 INCLUDES = -I$(SRC)
-LIBS = -lelf
+LIBS = -lelf -lSDL -lSDL_gfx -lrt
+CFLAGS = -O3 -Wall
+#-fwhole-program -flto
 
 all: $(BIN)/megas2
 
 $(BIN)/megas2: $(wildcard $(SRC)/*.cpp $(SRC)/*/*.cpp $(SRC)/*.h $(SRC)/*/*.h)
 	@mkdir -p $(BIN)
-	g++ $(INCLUDES) $(LIBS) -g -o $@ -Wall $(filter %.cpp,$^)
+	g++ $(CFLAGS) $(INCLUDES) $(LIBS) -g -o $@ -Wall $(filter %.cpp,$^)
 
 clean:
 	rm -rf $(BIN)

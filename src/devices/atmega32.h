@@ -6,6 +6,7 @@
 #include "glue/pin_monitor.h"
 #include "glue/i2c_device.h"
 #include "glue/spi_device.h"
+#include "simulation/sim_device.h"
 #include "device.h"
 
 #define MEGA32_PIN_A       0x00
@@ -21,13 +22,18 @@
 #define MEGA32_IO_BASE     0x0020   
 #define MEGA32_SRAM_BASE   0x0060
 
-class Atmega32 : public Device, public I2cDevice, public SpiDevice {
+class Atmega32 : public Device, public I2cDevice, public SpiDevice, public SimulatedDevice {
 public:
     Atmega32();
     void load_program_from_elf(const char *filename);
+    void setFrequency(unsigned frequency_khz);
+
     void step();
     
     virtual void reset();
+    
+    virtual void setSimulationTime(sim_time_t time);
+    virtual void act();
     virtual sim_time_t nextEventTime();
 
     void addPinMonitor(int pin, PinMonitor* monitor);
@@ -42,6 +48,11 @@ public:
     virtual void spiSlaveSelect(bool select);
     virtual bool spiReceiveData(uint8_t &data);
 private:
+    unsigned frequency_khz;
+    sim_time_t clock_period;
+
+    sim_time_t next_fetch_time;
+
     uint16_t flash[MEGA32_FLASH_SIZE];
     
     uint8_t ram[MEGA32_RAM_SIZE]; // note: includes regs and I/O space

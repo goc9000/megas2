@@ -19,7 +19,7 @@ using namespace std;
 
 // Registers
 #define REG_ECON1                     0x1f
-#define REG_EREVID                    0xd2
+#define REG_EREVID                    0x72
 
 // Register bits
 
@@ -52,9 +52,14 @@ Enc28J60::Enc28J60()
     this->reset();
 }
 
+void Enc28J60::act()
+{
+    // ENC28J60 does nothing on its own (for now)
+}
+
 sim_time_t Enc28J60::nextEventTime()
 {
-    return 0;
+    return SIM_TIME_NEVER;
 }
 
 void Enc28J60::reset()

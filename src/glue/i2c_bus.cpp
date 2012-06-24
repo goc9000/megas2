@@ -66,7 +66,7 @@ bool I2cBus::queryData(I2cDevice *sender)
 {
     bool ack = false;
     uint8_t data;
-    I2cDevice *emitter;
+    I2cDevice *emitter = NULL;
     
     for (unsigned int i = 0; i < this->devices.size(); i++)
         if (this->devices[i] != sender) {
