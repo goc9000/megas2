@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "pin_monitor.h"
-#include "device.h"
+#include "devices/device.h"
 
 using namespace std;
 

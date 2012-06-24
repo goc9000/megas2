@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "fail.h"
+#include "utils/fail.h"
 #include "ds1307.h"
 
 using namespace std;

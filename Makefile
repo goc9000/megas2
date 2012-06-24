@@ -5,9 +5,9 @@ LIBS = -lelf
 
 all: $(BIN)/megas2
 
-$(BIN)/megas2: $(wildcard $(SRC)/*.cpp $(SRC)/*.h)
+$(BIN)/megas2: $(wildcard $(SRC)/*.cpp $(SRC)/*/*.cpp $(SRC)/*.h $(SRC)/*/*.h)
 	@mkdir -p $(BIN)
-	g++ $(LIBS) -g -o $@ -Wall $(filter %.cpp,$^)
+	g++ $(INCLUDES) $(LIBS) -g -o $@ -Wall $(filter %.cpp,$^)
 
 clean:
 	rm -rf $(BIN)

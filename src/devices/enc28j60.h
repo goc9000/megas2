@@ -3,8 +3,8 @@
 
 #include <inttypes.h>
 
-#include "spi_device.h"
-#include "device.h"
+#include "glue/spi_device.h"
+#include "devices/device.h"
 
 #define E28J_REGS_COUNT         0x80
 #define E28J_PHY_REGS_COUNT     0x20

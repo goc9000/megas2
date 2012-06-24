@@ -2,7 +2,7 @@
 
 #include "i2c_bus.h"
 #include "i2c_device.h"
-#include "fail.h"
+#include "utils/fail.h"
 
 using namespace std;
 

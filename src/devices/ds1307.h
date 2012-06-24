@@ -3,8 +3,8 @@
 
 #include <inttypes.h>
 
-#include "i2c_device.h"
-#include "device.h"
+#include "glue/i2c_device.h"
+#include "devices/device.h"
 
 class Ds1307 : public Device, public I2cDevice {
 public:

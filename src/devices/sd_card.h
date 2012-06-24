@@ -4,8 +4,8 @@
 #include <cstdio>
 #include <inttypes.h>
 
-#include "spi_device.h"
-#include "device.h"
+#include "glue/spi_device.h"
+#include "devices/device.h"
 
 class SdCard : public Device, public SpiDevice {
 public:

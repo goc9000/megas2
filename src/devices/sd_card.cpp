@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <cstdlib>
 
-#include "bit_macros.h"
-#include "fail.h"
+#include "utils/bit_macros.h"
+#include "utils/fail.h"
 #include "sd_card.h"
 
 using namespace std;

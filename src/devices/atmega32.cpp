@@ -7,8 +7,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "bit_macros.h"
-#include "fail.h"
+#include "utils/bit_macros.h"
+#include "utils/fail.h"
 #include "gelf.h"
 #include "atmega32.h"
 
@@ -212,7 +212,7 @@ sim_time_t Atmega32::nextEventTime()
 void Atmega32::step()
 {
     this->last_inst_pc = this->pc;
-    
+
     uint16_t op = this->_fetchNextOpcode();
     
     if (!op) { // NOP

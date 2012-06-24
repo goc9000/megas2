@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "pin_monitor.h"
-#include "i2c_device.h"
-#include "spi_device.h"
+#include "glue/pin_monitor.h"
+#include "glue/i2c_device.h"
+#include "glue/spi_device.h"
 #include "device.h"
 
 #define MEGA32_PIN_A       0x00

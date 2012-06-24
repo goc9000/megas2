@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <cstdlib>
 
-#include "bit_macros.h"
-#include "fail.h"
+#include "utils/bit_macros.h"
+#include "utils/fail.h"
 #include "enc28j60.h"
 
 using namespace std;

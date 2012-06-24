@@ -4,15 +4,15 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "i2c_bus.h"
-#include "spi_bus.h"
-#include "atmega32.h"
-#include "ds1307.h"
-#include "sd_card.h"
-#include "enc28j60.h"
-#include "fail.h"
-#include "ss_pin_monitor.h"
-#include "reset_pin_monitor.h"
+#include "glue/i2c_bus.h"
+#include "glue/spi_bus.h"
+#include "glue/ss_pin_monitor.h"
+#include "glue/reset_pin_monitor.h"
+#include "devices/atmega32.h"
+#include "devices/ds1307.h"
+#include "devices/sd_card.h"
+#include "devices/enc28j60.h"
+#include "utils/fail.h"
 
 using namespace std;
 
