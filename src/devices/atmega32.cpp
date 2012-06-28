@@ -1055,11 +1055,9 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
     
     if (is_twi_port(port)) {
         this->_twiHandleRead(port, bit, value);
-    }
-    if (is_spi_port(port)) {
+    } else if (is_spi_port(port)) {
         this->_spiHandleRead(port, bit, value);
-    }
-    if (is_data_port(port)) {
+    } else if (is_data_port(port)) {
         this->_handleDataPortRead(port, bit, value);
     }
     /*
@@ -1080,21 +1078,19 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t pr
         
     if (is_twi_port(port)) {
         this->_twiHandleWrite(port, bit, value, prev_val);
-    }
-    if (is_spi_port(port)) {
+    } else if (is_spi_port(port)) {
         this->_spiHandleWrite(port, bit, value, prev_val);
-    }
-    if (is_data_port(port)) {
+    } else if (is_data_port(port)) {
         this->_handleDataPortWrite(port, bit, value, prev_val);
+    } else {    
+        if (bit < 0) {
+            printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->last_inst_pc * 2, PORT_NAMES[port], port,
+                value, prev_val);
+        } else {
+            printf("%04x: OUT %s(%02x).%d <- %d (was %d)\n", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
+                (value >> bit) & 1, (prev_val >> bit) & 1);
+        }
     }
-    /*
-    if (bit < 0) {
-        printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->last_inst_pc * 2, PORT_NAMES[port], port,
-            value, prev_val);
-    } else {
-        printf("%04x: OUT %s(%02x).%d <- %d (was %d)\n", this->last_inst_pc * 2, PORT_NAMES[port], port, bit,
-            (value >> bit) & 1, (prev_val >> bit) & 1);
-    }*/
 }
 
 void Atmega32::addPinMonitor(int pin, PinMonitor* monitor)
