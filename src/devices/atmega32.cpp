@@ -54,6 +54,13 @@ static inline bool is_spi_port(uint8_t port)
     return ((port >= PORT_SPCR) && (port <= PORT_SPDR));
 }
 
+static inline bool is_timer_port(uint8_t port)
+{
+    return ((port >= PORT_ASSR) && (port <= PORT_TCCR1A))
+        || (port == PORT_TCNT0) || (port == PORT_TCCR0) || (port == PORT_TIFR)
+        || (port == PORT_TIMSK)  || (port == PORT_OCR0);
+}
+
 Atmega32::Atmega32()
 {
     atmega32_core_init(&this->core, this);
@@ -131,6 +138,7 @@ void Atmega32::reset()
     
     this->_twiInit();
     this->_spiInit();
+    this->_timersInit();
 }
 
 void Atmega32::setSimulationTime(sim_time_t time)
@@ -171,6 +179,8 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
         this->_spiHandleRead(port, bit, value);
     } else if (is_data_port(port)) {
         this->_handleDataPortRead(port, bit, value);
+    } else if (is_timer_port(port)) {
+        this->_timersHandleRead(port, bit, value);
     }
     /*
     if (bit < 0) {
@@ -194,6 +204,8 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t pr
         this->_spiHandleWrite(port, bit, value, prev_val);
     } else if (is_data_port(port)) {
         this->_handleDataPortWrite(port, bit, value, prev_val);
+    } else if (is_timer_port(port)) {
+        this->_timersHandleWrite(port, bit, value, prev_val);
     } else {
         if (bit < 0) {
             printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port,
@@ -233,7 +245,6 @@ void Atmega32::_triggerPinMonitors(int pin, int value)
         it++;
     }
 }
-
 
 void Atmega32::_handleDataPortRead(uint8_t port, int8_t bit, uint8_t &value)
 {
@@ -455,6 +466,55 @@ bool Atmega32::spiReceiveData(uint8_t &data)
     fail("Slave behavior on SPI not supported for ATMEGA32");
 
     return false;
+}
+
+void Atmega32::_timersInit()
+{
+    /*
+    this->ports[PORT_SPCR] = 0x00;
+    this->ports[PORT_SPSR] = 0x00;
+    this->ports[PORT_SPDR] = 0xff;
+
+    this->spi_stat_read = false;
+    */
+}
+
+void Atmega32::_timersHandleRead(uint8_t port, int8_t bit, uint8_t &value)
+{
+/*
+    switch (port) {
+        case PORT_SPSR:
+            if (bit_is_set(value, B_SPIF))
+                this->spi_stat_read = true;
+        case PORT_SPDR:
+            if (this->spi_stat_read) {
+                clear_bit(this->ports[PORT_SPSR], B_SPIF);
+                this->spi_stat_read = false;
+            }
+    }
+*/
+}
+
+void Atmega32::_timersHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
+{
+/*
+    switch (port) {
+        case PORT_SPSR:
+            // reject writes to read-only bits
+            value = (prev_val & 0xfe) + (value & 0x01);
+            break;
+        case PORT_SPDR:
+            if (!this->_spiIsEnabled())
+                return;
+
+            this->spi_stat_read = false;
+
+            this->_spiSendData(value);
+
+            set_bit(this->ports[PORT_SPSR], B_SPIF);
+            break;
+    }
+*/
 }
 
 uint8_t Atmega32::_read16BitReg(uint8_t reg)

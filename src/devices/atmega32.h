@@ -82,6 +82,10 @@ protected:
     void _spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
     bool _spiIsEnabled();
 
+    void _timersInit();
+    void _timersHandleRead(uint8_t port, int8_t bit, uint8_t &value);
+    void _timersHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
+
     void _dumpRegisters();
     void _dumpSram();
 };

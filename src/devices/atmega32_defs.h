@@ -47,7 +47,26 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_PINA         0x19
 #define PORT_DDRA         0x1a
 #define PORT_PORTA        0x1b
+#define PORT_ASSR         0x22
+#define PORT_OCR2         0x23
+#define PORT_TCNT2        0x24
+#define PORT_TCCR2        0x25
+#define PORT_ICR1L        0x26
+#define PORT_ICR1H        0x27
+#define PORT_OCR1BL       0x28
+#define PORT_OCR1BH       0x29
+#define PORT_OCR1AL       0x2a
+#define PORT_OCR1AH       0x2b
+#define PORT_TCNT1L       0x2c
+#define PORT_TCNT1H       0x2d
+#define PORT_TCCR1B       0x2e
+#define PORT_TCCR1A       0x2f
+#define PORT_TCNT0        0x32
+#define PORT_TCCR0        0x33
 #define PORT_TWCR         0x36
+#define PORT_TIFR         0x38
+#define PORT_TIMSK        0x39
+#define PORT_OCR0         0x3c
 
 // Bit values
 #define B_TWINT         7
