@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <time.h>
 
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
@@ -72,6 +73,51 @@ private:
     bool debug_led_lit;
 };
 
+void benchmark(int argc, char **argv)
+{
+    Atmega32 mcu;
+    Ds1307 rtc(0x68);
+    SdCard sd_card(argv[2], 256*1024*1024);
+    Enc28J60 enc28j60;
+    I2cBus i2c_bus;
+    SpiBus spi_bus;
+    
+    rtc.connectToI2cBus(&i2c_bus);
+    mcu.connectToI2cBus(&i2c_bus);
+    
+    mcu.connectToSpiBus(&spi_bus);
+    sd_card.connectToSpiBus(&spi_bus);
+    mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
+    enc28j60.connectToSpiBus(&spi_bus);
+    mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
+    mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
+    
+    mcu.load_program_from_elf(argv[1]);
+
+    struct timespec t0;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+
+    long long count = 0;
+    
+    while (true) {
+        struct timespec t1;
+        clock_gettime(CLOCK_MONOTONIC, &t1);
+
+        for (int i = 0; i < 1000; i++) {
+            mcu.act();
+        }
+        count += 1000;
+
+        if (((t1.tv_sec - t0.tv_sec)*1000000000LL + t1.tv_nsec - t0.tv_nsec) > 5000000000LL) {
+            break;
+        }
+    }
+
+    printf("%lld instructions/second (%d%%)\n", count/5, (int)(count*100/5/16000000));
+
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char **argv)
 {
     try {
@@ -79,7 +125,7 @@ int main(int argc, char **argv)
             printf("Invocation: %s <program.elf> <sdcard.bin>\n", argv[0]);
             exit(EXIT_SUCCESS);
         }
-        
+
         SDL_Init(SDL_INIT_VIDEO);
 
         SDL_Surface *screen = SDL_SetVideoMode(640, 480, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
