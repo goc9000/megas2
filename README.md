@@ -52,3 +52,66 @@ Both of these solutions are also far, far more complex than is generally needed
 for simple projects, and this can be an impediment to the hackability that is
 inevitably required in these situations.
 
+
+Limitations
+-----------
+
+The following is an inventory of the emulation limitations in `megas2`.
+
+### ATMEGA32 emulation
+
+#### CPU core
+
+* Emulation is not cycle-exact (all instructions take 1 cycle)
+* Interrupts are not supported
+* `FMUL*` instructions are not supported
+* `SPM` instructions are not supported
+* `SLEEP`, `BREAK`, `WDR` instructions are not supported (they are treated as `NOP`)
+
+#### Timers
+
+* Not supported
+
+#### ADC
+
+* Not supported
+
+#### SPI
+
+* Only master transmitter/receiver behavior supported
+* Operations complete instantaneously and always succeed
+* SPI bandwidth settings are ignored
+
+#### TWI
+
+* Only master behavior supported
+* Operations complete instantaneously and always succeed
+* TWI bandwidth settings are ignored
+
+#### USART
+
+* Not supported
+
+### SD Card emulation
+
+* Only these commands are supported:
+    * `GO_IDLE_STATE`
+    * `SET_BLOCKLEN`
+    * `READ_SINGLE_BLOCK`
+    * `WRITE_SINGLE_BLOCK`
+* Operations complete instantaneously
+* Only 512-byte blocks are supported
+
+### DS1307 (Real-Time Clock)
+
+* Stub available, development in progress
+
+### ENC28J60 (Ethernet controller)
+
+* Stub available, development in progress
+
+### Interconnection
+
+* Tri-state and directionality not explicitly supported
+* Analog pins not supported
+
