@@ -5,8 +5,8 @@
 #include "utils/bit_macros.h"
 #include "utils/fail.h"
 #include "atmega32.h"
-#include "atmega32_core.h"
-#include "atmega32_defs.h"
+#include "cpu_core.h"
+#include "defs.h"
 
 typedef void (*inst_fn_t)(Atmega32Core*, uint16_t);
 

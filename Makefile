@@ -7,7 +7,7 @@ CFLAGS = -O3 -Wall
 
 all: $(BIN)/megas2
 
-$(BIN)/megas2: $(wildcard $(SRC)/*.cpp $(SRC)/*/*.cpp $(SRC)/*.h $(SRC)/*/*.h)
+$(BIN)/megas2: $(wildcard $(SRC)/*.cpp $(SRC)/*/*.cpp $(SRC)/*/*/*.cpp $(SRC)/*.h $(SRC)/*/*.h $(SRC)/*/*/*.h)
 	@mkdir -p $(BIN)
 	g++ $(CFLAGS) $(INCLUDES) $(LIBS) -g -o $@ -Wall $(filter %.cpp,$^)
 

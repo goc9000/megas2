@@ -9,7 +9,7 @@
 #include "glue/spi_bus.h"
 #include "glue/ss_pin_monitor.h"
 #include "glue/reset_pin_monitor.h"
-#include "devices/atmega32.h"
+#include "devices/atmega32/atmega32.h"
 #include "devices/ds1307.h"
 #include "devices/sd_card.h"
 #include "devices/enc28j60.h"
@@ -92,7 +92,7 @@ void benchmark(int argc, char **argv)
     mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
     mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
     
-    mcu.load_program_from_elf(argv[1]);
+    mcu.loadProgramFromElf(argv[1]);
 
     struct timespec t0;
     clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
         mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
         mcu.addPinMonitor(MEGA32_PIN_D+7, &con);
 
-        mcu.load_program_from_elf(argv[1]);
+        mcu.loadProgramFromElf(argv[1]);
         
         Simulation sim;
         sim.addDevice(&mcu);
