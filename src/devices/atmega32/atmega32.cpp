@@ -267,6 +267,30 @@ void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, ui
     }
 }
 
+/**
+ * Handles writes to ports that have 'flag' bits, i.e. bits that can be cleared
+ * by the user when a logic '1' is written directly to their location.
+ * 
+ * @param flag_bits A mask of the bits in the port that are flag bits
+ * @param bit The bit accessed in this operation, or -1 if all bits are accessed
+ * @param value The new value to be written to the port register (modifiable)
+ * @param prev_val The old value of the port register
+ * @return A mask of the bits that were cleared
+ */
+uint8_t Atmega32::_handleFlagBitsInPortWrite(uint8_t flag_bits, int8_t bit, uint8_t &value, uint8_t prev_val)
+{
+    uint8_t cleared = value;
+    
+    if (bit != -1) {
+        cleared &= _BV(bit);
+    }
+    
+    cleared &= flag_bits;
+    value &= ~cleared;
+    
+    return cleared;
+}
+
 uint8_t Atmega32::_read16BitReg(uint8_t reg)
 {
     return (this->core.ram[reg+1] << 8) + this->core.ram[reg];

@@ -14,6 +14,11 @@
 
 using namespace std;
 
+uint64_t compute_twi_baud(uint64_t cpu_freq, uint8_t twbr_val, uint8_t twsr_val)
+{
+    return cpu_freq / (16 + (twbr_val << (1 + 2*(twsr_val & 0x03))));
+}
+
 void Atmega32::_twiInit()
 {
     this->ports[PORT_TWBR] = 0x00;
@@ -33,23 +38,23 @@ void Atmega32::_twiHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
 {
     switch (port) {
+        case PORT_TWBR:
+            info("TWI baud rate set to %llu", compute_twi_baud(this->frequency, value, this->ports[PORT_TWSR]));
+            break;
         case PORT_TWSR:
             // reject writes to read-only bits
             value = (prev_val & 0xfc) + (value & 0x03);
+            info("TWI baud rate set to %llu", compute_twi_baud(this->frequency, this->ports[PORT_TWBR], value));
             break;
         case PORT_TWCR:
-            // My interpretation of the TWINT bit: write 1 to start the command,
-            // or 0 to do nothing. You will not read what you last wrote, but
-            // rather the current status (0=busy, 1=ready).
-            // If I change another bit in the TWCR register and TWINT was previously
-            // set to 1, should I interpret this as the go-signal for another command?
-            // My guess is no.
-            if (!bit_is_set(value, B_TWEN))
+            uint8_t cleared = this->_handleFlagBitsInPortWrite(_BV(B_TWINT), bit, value, prev_val);
+            
+            if (!bit_is_set(value, B_TWEN)) {
                 this->twi_has_floor = false;
-            if (bit_is_set(value, B_TWINT) && ((bit == B_TWINT) || (bit == -1))) {
-                if (!bit_is_set(value, B_TWEN))
-                    return;
-                
+                return;
+            }
+            
+            if (bit_is_set(cleared, B_TWINT)) {
                 // All TWI operations appear to complete immediately (not realistic of course)
                 set_bit(value, B_TWINT);
                 

@@ -52,6 +52,8 @@ protected:
     void _handleDataPortRead(uint8_t port, int8_t bit, uint8_t &value);
     void _handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
 
+    uint8_t _handleFlagBitsInPortWrite(uint8_t flag_bits, int8_t bit, uint8_t &value, uint8_t prev_val);
+
     void _dumpRegisters();
     void _dumpSram();
 #include "inc_twi_aspect.h"

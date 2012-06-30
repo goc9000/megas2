@@ -87,6 +87,8 @@ The following is an inventory of the emulation limitations in `megas2`.
 * Only master behavior supported
 * Operations complete instantaneously and always succeed
 * TWI bandwidth settings are ignored
+* Write collision detection not supported
+* Interrupts not supported
 
 #### USART
 
