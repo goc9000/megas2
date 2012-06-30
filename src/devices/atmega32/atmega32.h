@@ -20,7 +20,7 @@ class Atmega32 : public Device, public I2cDevice, public SpiDevice, public Simul
 public:
     Atmega32();
     void loadProgramFromElf(const char *filename);
-    void setFrequency(unsigned frequency_khz);
+    void setFrequency(uint64_t frequency);
 
     virtual void reset();
     
@@ -35,7 +35,7 @@ public:
     void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
     void _onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
 protected:
-    unsigned frequency_khz;
+    uint64_t frequency;
     sim_time_t clock_period;
 
     sim_time_t next_fetch_time;

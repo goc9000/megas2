@@ -67,15 +67,15 @@ Atmega32::Atmega32()
     
     this->ports = this->core.ram + IO_BASE;
     
-    this->setFrequency(16000);
+    this->setFrequency(16000000ULL);
     
     this->reset();
 }
 
-void Atmega32::setFrequency(unsigned frequency_khz)
+void Atmega32::setFrequency(uint64_t frequency)
 {
-    this->frequency_khz = frequency_khz;
-    this->clock_period = ns_to_sim_time(1000000/frequency_khz);
+    this->frequency = frequency;
+    this->clock_period = sec_to_sim_time(1) / frequency;
 }
 
 void Atmega32::loadProgramFromElf(const char *filename)
