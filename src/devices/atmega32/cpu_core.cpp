@@ -55,12 +55,12 @@ static void write_reg_bit(Atmega32Core *core, uint8_t reg, uint8_t bit, bool val
     }
 }
 
-static void set_flag(Atmega32Core *core, uint8_t bit, bool value)
+void set_flag(Atmega32Core *core, uint8_t bit, bool value)
 {
     write_reg_bit(core, REG_SREG, bit, value);
 }
 
-static bool get_flag(Atmega32Core *core, uint8_t bit)
+bool get_flag(Atmega32Core *core, uint8_t bit)
 {
     return read_reg_bit(core, REG_SREG, bit);
 }
@@ -179,7 +179,7 @@ static uint8_t pop(Atmega32Core *core)
     return value;
 }
 
-static void push_word(Atmega32Core *core, uint16_t value)
+void push_word(Atmega32Core *core, uint16_t value)
 {
     push(core, low_byte(value));
     push(core, high_byte(value));

@@ -16,5 +16,9 @@ struct Atmega32Core {
 void atmega32_core_init(Atmega32Core *core, Atmega32 *master);
 void atmega32_core_step(Atmega32Core *core);
 
+void set_flag(Atmega32Core *core, uint8_t bit, bool value);
+bool get_flag(Atmega32Core *core, uint8_t bit);
+void push_word(Atmega32Core *core, uint16_t value);
+
 #endif
 

@@ -51,12 +51,16 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_OCR2         0x23
 #define PORT_TCNT2        0x24
 #define PORT_TCCR2        0x25
+#define PORT_ICR1         0x26
 #define PORT_ICR1L        0x26
 #define PORT_ICR1H        0x27
+#define PORT_OCR1B        0x28
 #define PORT_OCR1BL       0x28
 #define PORT_OCR1BH       0x29
+#define PORT_OCR1A        0x2a
 #define PORT_OCR1AL       0x2a
 #define PORT_OCR1AH       0x2b
+#define PORT_TCNT1        0x2c
 #define PORT_TCNT1L       0x2c
 #define PORT_TCNT1H       0x2d
 #define PORT_TCCR1B       0x2e
@@ -68,16 +72,42 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_TIMSK        0x39
 #define PORT_OCR0         0x3c
 
-// Bit values
+// Bit values for TWCR
 #define B_TWINT         7
 #define B_TWSTA         5
 #define B_TWSTO         4
 #define B_TWEN          2
+// Bit values for SPSR 
 #define B_SPIF          7
+// Bit values for SPCR
 #define B_SPIE          7
 #define B_SPE           6
 #define B_DORD          5
 #define B_MSTR          4
+// Bit values for TCCR1A
+#define B_WGM11         1
+#define B_WGM10         0
+// Bit values for TCCR1B
+#define B_WGM13         4
+#define B_WGM12         3
+// Bit values for TIMSK
+#define B_OCIE2         7
+#define B_TOIE2         6
+#define B_TICIE1        5
+#define B_OCIE1A        4
+#define B_OCIE1B        3
+#define B_TOIE1         2
+#define B_OCIE0         1
+#define B_TOIE0         0
+// Bit values for TIFR
+#define B_OCF2          7
+#define B_TOV2          6
+#define B_ICF1          5
+#define B_OCF1A         4
+#define B_OCF1B         3
+#define B_TOV1          2
+#define B_OCF0          1
+#define B_TOV0          0
 
 // SREG flags
 #define FLAG_I          7
@@ -88,6 +118,30 @@ static char const * const PORT_NAMES[0x40] = {
 #define FLAG_N          2
 #define FLAG_Z          1
 #define FLAG_C          0
+
+// IRQs
+
+#define IRQ_RESET                1
+#define IRQ_INT0                 2
+#define IRQ_INT1                 3
+#define IRQ_INT2                 4
+#define IRQ_TIMER2_COMP          5
+#define IRQ_TIMER2_OVF           6
+#define IRQ_TIMER1_CAPT          7
+#define IRQ_TIMER1_COMPA         8
+#define IRQ_TIMER1_COMPB         9
+#define IRQ_TIMER1_OVF          10
+#define IRQ_TIMER0_COMP         11
+#define IRQ_TIMER0_OVF          12
+#define IRQ_SPI_STC             13
+#define IRQ_USART_RXC           14
+#define IRQ_USART_UDRE          15
+#define IRQ_USART_TXC           16
+#define IRQ_ADC                 17
+#define IRQ_EE_RDY              18
+#define IRQ_ANA_COMP            19
+#define IRQ_TWI                 20
+#define IRQ_SPM_RDY             21
 
 // Other
 #define TWI_STATUS_START        0x08

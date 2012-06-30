@@ -45,7 +45,11 @@ protected:
     vector<PinMonitor *> pin_monitors[MEGA32_PIN_COUNT];
     uint8_t *ports; // shortcut
 
-    uint8_t _read16BitReg(uint8_t reg);
+    uint16_t _get16BitPort(uint8_t port);
+    void _put16BitPort(uint8_t port, uint16_t value);
+    uint16_t _get16BitReg(uint8_t reg);
+  
+    void _handleIrqs();
     
     void _triggerPinMonitors(int pin, int value);
 

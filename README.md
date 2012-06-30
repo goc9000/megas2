@@ -63,14 +63,22 @@ The following is an inventory of the emulation limitations in `megas2`.
 #### CPU core
 
 * Emulation is not cycle-exact (all instructions take 1 cycle)
-* Interrupts are not supported
 * `FMUL*` instructions are not supported
 * `SPM` instructions are not supported
 * `SLEEP`, `BREAK`, `WDR` instructions are not supported (they are treated as `NOP`)
 
+#### Interrupts
+
+* `IVSEL`, `BOOTRST` options not supported
+
 #### Timers
 
-* Not supported
+* Timers 0 and 2 not supported
+* Partial support for Timer 1:
+    * Only 0, 4 and 12 `WGM`s supported
+    * `COM*` and `FOC*` not supported
+    * Input Capture not supported
+    * External clock sources not supported
 
 #### ADC
 
@@ -81,6 +89,8 @@ The following is an inventory of the emulation limitations in `megas2`.
 * Only master transmitter/receiver behavior supported
 * Operations complete instantaneously and always succeed
 * SPI bandwidth settings are ignored
+* Data order, clock polarity and clock phase options not supported
+* Interrupts not supported
 
 #### TWI
 

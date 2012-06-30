@@ -153,6 +153,7 @@ void Atmega32::act()
 {
     this->sim_time = this->next_fetch_time;
     
+    this->_handleIrqs();
     this->_runTimers();
     atmega32_core_step(&this->core);
     
@@ -162,6 +163,21 @@ void Atmega32::act()
 sim_time_t Atmega32::nextEventTime()
 {
     return this->next_fetch_time;
+}
+
+void Atmega32::_handleIrqs()
+{
+    uint8_t irq;
+    
+    if (!get_flag(&this->core, FLAG_I))
+        return;
+    
+    if ((irq = this->_handleTimerIrqs())) goto exec;
+    return;
+exec:
+    set_flag(&this->core, FLAG_I, false);
+    push_word(&this->core, this->core.pc);
+    this->core.pc = 2*(irq-1);
 }
 
 void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
@@ -291,7 +307,18 @@ uint8_t Atmega32::_handleFlagBitsInPortWrite(uint8_t flag_bits, int8_t bit, uint
     return cleared;
 }
 
-uint8_t Atmega32::_read16BitReg(uint8_t reg)
+uint16_t Atmega32::_get16BitPort(uint8_t port)
+{
+    return (this->ports[port+1] << 8) + this->ports[port];
+}
+
+void Atmega32::_put16BitPort(uint8_t port, uint16_t value)
+{
+    this->ports[port] = low_byte(value);
+    this->ports[port+1] = high_byte(value);
+}
+
+uint16_t Atmega32::_get16BitReg(uint8_t reg)
 {
     return (this->core.ram[reg+1] << 8) + this->core.ram[reg];
 }
@@ -318,8 +345,8 @@ void Atmega32::_dumpRegisters()
     sreg_rep[8] = 0;
 
     printf("X=%04x Y=%04x Z=%04x SP=%04x SREG=%02x (%s)\n",
-        this->_read16BitReg(REG16_X), this->_read16BitReg(REG16_Y),
-        this->_read16BitReg(REG16_Z), this->_read16BitReg(REG16_SP),
+        this->_get16BitReg(REG16_X), this->_get16BitReg(REG16_Y),
+        this->_get16BitReg(REG16_Z), this->_get16BitReg(REG16_SP),
         sreg, sreg_rep);
     
     printf("Last fetch @PC=%04x (in bytes: %04x)\n", this->core.last_inst_pc, 2*this->core.last_inst_pc);
