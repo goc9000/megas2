@@ -28,6 +28,13 @@ using namespace std;
 #define STATE_PRE_RESPONDING          2
 #define STATE_RESPONDING              3
 
+// Pin initialization data
+
+PinInitData const PIN_INIT_DATA[E28J_PIN_COUNT] = {
+    { PIN_MODE_INPUT, 0 }, // RESET
+    { PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
+};
+
 static bool is_common_reg(uint8_t reg)
 {
     return (reg & 0x1f) >= 0x1b;
@@ -46,9 +53,8 @@ static bool is_mii_reg(uint8_t reg)
     return (reg >= 0x51) && (reg <= 0x59);
 }
 
-Enc28J60::Enc28J60()
+Enc28J60::Enc28J60() : PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->spi_selected = false;
     this->reset();
 }
 
@@ -71,12 +77,17 @@ void Enc28J60::reset()
     this->regs[REG_EREVID] = E28J_REVISION_ID;
 }
 
-void Enc28J60::spiSlaveSelect(bool select)
+void Enc28J60::_onPinChanged(int pin_id, int value, int old_value)
 {
-    if (!this->spi_selected && select)
-        this->state = STATE_RECEIVING_COMMAND;
-    
-    this->spi_selected = select;
+    switch (pin_id) {
+        case E28J_PIN_RESET:
+            if (value)
+                this->reset();
+            return;
+        case E28J_PIN_SLAVE_SELECT:
+            this->_spiSlaveSelect(!value);
+            return;
+    }
 }
 
 bool Enc28J60::spiReceiveData(uint8_t &data)
@@ -87,6 +98,13 @@ bool Enc28J60::spiReceiveData(uint8_t &data)
     data = _handleSpiData(data);
     
     return true;
+}
+
+void Enc28J60::_onSpiSlaveSelect(bool select)
+{
+    if (select) {
+        this->state = STATE_RECEIVING_COMMAND;
+    }
 }
 
 uint8_t Enc28J60::_handleSpiData(uint8_t data)

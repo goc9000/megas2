@@ -9,6 +9,7 @@ using namespace std;
 SpiDevice::SpiDevice()
 {
     this->spi_bus = NULL;
+    this->spi_selected = false;
 }
 
 void SpiDevice::connectToSpiBus(SpiBus *bus)
@@ -20,6 +21,19 @@ void SpiDevice::connectToSpiBus(SpiBus *bus)
     this->spi_bus = bus;
     
     bus->addDevice(this);
+}
+
+void SpiDevice::_spiSlaveSelect(bool select)
+{
+    if (this->spi_selected != select) {
+        this->spi_selected = select;
+        this->_onSpiSlaveSelect(select);
+    }
+}
+
+void SpiDevice::_onSpiSlaveSelect(bool select)
+{
+    // do nothing
 }
 
 bool SpiDevice::_spiSendData(uint8_t &data)

@@ -9,12 +9,13 @@ class SpiDevice {
 public:
     SpiDevice();
     void connectToSpiBus(SpiBus *bus);
-    virtual void spiSlaveSelect(bool select) = 0;
     virtual bool spiReceiveData(uint8_t &data) = 0;
 protected:
     SpiBus *spi_bus;
     bool spi_selected;
 
+    void _spiSlaveSelect(bool select);
+    virtual void _onSpiSlaveSelect(bool select);
     bool _spiSendData(uint8_t &data);
 };
 

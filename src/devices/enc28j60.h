@@ -4,14 +4,20 @@
 #include <inttypes.h>
 
 #include "glue/spi_device.h"
+#include "glue/pin_device.h"
 #include "devices/device.h"
 #include "simulation/sim_device.h"
+
+#define E28J_PIN_COUNT          2
+
+#define E28J_PIN_RESET          0
+#define E28J_PIN_SLAVE_SELECT   1
 
 #define E28J_REGS_COUNT         0x80
 #define E28J_PHY_REGS_COUNT     0x20
 #define E28J_ETH_BUFFER_SIZE    0x2000
 
-class Enc28J60 : public Device, public SpiDevice, public SimulatedDevice {
+class Enc28J60 : public Device, public PinDevice, public SpiDevice, public SimulatedDevice {
 public:
     Enc28J60();
     virtual void reset();
@@ -19,19 +25,19 @@ public:
     virtual void act();
     virtual sim_time_t nextEventTime();
     
-    void spiSlaveSelect(bool select);
     bool spiReceiveData(uint8_t &data);
 private:
     uint8_t regs[E28J_REGS_COUNT];
     uint8_t phy_regs[E28J_PHY_REGS_COUNT];
     uint8_t eth_buffer[E28J_ETH_BUFFER_SIZE];
 
-    bool spi_selected;
-    
     int state;
     uint8_t cmd_byte;
     uint8_t response_byte;
     
+    virtual void _onPinChanged(int pin_id, int value, int old_value);
+    
+    virtual void _onSpiSlaveSelect(bool select);
     uint8_t _handleSpiData(uint8_t data);
     uint8_t _handleCommandStart(uint8_t data);
     uint8_t _handleCommandArg(uint8_t data);

@@ -5,10 +5,15 @@
 #include <inttypes.h>
 
 #include "glue/spi_device.h"
+#include "glue/pin_device.h"
 #include "devices/device.h"
 #include "simulation/sim_device.h"
 
-class SdCard : public Device, public SpiDevice, public SimulatedDevice {
+#define SDCARD_PIN_COUNT           1
+
+#define SDCARD_PIN_SLAVE_SELECT    0
+
+class SdCard : public Device, public SpiDevice, public PinDevice, public SimulatedDevice {
 public:
     SdCard(const char *backing_file_name, unsigned capacity);
     virtual void reset();
@@ -16,14 +21,11 @@ public:
     virtual void act();
     virtual sim_time_t nextEventTime();
     
-    void spiSlaveSelect(bool select);
     bool spiReceiveData(uint8_t &data);
 private:
     FILE *backing_file;
     unsigned backing_file_len;
     unsigned capacity;
-
-    bool spi_selected;
     
     bool in_sd_mode;
     bool idle;
@@ -47,6 +49,9 @@ private:
     bool crc_enabled;
     uint16_t block_size;
     
+    virtual void _onPinChanged(int pin_id, int value, int old_value);
+    
+    virtual void _onSpiSlaveSelect(bool select);
     uint8_t _handleSpiData(uint8_t data);
     uint8_t _handleCommandInIdle(uint8_t data);
     uint8_t _handleReceivingCommand(uint8_t data);

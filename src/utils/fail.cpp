@@ -18,6 +18,18 @@ void fail(const char *format, ...)
     throw runtime_error(buf);
 }
 
+void warn(const char *format, ...)
+{
+    char buf[16384];
+    va_list args;
+
+    va_start(args, format);
+    vsprintf(buf, format, args);
+    va_end(args);
+
+    printf("%s\n", buf);
+}
+
 void info(const char *format, ...)
 {
     char buf[16384];

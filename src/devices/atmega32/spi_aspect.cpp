@@ -62,7 +62,7 @@ bool Atmega32::_spiIsEnabled()
     return bit_is_set(this->ports[PORT_SPCR], B_SPE);
 }
 
-void Atmega32::spiSlaveSelect(bool select)
+void Atmega32::_onSpiSlaveSelect(bool select)
 {
     if (select)
         fail("Slave behavior on SPI not supported for ATMEGA32");

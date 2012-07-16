@@ -15,33 +15,11 @@
 
 using namespace std;
 
+extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT];
+
 static inline bool is_data_port(uint8_t port)
 {
     return ((port >= PORT_PIND) && (port <= PORT_PORTA));
-}
-
-static inline bool is_PIN_port(uint8_t port)
-{
-    return is_data_port(port) && (((port - PORT_PIND) % 3) == 0);
-}
-
-static inline bool is_DDR_port(uint8_t port)
-{
-    return is_data_port(port) && (((port - PORT_PIND) % 3) == 1);
-}
-
-static inline bool is_PORT_port(uint8_t port)
-{
-    return is_data_port(port) && (((port - PORT_PIND) % 3) == 2);
-}
-
-static inline int pin_for_port(uint8_t port)
-{
-    if (is_data_port(port)) {
-        return MEGA32_PIN_A + 8 * ((PORT_PORTA - port)/3);
-    }
-
-    return -1;
 }
 
 static inline bool is_twi_port(uint8_t port)
@@ -61,7 +39,7 @@ static inline bool is_timer_port(uint8_t port)
         || (port == PORT_TIMSK)  || (port == PORT_OCR0);
 }
 
-Atmega32::Atmega32()
+Atmega32::Atmega32() : PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
     atmega32_core_init(&this->core, this);
     
@@ -139,6 +117,7 @@ void Atmega32::reset()
     this->_twiInit();
     this->_spiInit();
     this->_timersInit();
+    this->_pinsInit();
 }
 
 void Atmega32::setSimulationTime(sim_time_t time)
@@ -152,6 +131,19 @@ void Atmega32::setSimulationTime(sim_time_t time)
 void Atmega32::act()
 {
     this->sim_time = this->next_fetch_time;
+/*
+static int x = 0;
+
+x++;
+if (x > 16000000) {
+    x = 0;
+    info("at pc=%04x(b)", this->core.pc*2);
+}
+
+if (this->core.pc*2 == 0xb42) {
+    info("SCHED_RUN_TASK @ %04x(b)", 2*this->_get16BitReg(REG16_Z));
+}
+*/
     
     this->_handleIrqs();
     this->_runTimers();
@@ -254,32 +246,6 @@ void Atmega32::_triggerPinMonitors(int pin, int value)
     while (it != end) {
         (*it)->onPinChanged(pin, value);
         it++;
-    }
-}
-
-void Atmega32::_handleDataPortRead(uint8_t port, int8_t bit, uint8_t &value)
-{
-}
-
-void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
-{
-    int pin = pin_for_port(port);
-    
-    if (is_PIN_port(port)) {
-        fail("Tried to write to PIN port");
-    } else if (is_PORT_port(port)) {
-        uint8_t mask = this->ports[port-1]; // read corresponding DDR register
-        
-        // copy data to PIN buffer (for pins set as output)
-        this->ports[port-2] = (this->ports[port-2] & ~mask) | (value & mask);
-        
-        for (uint8_t i = 0; i < 8; i++)
-            if (bit_is_set(mask, i) && (bit_is_set(value, i) != bit_is_set(prev_val, i)))
-                this->_triggerPinMonitors(pin + i, bit_is_set(value, i));
-    } else if (is_DDR_port(port)) {
-        for (uint8_t i = 0; i < 8; i++)
-            if (bit_is_set(value, i) && !bit_is_set(prev_val, i))
-                this->_triggerPinMonitors(pin + i, bit_is_set(this->ports[port+1], i));
     }
 }
 

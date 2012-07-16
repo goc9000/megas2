@@ -7,8 +7,6 @@
 
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
-#include "glue/ss_pin_monitor.h"
-#include "glue/reset_pin_monitor.h"
 #include "devices/atmega32/atmega32.h"
 #include "devices/ds1307.h"
 #include "devices/sd_card.h"
@@ -87,10 +85,10 @@ void benchmark(int argc, char **argv)
     
     mcu.connectToSpiBus(&spi_bus);
     sd_card.connectToSpiBus(&spi_bus);
-    mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
+    //mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
     enc28j60.connectToSpiBus(&spi_bus);
-    mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
-    mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
+    //mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
+    //mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
     
     mcu.loadProgramFromElf(argv[1]);
 
@@ -148,10 +146,10 @@ int main(int argc, char **argv)
         
         mcu.connectToSpiBus(&spi_bus);
         sd_card.connectToSpiBus(&spi_bus);
-        mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
+        //mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
         enc28j60.connectToSpiBus(&spi_bus);
-        mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
-        mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
+        //mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
+        //mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
         mcu.addPinMonitor(MEGA32_PIN_D+7, &con);
 
         mcu.loadProgramFromElf(argv[1]);

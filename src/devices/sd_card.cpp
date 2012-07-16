@@ -36,6 +36,12 @@ using namespace std;
 #define FLAG_ERASE_RESET              1
 #define FLAG_IN_IDLE_STATE            0
 
+// Pin initialization data
+
+PinInitData const PIN_INIT_DATA[SDCARD_PIN_COUNT] = {
+    { PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
+};
+
 uint8_t compute_crc7(uint8_t *buffer, int length)
 {
     uint8_t crc = 0;
@@ -67,7 +73,7 @@ uint16_t compute_crc16(uint8_t *buffer, int length)
     return crc;
 }
 
-SdCard::SdCard(const char *backing_file_name, unsigned capacity)
+SdCard::SdCard(const char *backing_file_name, unsigned capacity) : PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
 {
     if (capacity & 511)
         fail("SD capacity must be a multiple of 512 bytes");
@@ -104,13 +110,13 @@ void SdCard::reset()
     this->block_size = 512;
 }
 
-void SdCard::spiSlaveSelect(bool select)
+void SdCard::_onPinChanged(int pin_id, int value, int old_value)
 {
-    if (!this->spi_selected && select) {
-        this->idle = true;
+    switch (pin_id) {
+        case SDCARD_PIN_SLAVE_SELECT:
+            this->_spiSlaveSelect(!value);
+            return;
     }
-    
-    this->spi_selected = select;
 }
 
 bool SdCard::spiReceiveData(uint8_t &data)
@@ -121,6 +127,13 @@ bool SdCard::spiReceiveData(uint8_t &data)
     data = _handleSpiData(data);
     
     return true;
+}
+
+void SdCard::_onSpiSlaveSelect(bool select)
+{
+    if (select) {
+        this->idle = true;
+    }
 }
 
 uint8_t SdCard::_handleSpiData(uint8_t data)
