@@ -66,9 +66,13 @@ void Dashboard::act()
     
     SDL_Event event;
     
-    if (SDL_PollEvent(&event)) {
+    while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT)
             exit(EXIT_SUCCESS);
+        
+        for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
+            if ((*it)->handleEvent(this, &event))
+                break;
     }
     
     if (this->_background) {
@@ -99,13 +103,15 @@ void Dashboard::_init(int width, int height, SDL_Surface *background, const char
     
     TTF_Init();
     SDL_Init(SDL_INIT_VIDEO);
-
+    
     SDL_Surface *screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
     if (!screen)
         fail("Could not initialize SDL display");
     atexit(SDL_Quit);
-    
+
     SDL_WM_SetCaption("Dashboard", 0);
+
+    SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
     
     this->screen = screen;
     this->_background = background;
