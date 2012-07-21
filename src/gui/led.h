@@ -17,7 +17,7 @@ public:
     
     virtual void render(Dashboard *dash) = 0;
 protected:
-    int _value;
+    bool _lit;
     
     virtual void _onPinChanged(int pin_id, int value, int old_value);
 };

@@ -11,12 +11,12 @@ PinInitData const PIN_INIT_DATA[LED_PIN_COUNT] = {
 
 Led::Led(void) : PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_value = 0;
+    this->_lit = false;
 }
 
 void Led::_onPinChanged(int pin_id, int value, int old_value)
 {
-    this->_value = value;
+    this->_lit = !!value;
 }
 
 SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
@@ -30,7 +30,7 @@ SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
 
 void SimpleLed::render(Dashboard *dash)
 {
-    (this->_value ? filledCircleColor : circleColor)(dash->screen,
+    (this->_lit ? filledCircleColor : circleColor)(dash->screen,
         this->_x+this->_size/2,
         this->_y+this->_size/2,
         this->_size/2,
