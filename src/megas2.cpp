@@ -7,6 +7,7 @@
 
 #include "gui/dashboard.h"
 #include "gui/led.h"
+#include "gui/push_button.h"
 #include "glue/analog_bus.h"
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
@@ -94,6 +95,10 @@ int main(int argc, char **argv)
         SimpleLed debug_led(16, 16, 16, 0xff0000ff, "Debug LED");
         AnalogBus led_input(&mcu, MEGA32_PIN_D+7, &debug_led, LED_PIN_INPUT);
         dash.addWidget(&debug_led);
+        
+        SimplePushButton debug_btn(PIN_VAL_Z, 0, 16, 40, 16, 0x000000ff, "Debug button");
+        AnalogBus btn_output(&mcu, MEGA32_PIN_D+6, &debug_btn, PUSH_BUTTON_PIN_OUTPUT);
+        dash.addWidget(&debug_btn);
 
         mcu.loadProgramFromElf(argv[1]);
         
