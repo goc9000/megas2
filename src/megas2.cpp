@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <time.h>
 
+#include "gui/dashboard.h"
 #include "glue/analog_bus.h"
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
@@ -15,57 +16,7 @@
 #include "utils/fail.h"
 #include "simulation/simulation.h"
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_gfxPrimitives.h>
-
 using namespace std;
-
-class Console : public SimulatedDevice
-{
-public:
-    Console(SDL_Surface *screen)
-    {
-        this->screen = screen;
-        this->next_frame_time = 0;
-    }
-    
-    virtual void setSimulationTime(sim_time_t time)
-    {
-        sim_time_t delta = time - this->sim_time;
-        
-        this->sim_time = time;
-        this->next_frame_time += delta;
-    }
-
-    virtual void act()
-    {
-        this->sim_time = this->next_frame_time;
-        
-        SDL_Event event;
-        
-        if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT)
-                exit(EXIT_SUCCESS);
-        }
-        
-        boxColor(screen, 0, 0, 640, 480, 0x000000ff);
-        boxColor(screen, 16, 16, 32, 32, this->debug_led_lit ? 0xffc000ff : 0x806000ff);
-        
-        SDL_Flip(screen);
-        
-        this->next_frame_time = this->next_frame_time + ms_to_sim_time(20);
-    }
-
-    virtual sim_time_t nextEventTime()
-    {
-        return this->next_frame_time;
-    }
-private:
-    sim_time_t next_frame_time;
-    
-    SDL_Surface *screen;
-    bool debug_led_lit;
-};
 
 void benchmark(int argc, char **argv)
 {
@@ -120,16 +71,7 @@ int main(int argc, char **argv)
             exit(EXIT_SUCCESS);
         }
 
-        SDL_Init(SDL_INIT_VIDEO);
-
-        SDL_Surface *screen = SDL_SetVideoMode(640, 480, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-        if (!screen)
-            fail("Could not initialize SDL display");
-        atexit(SDL_Quit);
-        
-        SDL_WM_SetCaption("MEGAS-2 CHARLIE simulation", 0);
-        
-        Console con(screen);
+        Dashboard dash("charlie_dashboard_bkgd.png");
         Atmega32 mcu;
         Ds1307 rtc(0x68);
         SdCard sd_card(argv[2], 256*1024*1024);
@@ -156,7 +98,7 @@ int main(int argc, char **argv)
         sim.addDevice(&rtc);
         sim.addDevice(&sd_card);
         sim.addDevice(&enc28j60);
-        sim.addDevice(&con);
+        sim.addDevice(&dash);
         
         sim.run();
     } catch (exception &e) {
