@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "cpu_core.h"
-#include "glue/pin_monitor.h"
 #include "glue/pin_device.h"
 #include "glue/i2c_device.h"
 #include "glue/spi_device.h"
@@ -32,9 +31,6 @@ public:
     virtual void act();
     virtual sim_time_t nextEventTime();
 
-    void addPinMonitor(int pin, PinMonitor* monitor);
-    void removePinMonitor(int pin, PinMonitor* monitor);
-
     // should be protected, but...
     void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
     void _onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
@@ -46,7 +42,6 @@ protected:
 
     Atmega32Core core;
     
-    vector<PinMonitor *> pin_monitors[MEGA32_PIN_COUNT];
     uint8_t *ports; // shortcut
 
     uint16_t _get16BitPort(uint8_t port);
@@ -55,8 +50,6 @@ protected:
   
     void _handleIrqs();
     
-    void _triggerPinMonitors(int pin, int value);
-
     uint8_t _handleFlagBitsInPortWrite(uint8_t flag_bits, int8_t bit, uint8_t &value, uint8_t prev_val);
 
     void _dumpRegisters();

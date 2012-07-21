@@ -109,9 +109,9 @@ void Atmega32::_pinsInit()
 {
     // all pins revert to inputs again
     for (int i = MEGA32_PIN_A0; i <= MEGA32_PIN_D7; i++) {
-        this->pins[i].mode = PIN_MODE_INPUT;
-        this->pins[i].float_value = 0;
-        this->pins[i].last_output = 0;
+        this->_setPinMode(i, PIN_MODE_INPUT);
+        this->_setPinFloatValue(i, 0);
+        this->_pinWrite(i, 0);
     }
 }
 
@@ -141,6 +141,8 @@ void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, ui
         fail("Tried to write to PIN port");
     } else if (is_PORT_port(port)) {
         uint8_t mask = this->ports[DDR_for_PORT(port)]; // read corresponding DDR register
+        if (bit != -1)
+            mask &= (1 << bit);
         
         // copy data to PIN buffer (for pins set as output)
         uint8_t pin_port = PIN_for_PORT(port);
@@ -156,9 +158,6 @@ void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t &value, ui
     } else if (is_DDR_port(port)) {
         for (uint8_t i = 0; i < 8; i++)
             if (bit_is_set(value, i) != bit_is_set(prev_val, i)) {
-                if (bit_is_set(value, i)) {
-                    this->pins[i].last_output = bit_is_set(PORT_for_DDR(port), i);
-                }
                 this->_setPinMode(pin + i, bit_is_set(value, i) ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
             }
     }

@@ -31,7 +31,7 @@ using namespace std;
 // Pin initialization data
 
 PinInitData const PIN_INIT_DATA[E28J_PIN_COUNT] = {
-    { PIN_MODE_INPUT, 0 }, // RESET
+    { PIN_MODE_INPUT, 1 }, // RESET
     { PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
 };
 
@@ -81,7 +81,7 @@ void Enc28J60::_onPinChanged(int pin_id, int value, int old_value)
 {
     switch (pin_id) {
         case E28J_PIN_RESET:
-            if (value)
+            if (!value)
                 this->reset();
             return;
         case E28J_PIN_SLAVE_SELECT:

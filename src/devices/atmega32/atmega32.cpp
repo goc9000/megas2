@@ -220,35 +220,6 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t pr
     }
 }
 
-void Atmega32::addPinMonitor(int pin, PinMonitor* monitor)
-{
-    if ((pin < 0) || (pin >= MEGA32_PIN_COUNT))
-        fail("No such pin in ATMEGA32 (no. %02x)", pin);
-    
-    this->pin_monitors[pin].push_back(monitor);
-}
-
-void Atmega32::removePinMonitor(int pin, PinMonitor* monitor)
-{
-    if ((pin < 0) || (pin >= MEGA32_PIN_COUNT))
-        fail("No such pin in ATMEGA32 (no. %02x)", pin);
-    
-    vector<PinMonitor *>::iterator it = find(this->pin_monitors[pin].begin(), this->pin_monitors[pin].end(), monitor);
-    
-    this->pin_monitors[pin].erase(it);
-}
-
-void Atmega32::_triggerPinMonitors(int pin, int value)
-{
-    vector<PinMonitor *>::iterator it = this->pin_monitors[pin].begin();
-    vector<PinMonitor *>::iterator end = this->pin_monitors[pin].end();
-
-    while (it != end) {
-        (*it)->onPinChanged(pin, value);
-        it++;
-    }
-}
-
 /**
  * Handles writes to ports that have 'flag' bits, i.e. bits that can be cleared
  * by the user when a logic '1' is written directly to their location.

@@ -11,30 +11,25 @@ using namespace std;
 
 #define PIN_VAL_Z        0x0FFFFFFF
 
+class Pin;
+class AnalogBus;
+
 struct PinInitData {
     int mode;
     int float_value;
 };
 
-class Pin {
-public:
-    Pin();
-
-    int mode;
-    int float_value;
-    int last_output;
-    int last_input;
-};
-
 class PinDevice {
+    friend class Pin;
 public:
     PinDevice(int num_pins, PinInitData const * const init_data);
-    //void connectPinToBus(int pin_id, AnalogBus *bus);
-    void pinReceive(int pin_id, int data);
+    void connectPinToBus(int pin_id, AnalogBus *bus);
+    void disconnectPinFromBus(int pin_id, AnalogBus *bus);
+    void drivePin(int pin_id, int data);
     int queryPin(int pin_id);
 protected:
-    vector<Pin> pins;
-
+    Pin *_pins;
+    
     void _pinWrite(int pin_id, int data);
     int _pinRead(int pin_id);
     void _setPinMode(int pin_id, int mode);

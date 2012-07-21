@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <time.h>
 
+#include "glue/analog_bus.h"
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
 #include "devices/atmega32/atmega32.h"
@@ -19,7 +20,7 @@
 
 using namespace std;
 
-class Console : public SimulatedDevice, public PinMonitor
+class Console : public SimulatedDevice
 {
 public:
     Console(SDL_Surface *screen)
@@ -59,11 +60,6 @@ public:
     {
         return this->next_frame_time;
     }
-
-    virtual void onPinChanged(int pin, int value)
-    {
-        debug_led_lit = value;
-    }
 private:
     sim_time_t next_frame_time;
     
@@ -85,11 +81,11 @@ void benchmark(int argc, char **argv)
     
     mcu.connectToSpiBus(&spi_bus);
     sd_card.connectToSpiBus(&spi_bus);
-    //mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
+    AnalogBus sdcard_ss(&mcu, MEGA32_PIN_B+1, &sd_card, SDCARD_PIN_SLAVE_SELECT);
     enc28j60.connectToSpiBus(&spi_bus);
-    //mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
-    //mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
-    
+    AnalogBus encj_reset(&mcu, MEGA32_PIN_B+3, &enc28j60, E28J_PIN_RESET);
+    AnalogBus encj_ss(&mcu, MEGA32_PIN_B+4, &enc28j60, E28J_PIN_SLAVE_SELECT);
+
     mcu.loadProgramFromElf(argv[1]);
 
     struct timespec t0;
@@ -145,12 +141,13 @@ int main(int argc, char **argv)
         mcu.connectToI2cBus(&i2c_bus);
         
         mcu.connectToSpiBus(&spi_bus);
+        
         sd_card.connectToSpiBus(&spi_bus);
-        //mcu.addPinMonitor(MEGA32_PIN_B+1, new SlaveSelectPinMonitor(&sd_card, true));
+        AnalogBus sdcard_ss(&mcu, MEGA32_PIN_B+1, &sd_card, SDCARD_PIN_SLAVE_SELECT);
         enc28j60.connectToSpiBus(&spi_bus);
-        //mcu.addPinMonitor(MEGA32_PIN_B+3, new ResetPinMonitor(&enc28j60, false));
-        //mcu.addPinMonitor(MEGA32_PIN_B+4, new SlaveSelectPinMonitor(&enc28j60, true));
-        mcu.addPinMonitor(MEGA32_PIN_D+7, &con);
+        AnalogBus encj_reset(&mcu, MEGA32_PIN_B+3, &enc28j60, E28J_PIN_RESET);
+        AnalogBus encj_ss(&mcu, MEGA32_PIN_B+4, &enc28j60, E28J_PIN_SLAVE_SELECT);
+        //mcu.addPinMonitor(MEGA32_PIN_D+7, &con);
 
         mcu.loadProgramFromElf(argv[1]);
         
