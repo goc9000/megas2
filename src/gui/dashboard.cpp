@@ -4,22 +4,52 @@
 #include "utils/fail.h"
 #include "dashboard.h"
 
-Dashboard::Dashboard(const char *bkgd_image_filename)
+Dashboard::Dashboard(const char *bkgd_image_filename, const char *font_filename)
 {
     SDL_Surface *image = IMG_Load(bkgd_image_filename);
     if (!image)
         fail("Error loading dashboard background image: %s", IMG_GetError());
-    this->_background = image;
 
-    this->_initScreen(image->w, image->h);
-    this->_next_frame_time = 0;
+    this->_init(image->w, image->h, image, font_filename);
 }
 
-Dashboard::Dashboard(int width, int height)
+Dashboard::Dashboard(int width, int height, const char *font_filename)
 {
-    this->_background = NULL;
-    this->_initScreen(width, height);
-    this->_next_frame_time = 0;
+    this->_init(width, height, NULL, font_filename);
+}
+
+void Dashboard::addWidget(DashboardWidget *widget)
+{
+    for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
+        if (*it == widget)
+            return;
+    
+    this->_widgets.push_back(widget);
+}
+
+void Dashboard::removeWidget(DashboardWidget *widget)
+{
+    for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
+        if (*it == widget) {
+            this->_widgets.erase(it);
+            return;
+        }
+}
+
+TTF_Font * Dashboard::getFont(int size)
+{
+    if (this->_font_cache.find(size) != this->_font_cache.end()) {
+        return this->_font_cache[size];
+    }
+    
+    TTF_Font *font = TTF_OpenFont(this->_font_filename, size);
+    if (!font) {
+        fail("Could not load dashboard font: %s", TTF_GetError());
+    }
+    
+    this->_font_cache[size] = font;
+    
+    return font;
 }
 
 void Dashboard::setSimulationTime(sim_time_t time)
@@ -42,12 +72,15 @@ void Dashboard::act()
     }
     
     if (this->_background) {
-        SDL_BlitSurface(this->_background, NULL, this->_screen, NULL);
+        SDL_BlitSurface(this->_background, NULL, this->screen, NULL);
     } else {
-        boxColor(this->_screen, 0, 0, this->_screen->w, this->_screen->h, 0x000000ff);
+        boxColor(this->screen, 0, 0, this->screen->w, this->screen->h, 0x000000ff);
     }
     
-    SDL_Flip(this->_screen);
+    for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
+        (*it)->render(this);
+    
+    SDL_Flip(this->screen);
     
     this->_next_frame_time += ms_to_sim_time(20);
 }
@@ -57,13 +90,14 @@ sim_time_t Dashboard::nextEventTime()
     return this->_next_frame_time;
 }
 
-void Dashboard::_initScreen(int width, int height)
+void Dashboard::_init(int width, int height, SDL_Surface *background, const char *font_filename)
 {
     static char ENV1[100] = "SDL_VIDEO_WINDOW_POS";
     static char ENV2[100] = "SDL_VIDEO_CENTERED=1";
     putenv(ENV1);
     putenv(ENV2);
-
+    
+    TTF_Init();
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Surface *screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
@@ -73,5 +107,9 @@ void Dashboard::_initScreen(int width, int height)
     
     SDL_WM_SetCaption("Dashboard", 0);
     
-    this->_screen = screen;
+    this->screen = screen;
+    this->_background = background;
+    this->_font_filename = font_filename;
+    
+    this->_next_frame_time = 0;
 }

@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include "gui/dashboard.h"
+#include "gui/led.h"
 #include "glue/analog_bus.h"
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
@@ -71,7 +72,7 @@ int main(int argc, char **argv)
             exit(EXIT_SUCCESS);
         }
 
-        Dashboard dash("charlie_dashboard_bkgd.png");
+        Dashboard dash("charlie_dashboard_bkgd.png", "font.ttf");
         Atmega32 mcu;
         Ds1307 rtc(0x68);
         SdCard sd_card(argv[2], 256*1024*1024);
@@ -89,7 +90,10 @@ int main(int argc, char **argv)
         enc28j60.connectToSpiBus(&spi_bus);
         AnalogBus encj_reset(&mcu, MEGA32_PIN_B+3, &enc28j60, E28J_PIN_RESET);
         AnalogBus encj_ss(&mcu, MEGA32_PIN_B+4, &enc28j60, E28J_PIN_SLAVE_SELECT);
-        //mcu.addPinMonitor(MEGA32_PIN_D+7, &con);
+        
+        SimpleLed debug_led(16, 16, 16, 0xff0000ff, "Debug LED");
+        AnalogBus led_input(&mcu, MEGA32_PIN_D+7, &debug_led, LED_PIN_INPUT);
+        dash.addWidget(&debug_led);
 
         mcu.loadProgramFromElf(argv[1]);
         
