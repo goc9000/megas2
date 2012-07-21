@@ -1,7 +1,7 @@
 BIN = ./bin
 SRC = ./src
 INCLUDES = -I$(SRC)
-LIBS = -lelf -lSDL -lSDL_gfx -lrt
+LIBS = -lelf -lSDL -lSDL_gfx -lSDL_image -lrt
 CFLAGS = -O3 -Wall
 #-fwhole-program -flto
 

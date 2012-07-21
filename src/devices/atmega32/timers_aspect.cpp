@@ -187,6 +187,7 @@ void Atmega32::_timer1Tick()
             break;
         default:
             fail("Unsupported WGM for timer 1: %d", wgm);
+            break;
     }
 }
 

@@ -307,6 +307,7 @@ void SdCard::_execCommand(uint8_t command, uint32_t param)
             break;
         default:
             fail("Unrecognized SD command: %02x %08x\n", command, param);
+            break;
     }
     
     this->_prepareR1Response();
@@ -319,6 +320,7 @@ void SdCard::_execAppCommand(uint8_t command, uint32_t param)
             break;
         default:
             fail("Unrecognized app-specific SD command: %02x %08x\n", command, param);
+            break;
     }
     
     this->_prepareR1Response();

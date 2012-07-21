@@ -380,6 +380,7 @@ static void exec_reg_reg_op(Atmega32Core *core, uint16_t opcode)
             break;
         default:
             fail("Unsupported two-reg instruction %04x", opcode);
+            break;
     }
 }
 
@@ -421,6 +422,7 @@ static void exec_reg_imm_op(Atmega32Core *core, uint16_t opcode)
             break;
         default:
             fail("Unsupported immediate instruction %04x", opcode);
+            break;
     }
 }
 
@@ -487,6 +489,7 @@ static void exec_reg_mem_op(Atmega32Core *core, uint16_t opcode)
             break;
         default:
             fail("Unsupported reg-mem instruction %04x", opcode);
+            break;
     }
 }
 
@@ -570,6 +573,7 @@ static void exec_single_reg_op(Atmega32Core *core, uint16_t opcode)
             break;
         default:
             fail("Unsupported single-reg instruction %04x", opcode);
+            break;
     }
     
     if (ins->opcode != 0x02) {
@@ -636,6 +640,7 @@ static void exec_mcu_control_op(Atmega32Core *core, uint16_t opcode)
             break;
         default:
             fail("Unsupported MCU control instruction %04x", opcode);
+            break;
     }
 }
 

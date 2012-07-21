@@ -29,11 +29,13 @@ void Atmega32::_spiHandleRead(uint8_t port, int8_t bit, uint8_t &value)
         case PORT_SPSR:
             if (bit_is_set(value, B_SPIF))
                 this->spi_stat_read = true;
+            break;
         case PORT_SPDR:
             if (this->spi_stat_read) {
                 clear_bit(this->ports[PORT_SPSR], B_SPIF);
                 this->spi_stat_read = false;
             }
+            break;
     }
 }
 

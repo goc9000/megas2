@@ -105,6 +105,7 @@ void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t
                     this->_twiStatus(ack ? TWI_STATUS_R_DATA_ACK : TWI_STATUS_R_DATA_NACK);
                 }
             }
+            break;
     }
 }
 
