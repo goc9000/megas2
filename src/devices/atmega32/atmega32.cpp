@@ -39,6 +39,11 @@ static inline bool is_timer_port(uint8_t port)
         || (port == PORT_TIMSK)  || (port == PORT_OCR0);
 }
 
+static inline bool is_adc_port(uint8_t port)
+{
+    return (port >= PORT_ADCL) && (port <= PORT_ADMUX);
+}
+
 Atmega32::Atmega32() : PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
     atmega32_core_init(&this->core, this);
@@ -118,6 +123,7 @@ void Atmega32::reset()
     this->_spiInit();
     this->_timersInit();
     this->_pinsInit();
+    this->_adcInit();
 }
 
 void Atmega32::setSimulationTime(sim_time_t time)
@@ -165,6 +171,7 @@ void Atmega32::_handleIrqs()
         return;
     
     if ((irq = this->_handleTimerIrqs())) goto exec;
+    if ((irq = this->_handleAdcIrqs())) goto exec;
     return;
 exec:
     set_flag(&this->core, FLAG_I, false);
@@ -185,6 +192,8 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
         this->_handleDataPortRead(port, bit, value);
     } else if (is_timer_port(port)) {
         this->_timersHandleRead(port, bit, value);
+    } else if (is_adc_port(port)) {
+        this->_adcHandleRead(port, bit, value);
     } else {
         if (bit < 0) {
             printf("%04x: IN %s(%02x) == %02x\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port,
@@ -209,6 +218,8 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t pr
         this->_handleDataPortWrite(port, bit, value, prev_val);
     } else if (is_timer_port(port)) {
         this->_timersHandleWrite(port, bit, value, prev_val);
+    } else if (is_adc_port(port)) {
+        this->_adcHandleWrite(port, bit, value, prev_val);
     } else {
         if (bit < 0) {
             printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port,

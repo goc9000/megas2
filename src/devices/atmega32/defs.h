@@ -32,6 +32,10 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_TWSR         0x01
 #define PORT_TWAR         0x02
 #define PORT_TWDR         0x03
+#define PORT_ADCL         0x04
+#define PORT_ADCH         0x05
+#define PORT_ADCSRA       0x06
+#define PORT_ADMUX        0x07
 #define PORT_SPCR         0x0d
 #define PORT_SPSR         0x0e
 #define PORT_SPDR         0x0f
@@ -77,6 +81,12 @@ static char const * const PORT_NAMES[0x40] = {
 #define B_TWSTA         5
 #define B_TWSTO         4
 #define B_TWEN          2
+// Bit balues for ADCSRA
+#define B_ADEN          7
+#define B_ADSC          6
+#define B_ADATE         5
+#define B_ADIF          4
+#define B_ADIE          3
 // Bit values for SPSR 
 #define B_SPIF          7
 // Bit values for SPCR

@@ -58,6 +58,7 @@ protected:
 #include "inc_spi_aspect.h"
 #include "inc_timers_aspect.h"
 #include "inc_pins_aspect.h"
+#include "inc_adc_aspect.h"
 };
 
 #endif
