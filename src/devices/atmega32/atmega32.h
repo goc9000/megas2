@@ -7,6 +7,7 @@
 #include "glue/pin_device.h"
 #include "glue/i2c_device.h"
 #include "glue/spi_device.h"
+#include "simulation/entity.h"
 #include "simulation/sim_device.h"
 #include "devices/device.h"
 
@@ -19,9 +20,11 @@
 #define MEGA32_PIN_D         24
 #define MEGA32_PIN_D7        31
 
-class Atmega32 : public Device, public I2cDevice, public SpiDevice, public PinDevice, public SimulatedDevice {
+class Atmega32 : public Entity, public Device, public I2cDevice, public SpiDevice, public PinDevice, public SimulatedDevice {
 public:
     Atmega32();
+    Atmega32(Json::Value &json_data);
+    
     void loadProgramFromElf(const char *filename);
     void setFrequency(uint64_t frequency);
 
@@ -43,6 +46,8 @@ protected:
     Atmega32Core core;
     
     uint8_t *ports; // shortcut
+
+    void _init();
 
     uint16_t _get16BitPort(uint8_t port);
     void _put16BitPort(uint8_t port, uint16_t value);

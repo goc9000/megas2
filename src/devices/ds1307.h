@@ -3,13 +3,16 @@
 
 #include <inttypes.h>
 
+#include "simulation/entity.h"
 #include "simulation/sim_device.h"
 #include "glue/i2c_device.h"
 #include "devices/device.h"
 
-class Ds1307 : public Device, public I2cDevice, public SimulatedDevice {
+class Ds1307 : public Entity, Device, public I2cDevice, public SimulatedDevice {
 public:
     Ds1307(uint8_t i2c_address);
+    Ds1307(Json::Value &json_data);
+    
     virtual void reset();
     
     virtual void setSimulationTime(sim_time_t time);

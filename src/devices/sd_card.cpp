@@ -73,7 +73,33 @@ uint16_t compute_crc16(uint8_t *buffer, int length)
     return crc;
 }
 
-SdCard::SdCard(const char *backing_file_name, unsigned capacity) : PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
+SdCard::SdCard(const char *backing_file_name, unsigned capacity)
+    : Entity("sdcard", "SD Card"), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
+{
+    this->_init(backing_file_name, capacity);
+}
+
+SdCard::SdCard(Json::Value &json_data)
+    : Entity(json_data), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
+{
+    const char *backing_file_name = NULL;
+    unsigned capacity = 0;
+
+    if (json_data.isMember("image")) {
+        backing_file_name = json_data["image"].asCString();
+    } else {
+        fail("Parameter 'image' required for SD card");
+    }
+    if (json_data.isMember("capacity")) {
+        capacity = json_data["capacity"].asUInt();
+    } else {
+        fail("Parameter 'capacity' required for SD card");
+    }
+
+    this->_init(backing_file_name, capacity);
+}
+
+void SdCard::_init(const char *backing_file_name, unsigned capacity)
 {
     if (capacity & 511)
         fail("SD capacity must be a multiple of 512 bytes");

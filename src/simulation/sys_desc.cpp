@@ -5,6 +5,9 @@
 #include <fstream>
 
 #include "devices/atmega32/atmega32.h"
+#include "devices/ds1307.h"
+#include "devices/sd_card.h"
+#include "devices/enc28j60.h"
 
 #include "sys_desc.h"
 #include "utils/fail.h"
@@ -74,7 +77,15 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
 
     string type = json_data["type"].asString();
 
-    
+    if (type == "Atmega32") {
+        return new Atmega32(json_data);
+    } else if (type == "Ds1307") {
+        return new Ds1307(json_data);
+    } else if (type == "SdCard") {
+        return new SdCard(json_data);
+    } else if (type == "Enc28J60") {
+        return new Enc28J60(json_data);
+    }
     
     fail("Unsupported entity type '%s'", type.c_str());
 

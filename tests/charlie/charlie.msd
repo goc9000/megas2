@@ -1,7 +1,7 @@
 {
     "entities" : [
-                { "id": "mcu", "type": "Atmega32", "firmware": "charlie32.elf", "frequency": 16000000 },
-                { "id": "rtc", "type": "Ds1307", "slave_id": 104 },
+                { "id": "mcu", "type": "Atmega32", "firmware": "charliev2.elf", "frequency": 16000000 },
+                { "id": "rtc", "type": "Ds1307", "i2c_address": 104 },
                 { "id": "sd_card", "type": "SdCard", "image": "fsimage.bin", "capacity": 268435456 },
                 { "id": "enc28j60", "type": "Enc28J60" },
                 { "type": "I2cBus", "devices": ["mcu", "rtc"] },

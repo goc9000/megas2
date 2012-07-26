@@ -44,15 +44,33 @@ static inline bool is_adc_port(uint8_t port)
     return (port >= PORT_ADCL) && (port <= PORT_ADMUX);
 }
 
-Atmega32::Atmega32() : PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
+Atmega32::Atmega32() :
+    Entity("atmega32", "ATMEGA32"), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
-    atmega32_core_init(&this->core, this);
-    
-    this->ports = this->core.ram + IO_BASE;
-    
-    this->setFrequency(16000000ULL);
+    this->_init();
+    this->reset();
+}
+
+Atmega32::Atmega32(Json::Value &json_data) :
+    Entity(json_data), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
+{
+    this->_init();
+
+    if (json_data.isMember("frequency")) {
+        this->setFrequency(json_data["frequency"].asUInt64());
+    }
+    if (json_data.isMember("firmware")) {
+        this->loadProgramFromElf(json_data["firmware"].asCString());
+    }
     
     this->reset();
+}
+
+void Atmega32::_init()
+{
+    atmega32_core_init(&this->core, this);
+    this->ports = this->core.ram + IO_BASE;
+    this->setFrequency(16000000ULL);
 }
 
 void Atmega32::setFrequency(uint64_t frequency)

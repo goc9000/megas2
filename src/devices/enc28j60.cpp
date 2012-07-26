@@ -53,7 +53,14 @@ static bool is_mii_reg(uint8_t reg)
     return (reg >= 0x51) && (reg <= 0x59);
 }
 
-Enc28J60::Enc28J60() : PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
+Enc28J60::Enc28J60()
+    : Entity("enc28j60", "ENC28J60"), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
+{
+    this->reset();
+}
+
+Enc28J60::Enc28J60(Json::Value &json_data)
+    : Entity(json_data), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
 {
     this->reset();
 }

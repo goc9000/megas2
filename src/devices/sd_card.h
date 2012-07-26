@@ -7,15 +7,18 @@
 #include "glue/spi_device.h"
 #include "glue/pin_device.h"
 #include "devices/device.h"
+#include "simulation/entity.h"
 #include "simulation/sim_device.h"
 
 #define SDCARD_PIN_COUNT           1
 
 #define SDCARD_PIN_SLAVE_SELECT    0
 
-class SdCard : public Device, public SpiDevice, public PinDevice, public SimulatedDevice {
+class SdCard : public Entity, public Device, public SpiDevice, public PinDevice, public SimulatedDevice {
 public:
     SdCard(const char *backing_file_name, unsigned capacity);
+    SdCard(Json::Value &json_data);
+    
     virtual void reset();
     
     virtual void act();
@@ -48,6 +51,8 @@ private:
     
     bool crc_enabled;
     uint16_t block_size;
+
+    void _init(const char *backing_file_name, unsigned capacity);
     
     virtual void _onPinChanged(int pin_id, int value, int old_value);
     

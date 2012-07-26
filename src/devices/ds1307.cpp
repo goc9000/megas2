@@ -8,9 +8,20 @@
 
 using namespace std;
 
-Ds1307::Ds1307(uint8_t i2c_address)
+Ds1307::Ds1307(uint8_t i2c_address) : Entity("ds1307", "DS1307")
 {
     this->i2c_addr = i2c_address;
+    this->reset();
+}
+
+Ds1307::Ds1307(Json::Value &json_data) : Entity(json_data)
+{
+    if (json_data.isMember("i2c_address")) {
+        this->i2c_addr = json_data["i2c_address"].asInt();
+    } else {
+        fail("Attribute 'i2c_address' is required for DS1307");
+    }
+    
     this->reset();
 }
 
