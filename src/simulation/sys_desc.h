@@ -7,18 +7,19 @@
 #include <json/json.h>
 
 #include "entity.h"
+#include "entity_lookup.h"
 
 using namespace std;
 
-class SystemDescription {
+class SystemDescription : public EntityLookup {
 public:
     SystemDescription();
     SystemDescription(const char *filename);
     SystemDescription(Json::Value &json_data);
 
-    vector<Entity *> entities;
+    virtual Entity * lookupEntity(const char *id);
 
-    Entity * getEntity(const char *name);
+    vector<Entity *> entities;
 private:
     void _init();
     void _initFromJson(Json::Value &json_data);

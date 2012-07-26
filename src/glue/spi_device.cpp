@@ -14,13 +14,24 @@ SpiDevice::SpiDevice()
 
 void SpiDevice::connectToSpiBus(SpiBus *bus)
 {
-    if (this->spi_bus) {
-        this->spi_bus->removeDevice(this);
+    if (bus == this->spi_bus)
+        return;
+
+    if (this->spi_bus != NULL) {
+        this->disconnectFromSpiBus();
     }
-    
+
     this->spi_bus = bus;
-    
     bus->addDevice(this);
+}
+
+void SpiDevice::disconnectFromSpiBus()
+{
+    if (this->spi_bus) {
+        SpiBus *bus = this->spi_bus;
+        this->spi_bus = NULL;
+        bus->removeDevice(this);
+    }
 }
 
 void SpiDevice::_spiSlaveSelect(bool select)

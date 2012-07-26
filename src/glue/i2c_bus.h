@@ -4,12 +4,20 @@
 #include <inttypes.h>
 #include <vector>
 
+#include <json/json.h>
+
+#include "simulation/entity.h"
+#include "simulation/entity_lookup.h"
+
 using namespace std;
 
 class I2cDevice;
 
-class I2cBus {
+class I2cBus : public Entity {
 public:
+    I2cBus();
+    I2cBus(Json::Value &json_data, EntityLookup *lookup);
+
     void addDevice(I2cDevice *device);
     void removeDevice(I2cDevice *device);
     void sendStart(I2cDevice *sender);

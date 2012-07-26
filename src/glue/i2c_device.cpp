@@ -13,13 +13,24 @@ I2cDevice::I2cDevice()
 
 void I2cDevice::connectToI2cBus(I2cBus *bus)
 {
-    if (this->i2c_bus) {
-        this->i2c_bus->removeDevice(this);
+    if (bus == this->i2c_bus)
+        return;
+
+    if (this->i2c_bus != NULL) {
+        this->disconnectFromI2cBus();
     }
-    
+
     this->i2c_bus = bus;
-    
     bus->addDevice(this);
+}
+
+void I2cDevice::disconnectFromI2cBus()
+{
+    if (this->i2c_bus) {
+        I2cBus *bus = this->i2c_bus;
+        this->i2c_bus = NULL;
+        bus->removeDevice(this);
+    }
 }
 
 void I2cDevice::_i2cSendStart(void)

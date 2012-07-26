@@ -6,19 +6,51 @@
 
 using namespace std;
 
+I2cBus::I2cBus() : Entity("i2cbus", "I2C Bus")
+{
+}
+
+I2cBus::I2cBus(Json::Value &json_data, EntityLookup *lookup) : Entity(json_data)
+{
+    if (json_data.isMember("devices")) {
+        if (!json_data["devices"].isArray()) {
+            fail("'devices' should be an array");
+        }
+
+        for (Json::ValueIterator it = json_data["devices"].begin(); it != json_data["devices"].end(); it++) {
+            const char *dev_id = (*it).asCString();
+            Entity *ent = lookup->lookupEntity(dev_id);
+            
+            if (!ent) {
+                fail("Device '%s' not defined at this point", dev_id);
+            }
+
+            I2cDevice *as_i2c_dev = dynamic_cast<I2cDevice *>(ent);
+            if (as_i2c_dev == NULL) {
+                fail("Device '%s' is not a I2C device", dev_id);
+            }
+
+            this->addDevice(as_i2c_dev);
+        }
+    }
+}
+
 void I2cBus::addDevice(I2cDevice *device)
 {
     if (find(this->devices.begin(), this->devices.end(), device) != this->devices.end())
-        fail("Added device twice to I2C bus");
+        return;
     
     this->devices.push_back(device);
+    device->connectToI2cBus(this);
 }
 
 void I2cBus::removeDevice(I2cDevice *device)
 {
     vector<I2cDevice*>::iterator it = find(this->devices.begin(), this->devices.end(), device);
-    
-    this->devices.erase(it);
+    if (it != this->devices.end()) {
+        this->devices.erase(it);
+        device->disconnectFromI2cBus();
+    }
 }
 
 void I2cBus::sendStart(I2cDevice *sender)

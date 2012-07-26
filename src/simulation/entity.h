@@ -11,6 +11,7 @@ class Entity {
 public:
     Entity(const char *defaultId, const char *defaultName);
     Entity(Json::Value &json_data);
+    virtual ~Entity() { }; // needed to make this polymorphic
 
     string id;
     string name;

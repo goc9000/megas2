@@ -9,6 +9,9 @@
 #include "devices/sd_card.h"
 #include "devices/enc28j60.h"
 
+#include "glue/i2c_bus.h"
+#include "glue/spi_bus.h"
+
 #include "sys_desc.h"
 #include "utils/fail.h"
 
@@ -37,10 +40,10 @@ SystemDescription::SystemDescription(const char *filename)
     this->_initFromJson(json_data);
 }
 
-Entity * SystemDescription::getEntity(const char *name)
+Entity * SystemDescription::lookupEntity(const char *id)
 {
     for (vector<Entity *>::iterator it = this->entities.begin(); it != this->entities.end(); it++)
-        if ((*it)->name == name)
+        if ((*it)->id == id)
             return *it;
 
     return NULL;
@@ -85,6 +88,10 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new SdCard(json_data);
     } else if (type == "Enc28J60") {
         return new Enc28J60(json_data);
+    } else if (type == "I2cBus") {
+        return new I2cBus(json_data, this);
+    } else if (type == "SpiBus") {
+        return new SpiBus(json_data, this);
     }
     
     fail("Unsupported entity type '%s'", type.c_str());

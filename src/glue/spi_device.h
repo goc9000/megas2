@@ -8,7 +8,9 @@ class SpiBus;
 class SpiDevice {
 public:
     SpiDevice();
+    
     void connectToSpiBus(SpiBus *bus);
+    void disconnectFromSpiBus();
     virtual bool spiReceiveData(uint8_t &data) = 0;
 protected:
     SpiBus *spi_bus;

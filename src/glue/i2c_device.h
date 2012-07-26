@@ -9,6 +9,8 @@ class I2cDevice {
 public:
     I2cDevice();
     void connectToI2cBus(I2cBus *bus);
+    void disconnectFromI2cBus();
+    
     virtual void i2cReceiveStart() = 0;
     virtual bool i2cReceiveAddress(uint8_t address, bool write) = 0;
     virtual bool i2cReceiveData(uint8_t data) = 0;
