@@ -6,7 +6,7 @@
 // Pin initialization data
 
 PinInitData const PIN_INIT_DATA[PUSH_BUTTON_PIN_COUNT] = {
-    { PIN_MODE_OUTPUT, 0 }  // OUTPUT
+    { "OUT", PIN_MODE_OUTPUT, 0 }  // OUTPUT
 };
 
 PushButton::PushButton(void) : PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)

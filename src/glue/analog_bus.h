@@ -3,26 +3,24 @@
 
 #include <vector>
 
+#include <json/json.h>
+
+#include "pin_device.h"
+#include "pin_ref.h"
+#include "simulation/entity.h"
+#include "simulation/entity_lookup.h"
+
 using namespace std;
 
-class PinDevice;
-
-struct PinReference {
-    PinReference(PinDevice *device, int pin_id) : device(device), pin_id(pin_id) {};
-    
-    PinDevice *device;
-    int pin_id;
-};
-
-class AnalogBus {
+class AnalogBus : public Entity {
 public:
     AnalogBus();
-    AnalogBus(PinDevice* device1, int pin_id1);
-    AnalogBus(PinDevice* device1, int pin_id1, PinDevice* device2, int pin_id2);
-    AnalogBus(PinDevice* device1, int pin_id1, PinDevice* device2, int pin_id2, PinDevice* device3, int pin_id3);
-
+    AnalogBus(Json::Value &json_data, EntityLookup *lookup);
+    
     void addDevicePin(PinDevice *device, int pin_id);
+    void addDevicePin(PinReference &pinref);
     void removeDevicePin(PinDevice *device, int pin_id);
+    void removeDevicePin(PinReference &pinref);
     int query(void);
     void update(void);
 private:

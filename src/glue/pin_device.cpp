@@ -1,3 +1,4 @@
+#include <cstring>
 #include <cstdlib>
 
 #include "analog_bus.h"
@@ -10,6 +11,7 @@ class Pin {
 public:
     PinDevice *owner;
     int pin_id;
+    const char *pin_name;
     int mode;
     int float_value;
     int drive_value;
@@ -31,6 +33,7 @@ void Pin::initialize(PinDevice *owner, int pin_id, PinInitData const * init_data
 {
     this->owner = owner;
     this->pin_id = pin_id;
+    this->pin_name = init_data->pin_name;
     this->mode = init_data->mode;
     this->drive_value = (init_data->mode == PIN_MODE_OUTPUT) ? init_data->float_value : PIN_VAL_Z;
     this->float_value = init_data->float_value;
@@ -135,6 +138,7 @@ void Pin::setMode(int mode)
 PinDevice::PinDevice(int num_pins, PinInitData const * const init_data)
 {
     this->_pins = new Pin[num_pins];
+    this->_num_pins = num_pins;
     
     for (int i = 0; i < num_pins; i++) {
         this->_pins[i].initialize(this, i, &init_data[i]);
@@ -149,6 +153,15 @@ void PinDevice::connectPinToBus(int pin_id, AnalogBus *bus)
 void PinDevice::disconnectPinFromBus(int pin_id, AnalogBus *bus)
 {
     this->_pins[pin_id].disconnectFromBus(bus);
+}
+
+int PinDevice::lookupPin(const char *pin_name)
+{
+    for (int i = 0; i < this->_num_pins; i++)
+        if (!strcmp(pin_name, this->_pins[i].pin_name))
+            return i;
+    
+    return -1;
 }
 
 void PinDevice::drivePin(int pin_id, int value)

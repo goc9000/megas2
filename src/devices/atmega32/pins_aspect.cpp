@@ -17,38 +17,38 @@ using namespace std;
 // Pin initialization data
 
 extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT] = {
-    { PIN_MODE_INPUT, 0 }, // A0
-    { PIN_MODE_INPUT, 0 }, // A1
-    { PIN_MODE_INPUT, 0 }, // A2
-    { PIN_MODE_INPUT, 0 }, // A3
-    { PIN_MODE_INPUT, 0 }, // A4
-    { PIN_MODE_INPUT, 0 }, // A5
-    { PIN_MODE_INPUT, 0 }, // A6
-    { PIN_MODE_INPUT, 0 }, // A7
-    { PIN_MODE_INPUT, 0 }, // B0
-    { PIN_MODE_INPUT, 0 }, // B1
-    { PIN_MODE_INPUT, 0 }, // B2
-    { PIN_MODE_INPUT, 0 }, // B3
-    { PIN_MODE_INPUT, 0 }, // B4
-    { PIN_MODE_INPUT, 0 }, // B5
-    { PIN_MODE_INPUT, 0 }, // B6
-    { PIN_MODE_INPUT, 0 }, // B7
-    { PIN_MODE_INPUT, 0 }, // C0
-    { PIN_MODE_INPUT, 0 }, // C1
-    { PIN_MODE_INPUT, 0 }, // C2
-    { PIN_MODE_INPUT, 0 }, // C3
-    { PIN_MODE_INPUT, 0 }, // C4
-    { PIN_MODE_INPUT, 0 }, // C5
-    { PIN_MODE_INPUT, 0 }, // C6
-    { PIN_MODE_INPUT, 0 }, // C7
-    { PIN_MODE_INPUT, 0 }, // D0
-    { PIN_MODE_INPUT, 0 }, // D1
-    { PIN_MODE_INPUT, 0 }, // D2
-    { PIN_MODE_INPUT, 0 }, // B3
-    { PIN_MODE_INPUT, 0 }, // D4
-    { PIN_MODE_INPUT, 0 }, // D5
-    { PIN_MODE_INPUT, 0 }, // D6
-    { PIN_MODE_INPUT, 0 }  // D7
+    { "A0", PIN_MODE_INPUT, 0 }, // A0
+    { "A1", PIN_MODE_INPUT, 0 }, // A1
+    { "A2", PIN_MODE_INPUT, 0 }, // A2
+    { "A3", PIN_MODE_INPUT, 0 }, // A3
+    { "A4", PIN_MODE_INPUT, 0 }, // A4
+    { "A5", PIN_MODE_INPUT, 0 }, // A5
+    { "A6", PIN_MODE_INPUT, 0 }, // A6
+    { "A7", PIN_MODE_INPUT, 0 }, // A7
+    { "B0", PIN_MODE_INPUT, 0 }, // B0
+    { "B1", PIN_MODE_INPUT, 0 }, // B1
+    { "B2", PIN_MODE_INPUT, 0 }, // B2
+    { "B3", PIN_MODE_INPUT, 0 }, // B3
+    { "B4", PIN_MODE_INPUT, 0 }, // B4
+    { "B5", PIN_MODE_INPUT, 0 }, // B5
+    { "B6", PIN_MODE_INPUT, 0 }, // B6
+    { "B7", PIN_MODE_INPUT, 0 }, // B7
+    { "C0", PIN_MODE_INPUT, 0 }, // C0
+    { "C1", PIN_MODE_INPUT, 0 }, // C1
+    { "C2", PIN_MODE_INPUT, 0 }, // C2
+    { "C3", PIN_MODE_INPUT, 0 }, // C3
+    { "C4", PIN_MODE_INPUT, 0 }, // C4
+    { "C5", PIN_MODE_INPUT, 0 }, // C5
+    { "C6", PIN_MODE_INPUT, 0 }, // C6
+    { "C7", PIN_MODE_INPUT, 0 }, // C7
+    { "D0", PIN_MODE_INPUT, 0 }, // D0
+    { "D1", PIN_MODE_INPUT, 0 }, // D1
+    { "D2", PIN_MODE_INPUT, 0 }, // D2
+    { "D3", PIN_MODE_INPUT, 0 }, // B3
+    { "D4", PIN_MODE_INPUT, 0 }, // D4
+    { "D5", PIN_MODE_INPUT, 0 }, // D5
+    { "D6", PIN_MODE_INPUT, 0 }, // D6
+    { "D7", PIN_MODE_INPUT, 0 }  // D7
 };
 
 static inline bool is_data_port(uint8_t port)

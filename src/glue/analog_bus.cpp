@@ -1,31 +1,26 @@
 #include <algorithm>
 
 #include "analog_bus.h"
-#include "pin_device.h"
 #include "utils/fail.h"
 
 using namespace std;
 
-AnalogBus::AnalogBus()
+AnalogBus::AnalogBus() : Entity("analogbus", "Analog Bus")
 {
 }
 
-AnalogBus::AnalogBus(PinDevice* device1, int pin_id1)
+AnalogBus::AnalogBus(Json::Value &json_data, EntityLookup *lookup) : Entity(json_data)
 {
-    this->addDevicePin(device1, pin_id1);
-}
+    if (json_data.isMember("pins")) {
+        if (!json_data["pins"].isArray()) {
+            fail("'pins' should be an array");
+        }
 
-AnalogBus::AnalogBus(PinDevice* device1, int pin_id1, PinDevice* device2, int pin_id2)
-{
-    this->addDevicePin(device1, pin_id1);
-    this->addDevicePin(device2, pin_id2);
-}
-
-AnalogBus::AnalogBus(PinDevice* device1, int pin_id1, PinDevice* device2, int pin_id2, PinDevice* device3, int pin_id3)
-{
-    this->addDevicePin(device1, pin_id1);
-    this->addDevicePin(device2, pin_id2);
-    this->addDevicePin(device3, pin_id3);
+        for (Json::ValueIterator it = json_data["pins"].begin(); it != json_data["pins"].end(); it++) {
+            PinReference pinref(*it, lookup);
+            this->addDevicePin(pinref);
+        }
+    }
 }
 
 void AnalogBus::addDevicePin(PinDevice *device, int pin_id)
@@ -42,6 +37,11 @@ void AnalogBus::addDevicePin(PinDevice *device, int pin_id)
     this->update();
 }
 
+void AnalogBus::addDevicePin(PinReference &pinref)
+{
+    this->addDevicePin(pinref.device, pinref.pin_id);
+}
+
 void AnalogBus::removeDevicePin(PinDevice *device, int pin_id)
 {
     for (vector<PinReference>::iterator it = this->_pins.begin(); it != this->_pins.end(); it++)
@@ -52,6 +52,12 @@ void AnalogBus::removeDevicePin(PinDevice *device, int pin_id)
             this->update();
             return;
         }
+}
+
+
+void AnalogBus::removeDevicePin(PinReference &pinref)
+{
+    this->removeDevicePin(pinref.device, pinref.pin_id);
 }
 
 int AnalogBus::query(void)

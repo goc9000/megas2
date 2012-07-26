@@ -39,7 +39,7 @@ using namespace std;
 // Pin initialization data
 
 PinInitData const PIN_INIT_DATA[SDCARD_PIN_COUNT] = {
-    { PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
+    { "SS", PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
 };
 
 uint8_t compute_crc7(uint8_t *buffer, int length)

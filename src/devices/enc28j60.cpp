@@ -31,8 +31,8 @@ using namespace std;
 // Pin initialization data
 
 PinInitData const PIN_INIT_DATA[E28J_PIN_COUNT] = {
-    { PIN_MODE_INPUT, 1 }, // RESET
-    { PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
+    { "RESET", PIN_MODE_INPUT, 1 }, // RESET
+    { "SS", PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
 };
 
 static bool is_common_reg(uint8_t reg)

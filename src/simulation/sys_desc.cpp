@@ -11,6 +11,7 @@
 
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
+#include "glue/analog_bus.h"
 
 #include "sys_desc.h"
 #include "utils/fail.h"
@@ -92,6 +93,8 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new I2cBus(json_data, this);
     } else if (type == "SpiBus") {
         return new SpiBus(json_data, this);
+    } else if (type == "AnalogBus") {
+        return new AnalogBus(json_data, this);
     }
     
     fail("Unsupported entity type '%s'", type.c_str());

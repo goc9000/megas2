@@ -4,6 +4,9 @@
 #include <inttypes.h>
 #include <vector>
 
+#include "pin_ref.h"
+#include "simulation/entity_lookup.h"
+
 using namespace std;
 
 #define PIN_MODE_INPUT   0
@@ -15,6 +18,7 @@ class Pin;
 class AnalogBus;
 
 struct PinInitData {
+    const char *pin_name;
     int mode;
     int float_value;
 };
@@ -27,8 +31,10 @@ public:
     void disconnectPinFromBus(int pin_id, AnalogBus *bus);
     void drivePin(int pin_id, int data);
     int queryPin(int pin_id);
+    int lookupPin(const char *pin_name);
 protected:
     Pin *_pins;
+    int _num_pins;
     
     void _pinWrite(int pin_id, int data);
     int _pinRead(int pin_id);

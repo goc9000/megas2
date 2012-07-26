@@ -6,7 +6,7 @@
 // Pin initialization data
 
 PinInitData const PIN_INIT_DATA[LED_PIN_COUNT] = {
-    { PIN_MODE_INPUT, 0 }  // INPUT
+    { "IN", PIN_MODE_INPUT, 0 }  // INPUT
 };
 
 Led::Led(void) : PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
