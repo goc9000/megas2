@@ -1,6 +1,11 @@
 #ifndef _H_PUSH_BUTTON_H
 #define _H_PUSH_BUTTON_H
 
+#include <string>
+
+#include <json/json.h>
+
+#include "simulation/entity.h"
 #include "glue/pin_device.h"
 #include "dash_widget.h"
 
@@ -10,11 +15,12 @@ using namespace std;
 
 #define PUSH_BUTTON_PIN_OUTPUT 0
 
-class PushButton : public DashboardWidget, public PinDevice
+class PushButton : public Entity, public DashboardWidget, public PinDevice
 {
 public:
     PushButton();
     PushButton(int up_value, int down_value);
+    PushButton(Json::Value &json_data);
     
     virtual void render(Dashboard *dash) = 0;
 protected:
@@ -31,6 +37,7 @@ class SimplePushButton : public PushButton
 public:
     SimplePushButton(int x, int y, int size, int color, const char *caption);
     SimplePushButton(int up_value, int down_value, int x, int y, int size, int color, const char *caption);
+    SimplePushButton(Json::Value &json_data);
     
     virtual void render(Dashboard *dash);
     virtual bool handleEvent(Dashboard *dash, SDL_Event *event);
@@ -39,7 +46,7 @@ protected:
     int _y;
     int _size;
     int _color;
-    const char *_caption;
+    string _caption;
     
     void _init(int x, int y, int size, int color, const char *caption);
 };

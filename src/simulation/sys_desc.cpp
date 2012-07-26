@@ -13,6 +13,10 @@
 #include "glue/spi_bus.h"
 #include "glue/analog_bus.h"
 
+#include "gui/dashboard.h"
+#include "gui/led.h"
+#include "gui/push_button.h"
+
 #include "sys_desc.h"
 #include "utils/fail.h"
 
@@ -95,6 +99,10 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new SpiBus(json_data, this);
     } else if (type == "AnalogBus") {
         return new AnalogBus(json_data, this);
+    } else if (type == "SimpleLed") {
+        return new SimpleLed(json_data);
+    } else if (type == "SimplePushButton") {
+        return new SimplePushButton(json_data);
     }
     
     fail("Unsupported entity type '%s'", type.c_str());

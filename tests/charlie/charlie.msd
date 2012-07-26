@@ -10,9 +10,9 @@
                 { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "B3"}, { "device": "enc28j60", "pin": "RESET"}] },
                 { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "B4"}, { "device": "enc28j60", "pin": "SS"}] },
                 { "id": "debug_led", "type": "SimpleLed", "x": 16, "y": 16, "size": 16, "color": {"r":255, "g":0, "b":0}, "caption": "Debug LED" },
-                { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "D7"}, { "device": "debug_led", "pin": "INPUT"}] },
+                { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "D7"}, { "device": "debug_led", "pin": "IN"}] },
                 { "id": "debug_btn", "type": "SimplePushButton", "up_value": "Z", "down_value": 0, "x": 16, "y": 40, "size": 16, "color": {"r":0, "g":0, "b":0}, "caption": "Debug button" },
-                { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "D6"}, { "device": "debug_btn", "pin": "OUTPUT"}] },
+                { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "D6"}, { "device": "debug_btn", "pin": "OUT"}] },
                 { "id": "dashboard", "type": "Dashboard", "background": "charlie_dashboard_bkgd.png", "widgets": ["debug_led", "debug_btn"] }
                ]
 }
