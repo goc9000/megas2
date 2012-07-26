@@ -103,6 +103,8 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new SimpleLed(json_data);
     } else if (type == "SimplePushButton") {
         return new SimplePushButton(json_data);
+    } else if (type == "Dashboard") {
+        return new Dashboard(json_data, this);
     }
     
     fail("Unsupported entity type '%s'", type.c_str());

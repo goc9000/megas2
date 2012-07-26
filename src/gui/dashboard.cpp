@@ -4,18 +4,58 @@
 #include "utils/fail.h"
 #include "dashboard.h"
 
-Dashboard::Dashboard(const char *bkgd_image_filename, const char *font_filename)
-{
-    SDL_Surface *image = IMG_Load(bkgd_image_filename);
-    if (!image)
-        fail("Error loading dashboard background image: %s", IMG_GetError());
+// TODO: add cleanup for TTF_* objects
 
-    this->_init(image->w, image->h, image, font_filename);
+Dashboard::Dashboard(const char *bkgd_image_filename)
+    : Entity("dashboard", "Dashboard")
+{
+    this->_init(0, 0, bkgd_image_filename);
 }
 
-Dashboard::Dashboard(int width, int height, const char *font_filename)
+Dashboard::Dashboard(int width, int height)
+    : Entity("dashboard", "Dashboard")
 {
-    this->_init(width, height, NULL, font_filename);
+    this->_init(width, height, NULL);
+}
+
+Dashboard::Dashboard(Json::Value &json_data, EntityLookup *lookup)
+    : Entity(json_data)
+{
+    if (json_data.isMember("background")) {
+        this->_init(0, 0, json_data["background"].asCString());
+    } else if (json_data.isMember("width") && json_data.isMember("height")) {
+        this->_init(json_data["width"].asInt(), json_data["height"].asInt(), NULL);
+    } else {
+        fail("Either 'background' or 'width' and 'height' attributes required for Dashboard object");
+    }
+    
+    if (json_data.isMember("font")) {
+        this->setFont(json_data["font"].asCString());
+    }
+    if (json_data.isMember("monoFont")) {
+        this->setMonoFont(json_data["monoFont"].asCString());
+    }
+    if (json_data.isMember("widgets")) {
+        if (!json_data["widgets"].isArray()) {
+            fail("Member 'widgets' must be an array");
+        }
+        
+        for (Json::ValueIterator it = json_data["widgets"].begin(); it != json_data["widgets"].end(); it++) {
+            const char *dev_id = (*it).asCString();
+            Entity *ent = lookup->lookupEntity(dev_id);
+            
+            if (!ent) {
+                fail("Device '%s' not defined at this point", dev_id);
+            }
+
+            DashboardWidget *as_widget = dynamic_cast<DashboardWidget *>(ent);
+            if (as_widget == NULL) {
+                fail("Device '%s' is not a dashboard widget", dev_id);
+            }
+
+            this->addWidget(as_widget);
+        }
+    }
 }
 
 void Dashboard::addWidget(DashboardWidget *widget)
@@ -36,18 +76,50 @@ void Dashboard::removeWidget(DashboardWidget *widget)
         }
 }
 
+void Dashboard::setFont(const char *font_filename)
+{
+    this->_font_filename = font_filename;
+}
+
+void Dashboard::setMonoFont(const char *mono_font_filename)
+{
+    this->_mono_font_filename = mono_font_filename;
+}
+
 TTF_Font * Dashboard::getFont(int size)
 {
     if (this->_font_cache.find(size) != this->_font_cache.end()) {
         return this->_font_cache[size];
     }
     
-    TTF_Font *font = TTF_OpenFont(this->_font_filename, size);
+    if (this->_font_filename == "") {
+        fail("No font set for dashboard");
+    }
+    TTF_Font *font = TTF_OpenFont(this->_font_filename.c_str(), size);
     if (!font) {
         fail("Could not load dashboard font: %s", TTF_GetError());
     }
     
     this->_font_cache[size] = font;
+    
+    return font;
+}
+
+TTF_Font * Dashboard::getMonoFont(int size)
+{
+    if (this->_mono_font_cache.find(size) != this->_mono_font_cache.end()) {
+        return this->_mono_font_cache[size];
+    }
+    
+    if (this->_mono_font_filename == "") {
+        fail("No monospace font set for dashboard");
+    }
+    TTF_Font *font = TTF_OpenFont(this->_mono_font_filename.c_str(), size);
+    if (!font) {
+        fail("Could not load dashboard monospaced font: %s", TTF_GetError());
+    }
+    
+    this->_mono_font_cache[size] = font;
     
     return font;
 }
@@ -94,18 +166,29 @@ sim_time_t Dashboard::nextEventTime()
     return this->_next_frame_time;
 }
 
-void Dashboard::_init(int width, int height, SDL_Surface *background, const char *font_filename)
-{
+void Dashboard::_init(int width, int height, const char *bkgd_filename)
+{    
+    if (bkgd_filename) {
+        this->_background = IMG_Load(bkgd_filename);
+        if (!this->_background)
+            fail("Error loading dashboard background image: %s", IMG_GetError());
+        
+        width = this->_background->w;
+        height = this->_background->h;
+    } else {
+        this->_background = NULL;
+    }
+    
+    TTF_Init();
+ 
     static char ENV1[100] = "SDL_VIDEO_WINDOW_POS";
     static char ENV2[100] = "SDL_VIDEO_CENTERED=1";
     putenv(ENV1);
     putenv(ENV2);
-    
-    TTF_Init();
     SDL_Init(SDL_INIT_VIDEO);
     
-    SDL_Surface *screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-    if (!screen)
+    this->screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    if (!this->screen)
         fail("Could not initialize SDL display");
     atexit(SDL_Quit);
 
@@ -113,9 +196,7 @@ void Dashboard::_init(int width, int height, SDL_Surface *background, const char
 
     SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
     
-    this->screen = screen;
-    this->_background = background;
-    this->_font_filename = font_filename;
-    
     this->_next_frame_time = 0;
+    this->_font_filename = "";
+    this->_mono_font_filename = "";
 }

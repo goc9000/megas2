@@ -13,6 +13,9 @@
                 { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "D7"}, { "device": "debug_led", "pin": "IN"}] },
                 { "id": "debug_btn", "type": "SimplePushButton", "up_value": "Z", "down_value": 0, "x": 16, "y": 40, "size": 16, "color": {"r":0, "g":0, "b":0}, "caption": "Debug button" },
                 { "type": "AnalogBus", "pins": [{ "device": "mcu", "pin": "D6"}, { "device": "debug_btn", "pin": "OUT"}] },
-                { "id": "dashboard", "type": "Dashboard", "background": "charlie_dashboard_bkgd.png", "widgets": ["debug_led", "debug_btn"] }
+                { "id": "dashboard", "type": "Dashboard", "background": "charlie_dashboard_bkgd.png",
+                  "font": "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+                  "monoFont": "/usr/share/fonts/truetype/freefont/FreeMono.ttf",
+                  "widgets": ["debug_led", "debug_btn"] }
                ]
 }
