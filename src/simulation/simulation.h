@@ -1,6 +1,8 @@
 #ifndef _H_SIMULATION_H
 #define _H_SIMULATION_H
 
+#include "sys_desc.h"
+
 #include <inttypes.h>
 #include <vector>
 
@@ -21,9 +23,14 @@ class SimulatedDevice;
 class Simulation {
 public:
     Simulation();
+    Simulation(SystemDescription *sys_desc);
+    
     void addDevice(SimulatedDevice *device);
     void removeDevice(SimulatedDevice *device);
     void run();
+    void runToTime(sim_time_t to_time);
+    
+    bool sync_with_real_time;
 private:
     vector<SimulatedDevice *> devices;
 };
