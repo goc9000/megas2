@@ -36,10 +36,13 @@ SystemDescription::SystemDescription(Json::Value &json_data)
 SystemDescription::SystemDescription(const char *filename)
 {
     Json::Value json_data;
-    
+
     this->_init();
     
     ifstream infile(filename);
+    if (!infile.is_open()) {
+        fail("Cannot open system description file '%s'", filename);
+    }
     infile >> json_data;
     
     this->_initFromJson(json_data);
