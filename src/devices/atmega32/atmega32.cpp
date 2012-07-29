@@ -15,6 +15,8 @@
 
 using namespace std;
 
+#define SIM_EVENT_TICK   0
+
 extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT];
 
 static inline bool is_data_port(uint8_t port)
@@ -142,43 +144,22 @@ void Atmega32::reset()
     this->_timersInit();
     this->_pinsInit();
     this->_adcInit();
+
+    if (this->simulation) {
+        this->simulation->unscheduleAll(this);
+        this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + this->clock_period);
+    }
 }
 
-void Atmega32::setSimulationTime(sim_time_t time)
+void Atmega32::act(int event)
 {
-    sim_time_t delta = time - this->sim_time;
-    
-    this->sim_time = time;
-    this->next_fetch_time += delta;
-}
-
-void Atmega32::act()
-{
-    this->sim_time = this->next_fetch_time;
-/*
-static int x = 0;
-
-x++;
-if (x > 16000000) {
-    x = 0;
-    info("at pc=%04x(b)", this->core.pc*2);
-}
-
-if (this->core.pc*2 == 0xb42) {
-    info("SCHED_RUN_TASK @ %04x(b)", 2*this->_get16BitReg(REG16_Z));
-}
-*/
-    
     this->_handleIrqs();
     this->_runTimers();
     atmega32_core_step(&this->core);
-    
-    this->next_fetch_time = this->sim_time + this->clock_period;
-}
 
-sim_time_t Atmega32::nextEventTime()
-{
-    return this->next_fetch_time;
+    if (this->simulation) {
+        this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + this->clock_period);
+    }
 }
 
 void Atmega32::_handleIrqs()

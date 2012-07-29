@@ -31,15 +31,12 @@ public:
     
     TTF_Font *getFont(int size);
     TTF_Font *getMonoFont(int size);
-    
-    virtual void setSimulationTime(sim_time_t time);
-    virtual void act();
-    virtual sim_time_t nextEventTime();
+
+    virtual void reset();
+    virtual void act(int event);
 private:
     vector<DashboardWidget *> _widgets;
 
-    sim_time_t _next_frame_time;
-    
     string _font_filename;
     map<int, TTF_Font *> _font_cache;
     string _mono_font_filename;

@@ -4,6 +4,8 @@
 #include "utils/fail.h"
 #include "dashboard.h"
 
+#define SIM_EVENT_DO_FRAME  0
+
 // TODO: add cleanup for TTF_* objects
 
 Dashboard::Dashboard(const char *bkgd_image_filename)
@@ -124,26 +126,24 @@ TTF_Font * Dashboard::getMonoFont(int size)
     return font;
 }
 
-void Dashboard::setSimulationTime(sim_time_t time)
+void Dashboard::reset()
 {
-    sim_time_t delta = time - this->sim_time;
-    
-    this->sim_time = time;
-    this->_next_frame_time += delta;
+    if (this->simulation) {
+        this->simulation->unscheduleAll(this);
+        this->simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, this->simulation->time + ms_to_sim_time(20));
+    }    
 }
 
-void Dashboard::act()
+void Dashboard::act(int event)
 {
-    this->sim_time = this->_next_frame_time;
+    SDL_Event evt;
     
-    SDL_Event event;
-    
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT)
+    while (SDL_PollEvent(&evt)) {
+        if (evt.type == SDL_QUIT)
             exit(EXIT_SUCCESS);
         
         for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
-            if ((*it)->handleEvent(this, &event))
+            if ((*it)->handleEvent(this, &evt))
                 break;
     }
     
@@ -157,13 +157,10 @@ void Dashboard::act()
         (*it)->render(this);
     
     SDL_Flip(this->screen);
-    
-    this->_next_frame_time += ms_to_sim_time(20);
-}
 
-sim_time_t Dashboard::nextEventTime()
-{
-    return this->_next_frame_time;
+    if (this->simulation) {
+        this->simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, this->simulation->time + ms_to_sim_time(20));
+    }
 }
 
 void Dashboard::_init(int width, int height, const char *bkgd_filename)
@@ -196,7 +193,6 @@ void Dashboard::_init(int width, int height, const char *bkgd_filename)
 
     SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
     
-    this->_next_frame_time = 0;
     this->_font_filename = "";
     this->_mono_font_filename = "";
 }

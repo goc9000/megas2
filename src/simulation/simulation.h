@@ -20,6 +20,17 @@ typedef int64_t sim_time_t;
 
 class SimulatedDevice;
 
+class SimulationEventEntry {
+public:
+    sim_time_t timestamp;
+    SimulatedDevice *device;
+    int event_id;
+
+    SimulationEventEntry(sim_time_t timestamp_, SimulatedDevice* device_, int event_id_)
+        : timestamp(timestamp_), device(device_), event_id(event_id_) {}
+    bool before(SimulationEventEntry &other);
+};
+
 class Simulation {
 public:
     Simulation();
@@ -27,12 +38,19 @@ public:
     
     void addDevice(SimulatedDevice *device);
     void removeDevice(SimulatedDevice *device);
+
     void run();
     void runToTime(sim_time_t to_time);
+
+    void scheduleEvent(SimulatedDevice *device, int event, sim_time_t time);
+    void unscheduleAll(SimulatedDevice *device);
+
+    sim_time_t time;
     
     bool sync_with_real_time;
 private:
     vector<SimulatedDevice *> devices;
+    deque<SimulationEventEntry> event_queue;
 };
 
 #endif

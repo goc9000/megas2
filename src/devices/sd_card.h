@@ -14,15 +14,12 @@
 
 #define SDCARD_PIN_SLAVE_SELECT    0
 
-class SdCard : public Entity, public Device, public SpiDevice, public PinDevice, public SimulatedDevice {
+class SdCard : public Entity, public SpiDevice, public PinDevice, public SimulatedDevice {
 public:
     SdCard(const char *backing_file_name, unsigned capacity);
     SdCard(Json::Value &json_data);
     
     virtual void reset();
-    
-    virtual void act();
-    virtual sim_time_t nextEventTime();
     
     bool spiReceiveData(uint8_t &data);
 private:

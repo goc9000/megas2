@@ -1,15 +1,17 @@
 #ifndef _H_SIM_DEVICE_H
 #define _H_SIM_DEVICE_H
 
+#include "devices/device.h"
 #include "simulation.h"
 
-class SimulatedDevice {
+class SimulatedDevice : public Device {
 public:
-    virtual void act() = 0;
-    virtual void setSimulationTime(sim_time_t time);
-    virtual sim_time_t nextEventTime() = 0;
+    SimulatedDevice();
+
+    virtual void act(int event);
+    void setSimulation(Simulation *simulation);
 protected:
-    sim_time_t sim_time;
+    Simulation *simulation;
 };
 
 #endif

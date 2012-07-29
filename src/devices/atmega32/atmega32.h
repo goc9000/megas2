@@ -20,7 +20,7 @@
 #define MEGA32_PIN_D         24
 #define MEGA32_PIN_D7        31
 
-class Atmega32 : public Entity, public Device, public I2cDevice, public SpiDevice, public PinDevice, public SimulatedDevice {
+class Atmega32 : public Entity, public I2cDevice, public SpiDevice, public PinDevice, public SimulatedDevice {
 public:
     Atmega32();
     Atmega32(Json::Value &json_data);
@@ -29,10 +29,7 @@ public:
     void setFrequency(uint64_t frequency);
 
     virtual void reset();
-    
-    virtual void setSimulationTime(sim_time_t time);
-    virtual void act();
-    virtual sim_time_t nextEventTime();
+    virtual void act(int event);
 
     // should be protected, but...
     void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
@@ -40,8 +37,6 @@ public:
 protected:
     uint64_t frequency;
     sim_time_t clock_period;
-
-    sim_time_t next_fetch_time;
 
     Atmega32Core core;
     

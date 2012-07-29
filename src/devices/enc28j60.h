@@ -18,15 +18,12 @@
 #define E28J_PHY_REGS_COUNT     0x20
 #define E28J_ETH_BUFFER_SIZE    0x2000
 
-class Enc28J60 : public Entity, public Device, public PinDevice, public SpiDevice, public SimulatedDevice {
+class Enc28J60 : public Entity, public PinDevice, public SpiDevice, public SimulatedDevice {
 public:
     Enc28J60();
     Enc28J60(Json::Value &json_data);
     
     virtual void reset();
-    
-    virtual void act();
-    virtual sim_time_t nextEventTime();
     
     bool spiReceiveData(uint8_t &data);
 private:

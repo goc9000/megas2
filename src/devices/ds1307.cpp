@@ -8,6 +8,8 @@
 
 using namespace std;
 
+#define SIM_EVENT_TICK   0
+
 Ds1307::Ds1307(uint8_t i2c_address) : Entity("ds1307", "DS1307")
 {
     this->i2c_addr = i2c_address;
@@ -25,33 +27,23 @@ Ds1307::Ds1307(Json::Value &json_data) : Entity(json_data)
     this->reset();
 }
 
-void Ds1307::setSimulationTime(sim_time_t time)
+void Ds1307::act(int event)
 {
-    sim_time_t delta = time - this->sim_time;
-    
-    this->sim_time = time;
-    this->next_tick_time += delta;
-}
-
-void Ds1307::act()
-{
-    this->sim_time = this->next_tick_time;
-    
     printf("Ds1307 ticks!\n");
-    
-    this->next_tick_time = this->sim_time + sec_to_sim_time(1);
-}
 
-sim_time_t Ds1307::nextEventTime()
-{
-    return this->next_tick_time;
+    if (this->simulation) {
+        this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + sec_to_sim_time(1));
+    }
 }
 
 void Ds1307::reset()
 {
     this->i2c_listening = false;
     
-    this->next_tick_time = this->sim_time + sec_to_sim_time(1);
+    if (this->simulation) {
+        this->simulation->unscheduleAll(this);
+        this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + sec_to_sim_time(1));
+    }
 }
 
 void Ds1307::i2cReceiveStart()

@@ -116,16 +116,6 @@ void SdCard::_init(const char *backing_file_name, unsigned capacity)
     this->reset();
 }
 
-void SdCard::act()
-{
-    // SD cards do nothing on their own
-}
-
-sim_time_t SdCard::nextEventTime()
-{
-    return SIM_TIME_NEVER;
-}
-
 void SdCard::reset()
 {
     this->in_sd_mode = true;

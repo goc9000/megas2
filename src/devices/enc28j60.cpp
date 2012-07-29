@@ -65,16 +65,6 @@ Enc28J60::Enc28J60(Json::Value &json_data)
     this->reset();
 }
 
-void Enc28J60::act()
-{
-    // ENC28J60 does nothing on its own (for now)
-}
-
-sim_time_t Enc28J60::nextEventTime()
-{
-    return SIM_TIME_NEVER;
-}
-
 void Enc28J60::reset()
 {
     memset(this->regs, 0, E28J_REGS_COUNT);
