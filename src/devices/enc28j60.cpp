@@ -18,10 +18,118 @@ using namespace std;
 #define OPCODE_BIT_FIELD_CLEAR        5
 
 // Registers
+#define REG_ERDPTL                    0x00
+#define REG_ERDPTH                    0x01
+#define REG_EWRPTL                    0x02
+#define REG_EWRPTH                    0x03
+#define REG_ETXSTL                    0x04
+#define REG_ETXSTH                    0x05
+#define REG_ETXNDL                    0x06
+#define REG_ETXNDH                    0x07
+#define REG_ERXSTL                    0x08
+#define REG_ERXSTH                    0x09
+#define REG_ERXNDL                    0x0a
+#define REG_ERXNDH                    0x0b
+#define REG_ERXRDPTL                  0x0c
+#define REG_ERXRDPTH                  0x0d
+#define REG_ERXWRPTL                  0x0e
+#define REG_ERXWRPTH                  0x0f
+#define REG_EDMASTL                   0x10
+#define REG_EDMASTH                   0x11
+#define REG_EDMANDL                   0x12
+#define REG_EDMANDH                   0x13
+#define REG_EDMADSTL                  0x14
+#define REG_EDMADSTH                  0x15
+#define REG_EDMACSL                   0x16
+#define REG_EDMACSH                   0x17
+#define REG_EIE                       0x1b
+#define REG_EIR                       0x1c
+#define REG_ESTAT                     0x1d
+#define REG_ECON2                     0x1e
 #define REG_ECON1                     0x1f
+
+#define REG_EHT0                      0x20
+#define REG_EHT1                      0x21
+#define REG_EHT2                      0x22
+#define REG_EHT3                      0x23
+#define REG_EHT4                      0x24
+#define REG_EHT5                      0x25
+#define REG_EHT6                      0x26
+#define REG_EHT7                      0x27
+#define REG_EPMM0                     0x28
+#define REG_EPMM1                     0x29
+#define REG_EPMM2                     0x2a
+#define REG_EPMM3                     0x2b
+#define REG_EPMM4                     0x2c
+#define REG_EPMM5                     0x2d
+#define REG_EPMM6                     0x2e
+#define REG_EPMM7                     0x2f
+#define REG_EPMCSL                    0x30
+#define REG_EPMCSH                    0x31
+#define REG_EPMOL                     0x34
+#define REG_EPMOH                     0x35
+#define REG_EWOLIE                    0x36
+#define REG_EWOLIR                    0x37
+#define REG_ERXFCON                   0x38
+#define REG_EPKTCNT                   0x39
+
+#define REG_MACON1                    0x40
+#define REG_MACON2                    0x41
+#define REG_MACON3                    0x42
+#define REG_MACON4                    0x43
+#define REG_MABBIPG                   0x44
+#define REG_MAIPGL                    0x46
+#define REG_MAIPGH                    0x47
+#define REG_MACLCON1                  0x48
+#define REG_MACLCON2                  0x49
+#define REG_MAMXFLL                   0x4a
+#define REG_MAMXFLH                   0x4b
+#define REG_MAPHSUP                   0x4d
+#define REG_MICON                     0x51
+#define REG_MICMD                     0x52
+#define REG_MIREGADR                  0x54
+#define REG_MIWRL                     0x56
+#define REG_MIWRH                     0x57
+#define REG_MIRDL                     0x58
+#define REG_MIRDH                     0x59
+
+#define REG_MAADR1                    0x60
+#define REG_MAADR0                    0x61
+#define REG_MAADR3                    0x62
+#define REG_MAADR2                    0x63
+#define REG_MAADR5                    0x64
+#define REG_MAADR4                    0x65
+#define REG_EBSTSD                    0x66
+#define REG_EBSTCON                   0x67
+#define REG_EBSTCSL                   0x68
+#define REG_EBSTCSH                   0x69
+#define REG_MISTAT                    0x6a
 #define REG_EREVID                    0x72
+#define REG_ECOCON                    0x75
+#define REG_EFLOCON                   0x77
+#define REG_EPAUSL                    0x78
+#define REG_EPAUSH                    0x79
 
 // Register bits
+
+static char const * const REG_NAMES[128] = {
+    "ERDPTL", "ERDPTH", "EWRPTL", "EWRPTH", "ETXSTL", "ETXSTH", "ETXNDL", "ETXNDH",
+    "ERXSTL", "ERXSTH", "ERXNDL", "ERXNDH", "ERXRDPTL", "ERXRDPTH", "ERXWRPTL", "ERXWRPTH",
+    "EDMASTL", "EDMASTH", "EDMANDL", "EDMANDH", "EDMADSTL", "EDMADSTH", "EDMACSL", "EDMACSH",
+    "(18H)", "(19H)", "(1AH)", "EIE", "EIR", "ESTAT", "ECON2", "ECON1",
+    "EHT0", "EHT1", "EHT2", "EHT3", "EHT4", "EHT5", "EHT6", "EHT7",
+    "EPMM0", "EPMM1", "EPMM2", "EPMM3", "EPMM4", "EPMM5", "EPMM6", "EPMM7",
+    "EPMCSL", "EPMCSH", "(32H)", "(33H)", "EPMOL", "EPMOH", "EWOLIE", "EWOLIR",
+    "ERXFCON", "EPKTCNT", "(3AH)", "EIE", "EIR", "ESTAT", "ECON2", "ECON1",
+    "MACON1", "MACON2", "MACON3", "MACON4", "MABBIPG", "(45H)", "MAIPGL", "MAIPGH",
+    "MACLCON1", "MACLCON2", "MAMXFLL", "MAMXFLH", "(4CH)", "MAPHSUP", "(4EH)", "(4FH)",
+    "(50H)", "MICON", "MICMD", "(53H)", "MIREGADR", "(55H)", "MIWRL", "MIWRH",
+    "MIRDL", "MIRDH", "(5AH)", "EIE", "EIR", "ESTAT", "ECON2", "ECON1",
+    "MAADR1", "MAADR0", "MAADR3", "MAADR2", "MAADR5", "MAADR4", "EBSTSD", "EBSTCON",
+    "EBSTCSL", "EBSTCSH", "MISTAT", "(6BH)", "(6CH)", "(6DH)", "(6EH)", "(6FH)",
+    "(70H)", "(71H)", "EREVID", "(73H)", "(74H)", "ECOCON", "(76H)", "EFLOCON",
+    "EPAUSL", "EPAUSH", "(7AH)", "EIE", "EIR", "ESTAT", "ECON2", "ECON1"
+};
 
 #define STATE_RECEIVING_COMMAND       0
 #define STATE_RECEIVING_COMMAND_ARG   1
@@ -161,6 +269,8 @@ uint8_t Enc28J60::_handleCommandArg(uint8_t data)
 uint8_t Enc28J60::_execReadCtrlReg(uint8_t reg)
 {
     reg = this->_mapRegister(reg);
+
+//printf("E28J: read %s\n", REG_NAMES[reg]);
     
     this->response_byte = this->regs[reg];
     this->state = (is_mac_reg(reg) || is_mii_reg(reg)) ? STATE_PRE_RESPONDING : STATE_RESPONDING; 
@@ -171,6 +281,8 @@ uint8_t Enc28J60::_execReadCtrlReg(uint8_t reg)
 uint8_t Enc28J60::_execWriteCtrlReg(uint8_t reg, uint8_t data)
 {
     reg = this->_mapRegister(reg);
+
+//printf("E28J: write %s, %02x\n", REG_NAMES[reg], data);
     
     // TODO: intercept this
     this->regs[reg] = data;
@@ -186,7 +298,8 @@ uint8_t Enc28J60::_execBitFieldClear(uint8_t reg, uint8_t data)
     
     if (is_mac_reg(reg) || is_mii_reg(reg))
         fail("Attempted Bit Field Clear on MAC/MII register %02x", reg);
-    
+
+//printf("E28J: and %s, %02x\n", REG_NAMES[reg], data);    
     // TODO: intercept this
     this->regs[reg] &= ~data;
     
@@ -201,7 +314,8 @@ uint8_t Enc28J60::_execBitFieldSet(uint8_t reg, uint8_t data)
     
     if (is_mac_reg(reg) || is_mii_reg(reg))
         fail("Attempted Bit Field Set on MAC/MII register %02x", reg);
-    
+
+//printf("E28J: or %s, %02x\n", REG_NAMES[reg], data);
     // TODO: intercept this
     this->regs[reg] |= data;
     

@@ -534,6 +534,7 @@ static void exec_single_reg_op(Atmega32Core *core, uint16_t opcode)
     uint8_t d = ins->d;
     uint8_t d_val = read_reg(core, ins->d);
     uint8_t res = 0;
+    uint8_t top_bit = 0;
     
     switch (ins->opcode) {
         case 0x00: // COM
@@ -557,7 +558,6 @@ static void exec_single_reg_op(Atmega32Core *core, uint16_t opcode)
         case 0x05: // ASR
         case 0x06: // LSR
         case 0x07: // ROR
-            uint8_t top_bit;
             switch (ins->opcode) {
                 case 0x05: top_bit = bit_is_set(d_val, 7); break;
                 case 0x06: top_bit = 0; break;
