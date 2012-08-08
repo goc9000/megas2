@@ -295,11 +295,33 @@ Enc28J60::Enc28J60(Json::Value &json_data)
 
 void Enc28J60::reset()
 {
+    this->_initRegs();
+    memset(this->eth_buffer, 0, E28J_ETH_BUFFER_SIZE);
+}
+
+void Enc28J60::_initRegs()
+{
     memset(this->regs, 0, E28J_REGS_COUNT);
     memset(this->phy_regs, 0, E28J_PHY_REGS_COUNT);
-    memset(this->eth_buffer, 0, E28J_ETH_BUFFER_SIZE);
-    
+
+    this->regs[REG_ECON2] = _BV(B_AUTOINC);
+    this->regs[REG_ERDPTL] = 0xfa;
+    this->regs[REG_ERDPTH] = 0x05;
+    this->regs[REG_ERXSTL] = 0xfa;
+    this->regs[REG_ERXSTH] = 0x05;
+    this->regs[REG_ERXNDL] = 0xff;
+    this->regs[REG_ERXNDH] = 0x1f;
+    this->regs[REG_ERXRDPTL] = 0xfa;
+    this->regs[REG_ERXRDPTH] = 0x05;
+    this->regs[REG_ERXFCON] = _BV(B_UCEN) | _BV(B_CRCEN) | _BV(B_BCEN);
+    this->regs[REG_MACON2] = _BV(B_MARST);
+    this->regs[REG_MACLCON1] = 0x0f;
+    this->regs[REG_MACLCON2] = 0x37;
+    this->regs[REG_MAMXFLH] = 0x06;
+    this->regs[REG_MAPHSUP] = 0x10;
     this->regs[REG_EREVID] = E28J_REVISION_ID;
+    this->regs[REG_ECOCON] = 0x04;
+    this->regs[REG_EPAUSH] = 0x10;
 }
 
 void Enc28J60::_onPinChanged(int pin_id, int value, int old_value)
