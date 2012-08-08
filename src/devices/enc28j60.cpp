@@ -112,6 +112,126 @@ using namespace std;
 
 // Register bits
 
+// EIE
+#define B_INTIE                       7
+#define B_PKTIE                       6
+#define B_DMAIE                       5
+#define B_LINKIE                      4
+#define B_TXIE                        3
+#define B_WOLIE                       2
+#define B_TXERIE                      1
+#define B_RXERIE                      0
+// EIR
+#define B_PKTIF                       6
+#define B_DMAIF                       5
+#define B_LINKIF                      4
+#define B_TXIF                        3
+#define B_WOLIF                       2
+#define B_TXERIF                      1
+#define B_RXERIF                      0
+// ESTAT
+#define B_INT                         7
+#define B_LATECOL                     4
+#define B_RXBUSY                      2
+#define B_TXABRT                      1
+#define B_CLKRDY                      0
+// ECON2
+#define B_AUTOINC                     7
+#define B_PKTDEC                      6
+#define B_PWRSV                       5
+#define B_VRPS                        3
+// ECON1
+#define B_TXRST                       7
+#define B_RXRST                       6
+#define B_DMAST                       5
+#define B_CSUMEN                      4
+#define B_TXRTS                       3
+#define B_RXEN                        2
+#define B_BSEL1                       1
+#define B_BSEL0                       0
+// EWOLIE
+#define B_UCWOLIE                     7
+#define B_AWOLIE                      6
+#define B_PMWOLIE                     4
+#define B_MPWOLIE                     3
+#define B_HTWOLIE                     2
+#define B_MCWOLIE                     1
+#define B_BCWOLIE                     0
+// EWOLIR
+#define B_UCWOLIF                     7
+#define B_AWOLIF                      6
+#define B_PMWOLIF                     4
+#define B_MPWOLIF                     3
+#define B_HTWOLIF                     2
+#define B_MCWOLIF                     1
+#define B_BCWOLIF                     0
+// ERXFCON
+#define B_UCEN                        7
+#define B_ANDOR                       6
+#define B_CRCEN                       5
+#define B_PMEN                        4
+#define B_MPEN                        3
+#define B_HTEN                        2
+#define B_MCEN                        1
+#define B_BCEN                        0
+// MACON1
+#define B_LOOPBK                      4
+#define B_TXPAUS                      3
+#define B_RXPAUS                      2
+#define B_PASSALL                     1
+#define B_MARXEN                      0
+// MACON2
+#define B_MARST                       7
+#define B_RNDRST                      6
+#define B_MARXRST                     3
+#define B_RFUNRST                     2
+#define B_MATXRST                     1
+#define B_TFUNRST                     0
+// MACON3
+#define B_PADCFG2                     7
+#define B_PADCFG1                     6
+#define B_PADCFG0                     5
+#define B_TXCRCEN                     4
+#define B_PHDRLEN                     3
+#define B_HFRMEN                      2
+#define B_FRMLNEN                     1
+#define B_FULDPX                      0
+// MACON4
+#define B_DEFER                       6
+#define B_BPEN                        5
+#define B_NOBKOFF                     4
+#define B_LONGPRE                     1
+#define B_PUREPRE                     0
+// MAPHSUP
+#define B_RSTINTFC                    7
+#define B_RSTRMII                     3
+// MICON
+#define B_RSTMII                      7
+// MICMD
+#define B_MIISCAN                     1
+#define B_MIIRD                       0
+// EBSTCON
+#define B_PSV2                        7
+#define B_PSV1                        6
+#define B_PSV0                        5
+#define B_PSEL                        4
+#define B_TMSEL1                      3
+#define B_TMSEL0                      2
+#define B_TME                         1
+#define B_BISTST                      0
+// MISTAT
+#define B_NVALID                      2
+#define B_SCAN                        1
+#define B_BUSY                        0
+// ECOCON
+#define B_COCON2                      2
+#define B_COCON1                      1
+#define B_COCON0                      0
+// EFLOCON
+#define B_FULDPXS                     2
+#define B_FCEN1                       1
+#define B_FCEN0                       0
+
 static char const * const REG_NAMES[128] = {
     "ERDPTL", "ERDPTH", "EWRPTL", "EWRPTH", "ETXSTL", "ETXSTH", "ETXNDL", "ETXNDH",
     "ERXSTL", "ERXSTH", "ERXNDL", "ERXNDH", "ERXRDPTL", "ERXRDPTH", "ERXWRPTL", "ERXWRPTH",
