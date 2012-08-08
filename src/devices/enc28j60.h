@@ -35,6 +35,8 @@ private:
     uint8_t cmd_byte;
     uint8_t response_byte;
 
+    void _initRegs();
+
     virtual void _onPinChanged(int pin_id, int value, int old_value);
     
     virtual void _onSpiSlaveSelect(bool select);
@@ -48,8 +50,12 @@ private:
     uint8_t _execBitFieldSet(uint8_t reg, uint8_t data);
     
     uint8_t _mapRegister(uint8_t reg);
+    uint8_t _getRegWriteMask(uint8_t reg);
+    uint8_t _getRegClearableMask(uint8_t reg);
 
-    void _initRegs();
+    void _onRegRead(uint8_t reg, uint8_t &value);
+    void _onPreRegWrite(uint8_t reg, uint8_t &value, uint8_t prev_val);
+    void _onRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val);
 };
 
 #endif

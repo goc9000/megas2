@@ -412,9 +412,11 @@ uint8_t Enc28J60::_execReadCtrlReg(uint8_t reg)
 {
     reg = this->_mapRegister(reg);
 
-//printf("E28J: read %s\n", REG_NAMES[reg]);
-    
-    this->response_byte = this->regs[reg];
+    uint8_t value = this->regs[reg];
+
+    this->_onRegRead(reg, value);
+
+    this->response_byte = value;
     this->state = (is_mac_reg(reg) || is_mii_reg(reg)) ? STATE_PRE_RESPONDING : STATE_RESPONDING; 
     
     return 0xff;
@@ -424,10 +426,11 @@ uint8_t Enc28J60::_execWriteCtrlReg(uint8_t reg, uint8_t data)
 {
     reg = this->_mapRegister(reg);
 
-//printf("E28J: write %s, %02x\n", REG_NAMES[reg], data);
-    
-    // TODO: intercept this
-    this->regs[reg] = data;
+    uint8_t prev_value = this->regs[reg];
+    uint8_t value = data;
+    this->_onPreRegWrite(reg, value, prev_value);
+    this->regs[reg] = value;
+    this->_onRegWrite(reg, value, prev_value);
     
     this->state = STATE_RECEIVING_COMMAND;
     
@@ -441,9 +444,11 @@ uint8_t Enc28J60::_execBitFieldClear(uint8_t reg, uint8_t data)
     if (is_mac_reg(reg) || is_mii_reg(reg))
         fail("Attempted Bit Field Clear on MAC/MII register %02x", reg);
 
-//printf("E28J: and %s, %02x\n", REG_NAMES[reg], data);    
-    // TODO: intercept this
-    this->regs[reg] &= ~data;
+    uint8_t prev_value = this->regs[reg];
+    uint8_t value = prev_value & ~data;
+    this->_onPreRegWrite(reg, value, prev_value);
+    this->regs[reg] = value;
+    this->_onRegWrite(reg, value, prev_value);
     
     this->state = STATE_RECEIVING_COMMAND;
     
@@ -457,9 +462,11 @@ uint8_t Enc28J60::_execBitFieldSet(uint8_t reg, uint8_t data)
     if (is_mac_reg(reg) || is_mii_reg(reg))
         fail("Attempted Bit Field Set on MAC/MII register %02x", reg);
 
-//printf("E28J: or %s, %02x\n", REG_NAMES[reg], data);
-    // TODO: intercept this
-    this->regs[reg] |= data;
+    uint8_t prev_value = this->regs[reg];
+    uint8_t value = prev_value | data;
+    this->_onPreRegWrite(reg, value, prev_value);
+    this->regs[reg] = value;
+    this->_onRegWrite(reg, value, prev_value);
     
     this->state = STATE_RECEIVING_COMMAND;
     
@@ -475,4 +482,68 @@ uint8_t Enc28J60::_mapRegister(uint8_t reg)
         return reg;
     
     return ((this->regs[REG_ECON1] & 0x03) << 5) + reg;
+}
+
+uint8_t Enc28J60::_getRegWriteMask(uint8_t reg)
+{
+    switch (reg) {
+        case REG_EIR: return 0x00;
+        case REG_ESTAT: return 0x01;
+        case REG_ECON2: return 0xe8;
+        case REG_ERDPTH: case REG_EWRPTH: case REG_ETXSTH: case REG_ETXNDH:
+        case REG_ERXSTH: case REG_ERXNDH: case REG_ERXRDPTH: case REG_ERXWRPTH:
+        case REG_EDMASTH: case REG_EDMANDH: case REG_EDMADSTH: case REG_EDMACSH:
+            return 0x1f;
+        case REG_EPMOH: return 0x1f;
+        case REG_EPKTCNT: return 0x00;
+        case REG_EWOLIE: return 0xdf;
+        case REG_EWOLIR: return 0x00;
+        case REG_MACON1: return 0x1f;
+        case REG_MACON2: return 0xcf;
+        case REG_MACON4: return 0x73;
+        case REG_MABBIPG: return 0x7f;
+        case REG_MAIPGL: return 0x7f;
+        case REG_MAIPGH: return 0x7f;
+        case REG_MACLCON1: return 0x0f;
+        case REG_MACLCON2: return 0x3f;
+        case REG_MAPHSUP: return 0x99;
+        case REG_MICON: return 0x80;
+        case REG_MICMD: return 0x03;
+        case REG_MIREGADR: return 0x1f;
+        case REG_MISTAT: return 0x00;
+        case REG_EREVID: return 0x00;
+        case REG_ECOCON: return 0x07;
+        case REG_EFLOCON: return 0x03;
+    }
+    
+    return 0xff;
+}
+
+uint8_t Enc28J60::_getRegClearableMask(uint8_t reg)
+{
+    switch (reg) {
+        case REG_ESTAT: return 0x52;
+        case REG_EIR: return 0x2b;
+        case REG_EWOLIR: return 0xdf;
+    }
+    
+    return 0x00;
+}
+
+void Enc28J60::_onRegRead(uint8_t reg, uint8_t &value)
+{
+}
+
+void Enc28J60::_onPreRegWrite(uint8_t reg, uint8_t &value, uint8_t prev_val)
+{
+    uint8_t clr_mask = this->_getRegClearableMask(reg);
+    uint8_t wr_mask = this->_getRegWriteMask(reg);
+    
+    uint8_t mask = wr_mask | clr_mask;
+    value &= ~((value & ~prev_val) & clr_mask); // can't set clearable bits
+    value = (prev_val & ~mask) | (value & mask); // mask off R/O bits
+}
+
+void Enc28J60::_onRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
+{
 }
