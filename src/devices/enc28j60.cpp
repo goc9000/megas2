@@ -110,6 +110,17 @@ using namespace std;
 #define REG_EPAUSL                    0x78
 #define REG_EPAUSH                    0x79
 
+// PHY registers
+#define REG_PHCON1                    0x00
+#define REG_PHSTAT1                   0x01
+#define REG_PHID1                     0x02
+#define REG_PHID2                     0x03
+#define REG_PHCON2                    0x10
+#define REG_PHSTAT2                   0x11
+#define REG_PHIE                      0x12
+#define REG_PHIR                      0x13
+#define REG_PHLCON                    0x14
+
 // Register bits
 
 // EIE
@@ -232,6 +243,41 @@ using namespace std;
 #define B_FCEN1                       1
 #define B_FCEN0                       0
 
+// PHCON1
+#define B_PRST                       15
+#define B_PLOOPBK                    14
+#define B_PPWRSV                     11
+#define B_PDPXMD                      8
+// PHSTAT1
+#define B_PFDPX                      12
+#define B_PHDPX                      11
+#define B_LLSTAT                      2
+#define B_JBSTAT                      1
+// PHCON2
+#define B_FRCLNK                     14
+#define B_TXDIS                      13
+#define B_JABBER                     10
+#define B_HDLDIS                      8
+// PHSTAT2
+#define B_TXSTAT                     13
+#define B_RXSTAT                     12
+#define B_COLSTAT                    11
+#define B_LSTAT                      10
+#define B_DPXSTAT                     9
+#define B_PLRITY                      4
+// PHIE
+#define B_PNLKIE                      4
+#define B_PGEIE                       1
+// PHIR
+#define B_PLNKIF                      4
+#define B_PGIF                        2
+// PHLCON
+#define B_LACFG0                      8
+#define B_LBCFG0                      4
+#define B_LFRQ1                       3
+#define B_LFRQ0                       2
+#define B_STRCH                       1
+
 static char const * const REG_NAMES[128] = {
     "ERDPTL", "ERDPTH", "EWRPTL", "EWRPTH", "ETXSTL", "ETXSTH", "ETXNDL", "ETXNDH",
     "ERXSTL", "ERXSTH", "ERXNDL", "ERXNDH", "ERXRDPTL", "ERXRDPTH", "ERXWRPTL", "ERXWRPTH",
@@ -271,25 +317,32 @@ static bool is_common_reg(uint8_t reg)
 static bool is_mac_reg(uint8_t reg)
 {
     return
-        ((reg >= 0x40) && (reg <= 0x4d)) ||
-        ((reg >= 0x60) && (reg <= 0x65)) ||
-        (reg == 0x6A);
+        ((reg >= REG_MACON1) && (reg <= REG_MAPHSUP)) ||
+        ((reg >= REG_MAADR0) && (reg <= REG_MAADR4));
 }
 
 static bool is_mii_reg(uint8_t reg)
 {
-    return (reg >= 0x51) && (reg <= 0x59);
+    return ((reg >= REG_MICON) && (reg <= REG_MIRDH)) || (reg == REG_MISTAT);
 }
 
 Enc28J60::Enc28J60()
     : Entity("enc28j60", "ENC28J60"), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
 {
+    this->full_duplex_wired = true;
+    
     this->reset();
 }
 
 Enc28J60::Enc28J60(Json::Value &json_data)
     : Entity(json_data), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
 {
+    this->full_duplex_wired = true;
+
+    if (json_data.isMember("full_duplex")) {
+        this->setFullDuplexWired(json_data["full_duplex"].asBool());
+    }
+    
     this->reset();
 }
 
@@ -299,11 +352,14 @@ void Enc28J60::reset()
     memset(this->eth_buffer, 0, E28J_ETH_BUFFER_SIZE);
 }
 
+void Enc28J60::setFullDuplexWired(bool wired)
+{
+    this->full_duplex_wired = wired;
+}
+
 void Enc28J60::_initRegs()
 {
     memset(this->regs, 0, E28J_REGS_COUNT);
-    memset(this->phy_regs, 0, E28J_PHY_REGS_COUNT);
-
     this->regs[REG_ECON2] = _BV(B_AUTOINC);
     this->regs[REG_ERDPTL] = 0xfa;
     this->regs[REG_ERDPTH] = 0x05;
@@ -322,6 +378,14 @@ void Enc28J60::_initRegs()
     this->regs[REG_EREVID] = E28J_REVISION_ID;
     this->regs[REG_ECOCON] = 0x04;
     this->regs[REG_EPAUSH] = 0x10;
+
+    memset(this->phy_regs, 0, E28J_PHY_REGS_COUNT);
+    this->phy_regs[REG_PHCON1] = _BV(B_PPWRSV) | (this->full_duplex_wired * _BV(B_PDPXMD));
+    this->phy_regs[REG_PHSTAT1] = _BV(B_PFDPX) | _BV(B_PHDPX);
+    this->phy_regs[REG_PHID1] = 0x0083;
+    this->phy_regs[REG_PHID2] = 0x1400;
+    this->phy_regs[REG_PHSTAT2] = (this->full_duplex_wired * _BV(B_DPXSTAT));
+    this->phy_regs[REG_PHLCON] = 0x3422;
 }
 
 void Enc28J60::_onPinChanged(int pin_id, int value, int old_value)
@@ -530,8 +594,28 @@ uint8_t Enc28J60::_getRegClearableMask(uint8_t reg)
     return 0x00;
 }
 
+uint16_t Enc28J60::_getPhyRegWriteMask(uint8_t reg)
+{
+    switch (reg) {
+        case REG_PHCON1: return 0xc480;
+        case REG_PHSTAT1: return 0x0000;
+        case REG_PHID1: return 0x0000;
+        case REG_PHID2: return 0x0000;
+        case REG_PHSTAT2: return 0x0000;
+        case REG_PHCON2: return 0x7fff;
+        case REG_PHLCON: return 0xffff;
+        case REG_PHIE: return 0xffff;
+        case REG_PHIR: return 0x0000;
+    }
+    
+    return 0x0000;
+}
+
 void Enc28J60::_onRegRead(uint8_t reg, uint8_t &value)
 {
+    if (is_mii_reg(reg)) {
+        this->_onMiiRegRead(reg, value);
+    }
 }
 
 void Enc28J60::_onPreRegWrite(uint8_t reg, uint8_t &value, uint8_t prev_val)
@@ -546,4 +630,69 @@ void Enc28J60::_onPreRegWrite(uint8_t reg, uint8_t &value, uint8_t prev_val)
 
 void Enc28J60::_onRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
 {
+    if (is_mii_reg(reg)) {
+        this->_onMiiRegWrite(reg, value, prev_val);
+    }
+}
+
+void Enc28J60::_onMiiRegRead(uint8_t reg, uint8_t &value)
+{
+    switch (reg) {
+        case REG_MIRDL:
+            if (bit_is_set(this->regs[REG_MICMD], B_MIISCAN)) {
+                uint16_t val = this->_readPhyReg(this->regs[REG_MIREGADR]);
+                this->regs[REG_MIRDH] = high_byte(val);
+                this->regs[REG_MIRDL] = low_byte(val);
+            }
+            break;
+    }
+}
+
+void Enc28J60::_onMiiRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
+{
+    switch (reg) {
+        case REG_MICMD:
+            if (bit_is_set(value, B_MIISCAN)) {
+                set_bit(this->regs[REG_MISTAT], B_SCAN);
+            } else {
+                clear_bit(this->regs[REG_MISTAT], B_SCAN);
+            }
+            if (bit_is_set(value, B_MIIRD)) {
+                uint16_t val = this->_readPhyReg(this->regs[REG_MIREGADR]);
+                this->regs[REG_MIRDH] = high_byte(val);
+                this->regs[REG_MIRDL] = low_byte(val);
+            }
+            break;
+        case REG_MIWRH:
+            this->_writePhyReg(this->regs[REG_MIREGADR],
+                (this->regs[REG_MIWRH] << 8) + this->regs[REG_MIWRL]);
+            break;
+    }
+}
+
+uint16_t Enc28J60::_readPhyReg(uint8_t reg)
+{
+    uint16_t value = this->phy_regs[reg];
+
+    // clear status bits
+    switch (reg) {
+        case REG_PHSTAT1:
+            this->phy_regs[reg] = (value & ~(_BV(B_JABBER) | _BV(B_LLSTAT))) | (_BV(B_LLSTAT) * this->_linkIsUp());
+            break;
+        case REG_PHIR:
+            this->phy_regs[reg] = value & ~(_BV(B_PLNKIF) | _BV(B_PGIF));
+            break;
+    }
+    
+    return value;
+}
+
+void Enc28J60::_writePhyReg(uint8_t reg, uint16_t value)
+{
+    this->phy_regs[reg] = value;
+}
+
+bool Enc28J60::_linkIsUp()
+{
+    return true;
 }

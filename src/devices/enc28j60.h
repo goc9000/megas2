@@ -22,14 +22,17 @@ class Enc28J60 : public Entity, public PinDevice, public SpiDevice, public Simul
 public:
     Enc28J60();
     Enc28J60(Json::Value &json_data);
-    
+        
     virtual void reset();
+    void setFullDuplexWired(bool wired);
     
     bool spiReceiveData(uint8_t &data);
 private:
     uint8_t regs[E28J_REGS_COUNT];
-    uint8_t phy_regs[E28J_PHY_REGS_COUNT];
+    uint16_t phy_regs[E28J_PHY_REGS_COUNT];
     uint8_t eth_buffer[E28J_ETH_BUFFER_SIZE];
+
+    bool full_duplex_wired;
 
     int state;
     uint8_t cmd_byte;
@@ -52,10 +55,18 @@ private:
     uint8_t _mapRegister(uint8_t reg);
     uint8_t _getRegWriteMask(uint8_t reg);
     uint8_t _getRegClearableMask(uint8_t reg);
+    uint16_t _getPhyRegWriteMask(uint8_t reg);
 
     void _onRegRead(uint8_t reg, uint8_t &value);
     void _onPreRegWrite(uint8_t reg, uint8_t &value, uint8_t prev_val);
     void _onRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val);
+
+    void _onMiiRegRead(uint8_t reg, uint8_t &value);
+    void _onMiiRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val);
+    uint16_t _readPhyReg(uint8_t reg);
+    void _writePhyReg(uint8_t reg, uint16_t value);
+
+    bool _linkIsUp();
 };
 
 #endif
