@@ -130,12 +130,12 @@ static void write_mem(Atmega32Core *core, int addr, uint8_t value)
 
 static uint16_t fetch_next_opcode(Atmega32Core *core)
 {
-    if (core->pc >= FLASH_SIZE) {
+    if (core->pc >= MEGA32_FLASH_SIZE) {
         fail("Attempted fetch from invalid address %s%04x (last instr fetched at %04x)",
             core->pc, core->last_inst_pc);
     }
     
-    uint16_t opcode = core->flash[core->pc++];
+    uint16_t opcode = core->prog_mem.flash[core->pc++];
 
     return opcode;
 }
@@ -150,7 +150,7 @@ static void skip_instruction(Atmega32Core *core)
 
 static void do_jump(Atmega32Core *core, int address)
 {
-    if ((address < 0) || (address >= FLASH_SIZE)) {
+    if ((address < 0) || (address >= MEGA32_FLASH_SIZE)) {
         fail("Attempted jump to invalid address %s%04x (last instr fetched at %04x)",
             (address < 0) ? "-" : "", abs(address), core->last_inst_pc);
     }
@@ -212,13 +212,8 @@ static void load_prog_mem(Atmega32Core *core, uint8_t dest_reg, bool post_increm
     
     if (extended)
         fail("Extended LPM not supported");
-    
-    if (z >= 2*FLASH_SIZE)
-        fail("LPM from invalid program memory address (%04x)", z);
-    
-    core->ram[dest_reg] = (z & 1) ?
-        high_byte(core->flash[z >> 1]) :
-        low_byte(core->flash[z >> 1]);
+
+    core->ram[dest_reg] = core->prog_mem.readByte(z);
     
     if (post_increment)
         write_16bit_reg(core, REG16_Z, z+1);
@@ -851,9 +846,8 @@ static void init_fn_table()
 void atmega32_core_init(Atmega32Core *core, Atmega32 *master)
 {
     init_fn_table();
-    
+
     core->master = master;
-    memset(core->flash, 0xFF, 2*FLASH_SIZE);
 }
 
 void atmega32_core_step(Atmega32Core *core)

@@ -3,14 +3,18 @@
 
 #include <inttypes.h>
 
+#include "progmem.h"
+
 class Atmega32;
 
 struct Atmega32Core {
     int pc;
-    uint16_t flash[0x4000];
     uint8_t ram[0x0860];
     Atmega32 *master;
     int last_inst_pc;
+    ProgMem prog_mem;
+
+    Atmega32Core() : prog_mem(0x4000) {}
 };
 
 void atmega32_core_init(Atmega32Core *core, Atmega32 *master);

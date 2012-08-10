@@ -2,12 +2,12 @@
 #define _H_ATMEGA32_DEFS_H
 
 // Flash size is in 16-bit words
-#define FLASH_SIZE      0x4000
+#define MEGA32_FLASH_SIZE  0x4000
 
 // Others are in bytes
-#define RAM_SIZE        0x0860
-#define IO_BASE         0x0020   
-#define SRAM_BASE       0x0060
+#define RAM_SIZE           0x0860
+#define IO_BASE            0x0020   
+#define SRAM_BASE          0x0060
 
 static char const * const PORT_NAMES[0x40] = {
     "TWBR", "TWSR", "TWAR", "TWDR", "ADCL", "ADCH", "ADCSRA", "ADMUX",
