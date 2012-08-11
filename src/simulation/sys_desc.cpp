@@ -5,9 +5,9 @@
 #include <fstream>
 
 #include "devices/atmega32/atmega32.h"
+#include "devices/enc28j60/enc28j60.h"
 #include "devices/ds1307.h"
 #include "devices/sd_card.h"
-#include "devices/enc28j60.h"
 
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
