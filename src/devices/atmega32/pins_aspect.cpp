@@ -51,11 +51,6 @@ extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT] = {
     { "D7", PIN_MODE_INPUT, 0 }  // D7
 };
 
-static inline bool is_data_port(uint8_t port)
-{
-    return ((port >= PORT_PIND) && (port <= PORT_PORTA));
-}
-
 static inline bool is_PIN_port(uint8_t port)
 {
     return is_data_port(port) && (((port - PORT_PIND) % 3) == 0);

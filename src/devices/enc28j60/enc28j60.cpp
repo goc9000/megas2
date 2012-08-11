@@ -23,23 +23,6 @@ PinInitData const PIN_INIT_DATA[E28J_PIN_COUNT] = {
     { "SS", PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
 };
 
-static bool is_common_reg(uint8_t reg)
-{
-    return (reg & 0x1f) >= 0x1b;
-}
-
-static bool is_mac_reg(uint8_t reg)
-{
-    return
-        ((reg >= REG_MACON1) && (reg <= REG_MAPHSUP)) ||
-        ((reg >= REG_MAADR0) && (reg <= REG_MAADR4));
-}
-
-static bool is_mii_reg(uint8_t reg)
-{
-    return ((reg >= REG_MICON) && (reg <= REG_MIRDH)) || (reg == REG_MISTAT);
-}
-
 Enc28J60::Enc28J60()
     : Entity("enc28j60", "ENC28J60"), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
 {

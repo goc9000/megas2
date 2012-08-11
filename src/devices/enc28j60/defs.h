@@ -288,4 +288,21 @@ static char const * const REG_NAMES[128] = {
     "EPAUSL", "EPAUSH", "(7AH)", "EIE", "EIR", "ESTAT", "ECON2", "ECON1"
 };
 
+static inline bool is_common_reg(uint8_t reg)
+{
+    return (reg & 0x1f) >= 0x1b;
+}
+
+static inline bool is_mac_reg(uint8_t reg)
+{
+    return
+        ((reg >= REG_MACON1) && (reg <= REG_MAPHSUP)) ||
+        ((reg >= REG_MAADR0) && (reg <= REG_MAADR4));
+}
+
+static inline bool is_mii_reg(uint8_t reg)
+{
+    return ((reg >= REG_MICON) && (reg <= REG_MIRDH)) || (reg == REG_MISTAT);
+}
+
 #endif

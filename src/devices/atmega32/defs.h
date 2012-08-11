@@ -166,4 +166,31 @@ static char const * const PORT_NAMES[0x40] = {
 #define TWI_STATUS_R_DATA_NACK  0x58
 #define TWI_STATUS_IDLE         0xf8
 
+static inline bool is_data_port(uint8_t port)
+{
+    return ((port >= PORT_PIND) && (port <= PORT_PORTA));
+}
+
+static inline bool is_twi_port(uint8_t port)
+{
+    return ((port >= PORT_TWBR) && (port <= PORT_TWDR)) || (port == PORT_TWCR);
+}
+
+static inline bool is_spi_port(uint8_t port)
+{
+    return ((port >= PORT_SPCR) && (port <= PORT_SPDR));
+}
+
+static inline bool is_timer_port(uint8_t port)
+{
+    return ((port >= PORT_ASSR) && (port <= PORT_TCCR1A))
+        || (port == PORT_TCNT0) || (port == PORT_TCCR0) || (port == PORT_TIFR)
+        || (port == PORT_TIMSK)  || (port == PORT_OCR0);
+}
+
+static inline bool is_adc_port(uint8_t port)
+{
+    return (port >= PORT_ADCL) && (port <= PORT_ADMUX);
+}
+
 #endif
