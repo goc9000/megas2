@@ -100,6 +100,16 @@ exec:
     this->core.pc = 2*(irq-1);
 }
 
+uint8_t Atmega32::_getPortWriteMask(uint8_t port)
+{
+    return 0xff;
+}
+
+uint8_t Atmega32::_getPortClearableMask(uint8_t port)
+{
+    return 0x00;
+}
+
 void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
 {
     if (port >= REG16_SP-IO_BASE)
@@ -126,11 +136,15 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
     }
 }
 
-void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
+void Atmega32::_onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
+{
+}
+
+void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
 {
     if (port >= REG16_SP-IO_BASE)
         return;
-        
+    
     if (is_twi_port(port)) {
         this->_twiHandleWrite(port, bit, value, prev_val);
     } else if (is_spi_port(port)) {

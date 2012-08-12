@@ -65,7 +65,7 @@ bool get_flag(Atmega32Core *core, uint8_t bit)
     return read_reg_bit(core, REG_SREG, bit);
 }
 
-static uint8_t read_port(Atmega32Core *core, uint8_t port)
+uint8_t read_port(Atmega32Core *core, uint8_t port)
 {
     uint8_t value = core->ram[IO_BASE + port];
     
@@ -74,7 +74,7 @@ static uint8_t read_port(Atmega32Core *core, uint8_t port)
     return value;
 }
 
-static bool read_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit)
+bool read_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit)
 {
     uint8_t value = core->ram[IO_BASE + port];
     
@@ -83,7 +83,7 @@ static bool read_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit)
     return bit_is_set(value, bit);
 }
 
-static void write_port(Atmega32Core *core, uint8_t port, uint8_t value)
+void write_port(Atmega32Core *core, uint8_t port, uint8_t value)
 {
     uint8_t prev_val = core->ram[IO_BASE + port];
     
@@ -92,7 +92,7 @@ static void write_port(Atmega32Core *core, uint8_t port, uint8_t value)
     core->ram[IO_BASE + port] = value;
 }
 
-static void write_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit, bool value)
+void write_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit, bool value)
 {
     uint8_t prev_val = core->ram[IO_BASE + port];
     uint8_t new_val = (prev_val & ~(1 << bit)) | (value << bit);

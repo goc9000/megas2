@@ -21,6 +21,10 @@
 #define MEGA32_PIN_D7        31
 
 class Atmega32 : public Entity, public I2cDevice, public SpiDevice, public PinDevice, public SimulatedDevice {
+    friend uint8_t read_port(Atmega32Core *core, uint8_t port);
+    friend bool read_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit);
+    friend void write_port(Atmega32Core *core, uint8_t port, uint8_t value);
+    friend void write_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit, bool value);
 public:
     Atmega32();
     Atmega32(Json::Value &json_data);
@@ -30,10 +34,6 @@ public:
 
     virtual void reset();
     virtual void act(int event);
-
-    // should be protected, but...
-    void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
-    void _onPortWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
 protected:
     uint64_t frequency;
     sim_time_t clock_period;
@@ -44,6 +44,12 @@ protected:
 
     void _init();
 
+    uint8_t _getPortWriteMask(uint8_t port);
+    uint8_t _getPortClearableMask(uint8_t port);
+    void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
+    void _onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
+    void _onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val);
+    
     uint16_t _get16BitPort(uint8_t port);
     void _put16BitPort(uint8_t port, uint16_t value);
     uint16_t _get16BitReg(uint8_t reg);
