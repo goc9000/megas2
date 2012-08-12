@@ -15,4 +15,10 @@ protected:
     void _twiInit();
     void _twiHandleRead(uint8_t port, int8_t bit, uint8_t &value);
     void _twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
-    void _twiStatus(uint8_t status);
+    
+    void _twiDoSendStart();
+    void _twiDoSendStop();
+    void _twiDoSendAddress();
+    void _twiDoSendData();
+    void _twiDoReceiveData();
+    void _twiCompleteOp(uint8_t status);
