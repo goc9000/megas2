@@ -36,6 +36,11 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_ADCH         0x05
 #define PORT_ADCSRA       0x06
 #define PORT_ADMUX        0x07
+#define PORT_ACSR         0x08
+#define PORT_UBRRL        0x09
+#define PORT_UCSRB        0x0a
+#define PORT_UCSRA        0x0b
+#define PORT_UDR          0x0c
 #define PORT_SPCR         0x0d
 #define PORT_SPSR         0x0e
 #define PORT_SPDR         0x0f
@@ -51,6 +56,13 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_PINA         0x19
 #define PORT_DDRA         0x1a
 #define PORT_PORTA        0x1b
+#define PORT_EECR         0x1c
+#define PORT_EEDR         0x1d
+#define PORT_EEARL        0x1e
+#define PORT_EEARH        0x1f
+#define PORT_UCSRC        0x20
+#define PORT_UBRRH        0x20
+#define PORT_WDTCR        0x21
 #define PORT_ASSR         0x22
 #define PORT_OCR2         0x23
 #define PORT_TCNT2        0x24
@@ -69,11 +81,19 @@ static char const * const PORT_NAMES[0x40] = {
 #define PORT_TCNT1H       0x2d
 #define PORT_TCCR1B       0x2e
 #define PORT_TCCR1A       0x2f
+#define PORT_SFIOR        0x30
+#define PORT_OCDR         0x31
+#define PORT_OSCCAL       0x31
 #define PORT_TCNT0        0x32
 #define PORT_TCCR0        0x33
+#define PORT_MCUCSR       0x34
+#define PORT_MCUCR        0x35
 #define PORT_TWCR         0x36
+#define PORT_SPMCR        0x37
 #define PORT_TIFR         0x38
 #define PORT_TIMSK        0x39
+#define PORT_GIFR         0x3a
+#define PORT_GICR         0x3b
 #define PORT_OCR0         0x3c
 
 // Bit values for TWCR
