@@ -189,7 +189,7 @@ uint8_t Enc28J60::_execWriteCtrlReg(uint8_t reg, uint8_t data)
 
     uint8_t prev_value = this->regs[reg];
     uint8_t value = data;
-    this->_onPreRegWrite(reg, value, prev_value);
+    value = this->_adjustRegWrite(reg, value, prev_value);
     this->regs[reg] = value;
     this->_onRegWrite(reg, value, prev_value);
     
@@ -207,7 +207,7 @@ uint8_t Enc28J60::_execBitFieldClear(uint8_t reg, uint8_t data)
 
     uint8_t prev_value = this->regs[reg];
     uint8_t value = prev_value & ~data;
-    this->_onPreRegWrite(reg, value, prev_value);
+    value = this->_adjustRegWrite(reg, value, prev_value);
     this->regs[reg] = value;
     this->_onRegWrite(reg, value, prev_value);
     
@@ -225,7 +225,7 @@ uint8_t Enc28J60::_execBitFieldSet(uint8_t reg, uint8_t data)
 
     uint8_t prev_value = this->regs[reg];
     uint8_t value = prev_value | data;
-    this->_onPreRegWrite(reg, value, prev_value);
+    value = this->_adjustRegWrite(reg, value, prev_value);
     this->regs[reg] = value;
     this->_onRegWrite(reg, value, prev_value);
     
@@ -308,21 +308,19 @@ uint16_t Enc28J60::_getPhyRegWriteMask(uint8_t reg)
     return 0x0000;
 }
 
+uint8_t Enc28J60::_adjustRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
+{
+    uint8_t clr_mask = this->_getRegClearableMask(reg);
+    uint8_t wr_mask = this->_getRegWriteMask(reg);
+
+    return ((prev_val & ~(~value & clr_mask)) & ~wr_mask) | (value & wr_mask);
+}
+
 void Enc28J60::_onRegRead(uint8_t reg, uint8_t &value)
 {
     if (is_mii_reg(reg)) {
         this->_onMiiRegRead(reg, value);
     }
-}
-
-void Enc28J60::_onPreRegWrite(uint8_t reg, uint8_t &value, uint8_t prev_val)
-{
-    uint8_t clr_mask = this->_getRegClearableMask(reg);
-    uint8_t wr_mask = this->_getRegWriteMask(reg);
-    
-    uint8_t mask = wr_mask | clr_mask;
-    value &= ~((value & ~prev_val) & clr_mask); // can't set clearable bits
-    value = (prev_val & ~mask) | (value & mask); // mask off R/O bits
 }
 
 void Enc28J60::_onRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
