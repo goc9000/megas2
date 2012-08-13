@@ -347,11 +347,8 @@ void Enc28J60::_onMiiRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
 {
     switch (reg) {
         case REG_MICMD:
-            if (bit_is_set(value, B_MIISCAN)) {
-                set_bit(this->regs[REG_MISTAT], B_SCAN);
-            } else {
-                clear_bit(this->regs[REG_MISTAT], B_SCAN);
-            }
+            chg_bit(this->regs[REG_MISTAT], B_SCAN, bit_is_set(value, B_MIISCAN));
+            
             if (bit_is_set(value, B_MIIRD)) {
                 uint16_t val = this->_readPhyReg(this->regs[REG_MIREGADR]);
                 this->regs[REG_MIRDH] = high_byte(val);

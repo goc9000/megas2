@@ -9,5 +9,6 @@
 #define bit_was_cleared(before,after,bit) ((((before) & ~(after)) >> (bit)) & 1)
 #define set_bit(lval,bit) do { lval |= (1 << (bit)); } while (0)
 #define clear_bit(lval,bit) do { lval &= ~(1 << (bit)); } while (0)
+#define chg_bit(lval,bit,value) do { if (value) { set_bit(lval,bit); } else { clear_bit(lval,bit); }} while (0)
 
 #endif

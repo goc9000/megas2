@@ -116,11 +116,7 @@ void Atmega32::_onPinChanged(int pin_id, int value, int old_value)
         uint8_t port = PIN_for_pin(pin_id);
         
         // TODO: feed into ADC
-        if (value) {
-            set_bit(this->ports[port], pin_id & 7);
-        } else {
-            clear_bit(this->ports[port], pin_id & 7);
-        }
+        chg_bit(this->ports[port], pin_id & 7, value);
     }
 }
 

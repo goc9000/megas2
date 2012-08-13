@@ -48,11 +48,7 @@ static bool read_reg_bit(Atmega32Core *core, uint8_t reg, uint8_t bit)
 
 static void write_reg_bit(Atmega32Core *core, uint8_t reg, uint8_t bit, bool value)
 {
-    if (value) {
-        set_bit(core->ram[reg], bit);
-    } else {
-        clear_bit(core->ram[reg], bit);
-    }
+    chg_bit(core->ram[reg], bit, value);
 }
 
 void set_flag(Atmega32Core *core, uint8_t bit, bool value)
