@@ -35,28 +35,20 @@ void Atmega32::_twiHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
 }
 
-void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
+void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
 {
     switch (port) {
         case PORT_TWBR:
-            info("TWI baud rate set to %llu", compute_twi_baud(this->frequency, value, this->ports[PORT_TWSR]));
-            break;
         case PORT_TWSR:
-            // reject writes to read-only bits
-            value = (prev_val & 0xfc) + (value & 0x03);
-            info("TWI baud rate set to %llu", compute_twi_baud(this->frequency, this->ports[PORT_TWBR], value));
+            info("TWI baud rate set to %llu", compute_twi_baud(this->frequency, this->ports[PORT_TWBR], this->ports[PORT_TWSR]));
             break;
         case PORT_TWCR:
-            uint8_t cleared = this->_handleFlagBitsInPortWrite(_BV(B_TWINT), bit, value, prev_val);
-            
-            this->ports[PORT_TWCR] = value; // REMOVE LATER
-            
             if (!bit_is_set(value, B_TWEN)) {
                 this->twi_has_floor = false;
                 return;
             }
             
-            if (bit_is_set(cleared, B_TWINT)) {
+            if (bit_is_set(value, B_TWINT)) {
                 // Note: TWSTA and TWSTO may be set simultaneously. The effect
                 // is to send the STOP first
                 if (bit_is_set(value, B_TWSTO)) {
@@ -74,8 +66,6 @@ void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t
                     this->_twiDoReceiveData();
                 }
             }
-            
-            value = this->ports[PORT_TWCR]; // REMOVE LATER
             break;
     }
 }

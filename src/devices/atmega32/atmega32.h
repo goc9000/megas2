@@ -46,8 +46,8 @@ protected:
 
     uint8_t _getPortWriteMask(uint8_t port);
     uint8_t _getPortClearableMask(uint8_t port);
+    uint8_t _adjustPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val);
     void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
-    void _onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
     void _onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val);
     
     uint16_t _get16BitPort(uint8_t port);
@@ -56,8 +56,6 @@ protected:
   
     void _handleIrqs();
     
-    uint8_t _handleFlagBitsInPortWrite(uint8_t flag_bits, int8_t bit, uint8_t &value, uint8_t prev_val);
-
     void _dumpRegisters();
     void _dumpSram();
 #include "inc_twi_aspect.h"

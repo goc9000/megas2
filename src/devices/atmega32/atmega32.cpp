@@ -102,12 +102,43 @@ exec:
 
 uint8_t Atmega32::_getPortWriteMask(uint8_t port)
 {
+    switch (port) {
+        case PORT_TWCR: return 0x75;
+        case PORT_TWSR: return 0x03;
+        case PORT_SPSR: return 0x01;
+        case PORT_TIFR: return 0x00;
+        case PORT_ASSR: return 0x08;
+        case PORT_ADCSRA: return 0xef;
+        case PORT_ADCL: return 0x00;
+        case PORT_ADCH: return 0x00;
+        case PORT_SFIOR: return 0xe7;
+    }
+    
     return 0xff;
 }
 
 uint8_t Atmega32::_getPortClearableMask(uint8_t port)
 {
+    switch (port) {
+        case PORT_TWCR: return 0x80;
+        case PORT_TIFR: return 0xff;
+        case PORT_ADCSRA: return 0x10;
+    }
+    
     return 0x00;
+}
+
+uint8_t Atmega32::_adjustPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+{
+    uint8_t clr_mask = this->_getPortClearableMask(port);
+    uint8_t wr_mask = this->_getPortWriteMask(port);
+
+    if (bit != -1) {
+        clr_mask &= _BV(bit);
+        wr_mask &= _BV(bit);
+    }
+
+    return ((prev_val & ~(value & clr_mask)) & ~wr_mask) | (value & wr_mask);
 }
 
 void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
@@ -136,10 +167,6 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
     }
 }
 
-void Atmega32::_onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
-{
-}
-
 void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
 {
     if (port >= REG16_SP-IO_BASE)
@@ -164,30 +191,6 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t pre
                 (value >> bit) & 1, (prev_val >> bit) & 1);
         }
     }
-}
-
-/**
- * Handles writes to ports that have 'flag' bits, i.e. bits that can be cleared
- * by the user when a logic '1' is written directly to their location.
- * 
- * @param flag_bits A mask of the bits in the port that are flag bits
- * @param bit The bit accessed in this operation, or -1 if all bits are accessed
- * @param value The new value to be written to the port register (modifiable)
- * @param prev_val The old value of the port register
- * @return A mask of the bits that were cleared
- */
-uint8_t Atmega32::_handleFlagBitsInPortWrite(uint8_t flag_bits, int8_t bit, uint8_t &value, uint8_t prev_val)
-{
-    uint8_t cleared = value;
-    
-    if (bit != -1) {
-        cleared &= _BV(bit);
-    }
-    
-    cleared &= flag_bits;
-    value &= ~cleared;
-    
-    return cleared;
 }
 
 uint16_t Atmega32::_get16BitPort(uint8_t port)

@@ -14,7 +14,7 @@ protected:
 
     void _twiInit();
     void _twiHandleRead(uint8_t port, int8_t bit, uint8_t &value);
-    void _twiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
+    void _twiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val);
     
     void _twiDoSendStart();
     void _twiDoSendStop();

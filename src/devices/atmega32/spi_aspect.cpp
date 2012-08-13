@@ -39,13 +39,9 @@ void Atmega32::_spiHandleRead(uint8_t port, int8_t bit, uint8_t &value)
     }
 }
 
-void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
+void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
 {
     switch (port) {
-        case PORT_SPSR:
-            // reject writes to read-only bits
-            value = (prev_val & 0xfe) + (value & 0x01);
-            break;
         case PORT_SPDR:
             if (!this->_spiIsEnabled())
                 return;
@@ -53,7 +49,7 @@ void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t
             this->spi_stat_read = false;
 
             this->_spiSendData(value);
-
+            this->ports[PORT_SPDR] = value;
             set_bit(this->ports[PORT_SPSR], B_SPIF);
             break;
     }

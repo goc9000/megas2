@@ -25,7 +25,7 @@ void Atmega32::_adcHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
 }
 
-void Atmega32::_adcHandleWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
+void Atmega32::_adcHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
 {
 }
 
