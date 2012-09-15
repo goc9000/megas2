@@ -107,11 +107,12 @@ uint8_t Atmega32::_getPortWriteMask(uint8_t port)
         case PORT_TWSR: return 0x03;
         case PORT_SPSR: return 0x01;
         case PORT_TIFR: return 0x00;
-        case PORT_ASSR: return 0x08;
         case PORT_ADCSRA: return 0xef;
         case PORT_ADCL: return 0x00;
         case PORT_ADCH: return 0x00;
-        case PORT_SFIOR: return 0xe7;
+        case PORT_SFIOR: return 0xef;
+        case PORT_TCCR1A: return 0xf3;
+        case PORT_TCCR1B: return 0xdf;
     }
     
     return 0xff;
@@ -121,24 +122,12 @@ uint8_t Atmega32::_getPortClearableMask(uint8_t port)
 {
     switch (port) {
         case PORT_TWCR: return 0x80;
-        case PORT_TIFR: return 0xff;
         case PORT_ADCSRA: return 0x10;
+        case PORT_TIFR: return 0xff;
+        case PORT_TCCR1A: return 0xc0;
     }
     
     return 0x00;
-}
-
-uint8_t Atmega32::_adjustPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
-{
-    uint8_t clr_mask = this->_getPortClearableMask(port);
-    uint8_t wr_mask = this->_getPortWriteMask(port);
-
-    if (bit != -1) {
-        clr_mask &= _BV(bit);
-        wr_mask &= _BV(bit);
-    }
-
-    return ((prev_val & ~(value & clr_mask)) & ~wr_mask) | (value & wr_mask);
 }
 
 void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
@@ -167,21 +156,38 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
     }
 }
 
-void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+uint8_t Atmega32::_onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val)
+{
+    uint8_t write_mask = this->_getPortWriteMask(port);
+    uint8_t clear_mask = this->_getPortClearableMask(port);
+    
+    if (bit != -1) {
+        write_mask &= (1 << bit);
+        clear_mask &= (1 << bit);
+    }
+    
+    uint8_t cleared = value & clear_mask;
+    
+    value = (prev_val & ~write_mask & ~cleared) | (value & write_mask);
+    
+    return cleared;
+}
+
+void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     if (port >= REG16_SP-IO_BASE)
         return;
     
     if (is_twi_port(port)) {
-        this->_twiHandleWrite(port, bit, value, prev_val);
+        this->_twiHandleWrite(port, bit, value, prev_val, cleared);
     } else if (is_spi_port(port)) {
-        this->_spiHandleWrite(port, bit, value, prev_val);
+        this->_spiHandleWrite(port, bit, value, prev_val, cleared);
     } else if (is_data_port(port)) {
-        this->_handleDataPortWrite(port, bit, value, prev_val);
+        this->_handleDataPortWrite(port, bit, value, prev_val, cleared);
     } else if (is_timer_port(port)) {
-        this->_timersHandleWrite(port, bit, value, prev_val);
+        this->_timersHandleWrite(port, bit, value, prev_val, cleared);
     } else if (is_adc_port(port)) {
-        this->_adcHandleWrite(port, bit, value, prev_val);
+        this->_adcHandleWrite(port, bit, value, prev_val, cleared);
     } else {
         if (bit < 0) {
             printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port,

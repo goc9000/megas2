@@ -39,7 +39,7 @@ void Atmega32::_spiHandleRead(uint8_t port, int8_t bit, uint8_t &value)
     }
 }
 
-void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     switch (port) {
         case PORT_SPDR:
@@ -50,6 +50,7 @@ void Atmega32::_spiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t 
 
             this->_spiSendData(value);
             this->ports[PORT_SPDR] = value;
+
             set_bit(this->ports[PORT_SPSR], B_SPIF);
             break;
     }

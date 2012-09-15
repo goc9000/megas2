@@ -101,14 +101,14 @@ void Atmega32::_timersHandleRead(uint8_t port, int8_t bit, uint8_t &value)
     }
 }
 
-void Atmega32::_timersHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+void Atmega32::_timersHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     if (is_timer0_port(port)) {
-        this->_timer0HandleWrite(port, bit, value, prev_val);
+        this->_timer0HandleWrite(port, bit, value, prev_val, cleared);
     } else if (is_timer1_port(port)) {
-        this->_timer1HandleWrite(port, bit, value, prev_val);
+        this->_timer1HandleWrite(port, bit, value, prev_val, cleared);
     } else if (is_timer2_port(port)) {
-        this->_timer2HandleWrite(port, bit, value, prev_val);
+        this->_timer2HandleWrite(port, bit, value, prev_val, cleared);
     } else {
         // handle common ports
     }
@@ -146,7 +146,7 @@ void Atmega32::_timer0HandleRead(uint8_t port, int8_t bit, uint8_t &value)
     fail("Timer 0 not supported");
 }
 
-void Atmega32::_timer0HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+void Atmega32::_timer0HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     fail("Timer 0 not supported");
 }
@@ -202,7 +202,7 @@ void Atmega32::_timer1HandleRead(uint8_t port, int8_t bit, uint8_t &value)
     }
 }
 
-void Atmega32::_timer1HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+void Atmega32::_timer1HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     switch (port) {
         case PORT_ICR1H:
@@ -210,6 +210,7 @@ void Atmega32::_timer1HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8
         case PORT_OCR1AH:
         case PORT_TCNT1H:
             this->timer1_temp_high_byte = value;
+            this->ports[port] = prev_val;
             break;
         case PORT_ICR1L:
         case PORT_OCR1BL:
@@ -233,7 +234,7 @@ void Atmega32::_timer2HandleRead(uint8_t port, int8_t bit, uint8_t &value)
     fail("Timer 2 not supported");
 }
 
-void Atmega32::_timer2HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+void Atmega32::_timer2HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     fail("Timer 2 not supported");
 }

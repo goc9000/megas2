@@ -35,7 +35,7 @@ void Atmega32::_twiHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
 }
 
-void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val)
+void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     switch (port) {
         case PORT_TWBR:
@@ -48,7 +48,7 @@ void Atmega32::_twiHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t 
                 return;
             }
             
-            if (bit_is_set(value, B_TWINT)) {
+            if (bit_is_set(cleared, B_TWINT)) {
                 // Note: TWSTA and TWSTO may be set simultaneously. The effect
                 // is to send the STOP first
                 if (bit_is_set(value, B_TWSTO)) {

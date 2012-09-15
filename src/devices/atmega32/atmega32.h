@@ -46,9 +46,9 @@ protected:
 
     uint8_t _getPortWriteMask(uint8_t port);
     uint8_t _getPortClearableMask(uint8_t port);
-    uint8_t _adjustPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val);
     void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
-    void _onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val);
+    uint8_t _onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
+    void _onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
     
     uint16_t _get16BitPort(uint8_t port);
     void _put16BitPort(uint8_t port, uint16_t value);

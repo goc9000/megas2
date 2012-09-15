@@ -83,8 +83,9 @@ void write_port(Atmega32Core *core, uint8_t port, uint8_t value)
 {
     uint8_t prev_val = core->ram[IO_BASE + port];
     
-    core->ram[IO_BASE + port] = core->master->_adjustPortWrite(port, -1, value, prev_val);
-    core->master->_onPortWrite(port, -1, value, prev_val);
+    uint8_t cleared = core->master->_onPortPreWrite(port, -1, value, prev_val);
+    core->ram[IO_BASE + port] = value;
+    core->master->_onPortWrite(port, -1, value, prev_val, cleared);
 }
 
 void write_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit, bool value)
@@ -92,8 +93,9 @@ void write_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit, bool value)
     uint8_t prev_val = core->ram[IO_BASE + port];
     uint8_t new_val = (prev_val & ~(1 << bit)) | (value << bit);
 
-    core->ram[IO_BASE + port] = core->master->_adjustPortWrite(port, bit, new_val, prev_val);
-    core->master->_onPortWrite(port, bit, new_val, prev_val);
+    uint8_t cleared = core->master->_onPortPreWrite(port, bit, new_val, prev_val);
+    core->ram[IO_BASE + port] = new_val;
+    core->master->_onPortWrite(port, -1, new_val, prev_val, cleared);
 }
 
 static uint8_t read_mem(Atmega32Core *core, int addr)
