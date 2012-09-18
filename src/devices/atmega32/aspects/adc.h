@@ -4,6 +4,7 @@ public:
 
 
 protected:
+    bool adc_enabled;
     bool adc_result_locked;
     
     void _adcInit();
@@ -11,3 +12,5 @@ protected:
     void _adcHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
 
     uint8_t _handleAdcIrqs();
+    
+    void _setAdcEnabled(bool enabled);

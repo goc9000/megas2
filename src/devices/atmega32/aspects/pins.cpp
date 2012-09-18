@@ -100,8 +100,25 @@ static inline uint8_t PIN_for_pin(int pin_id)
     return PORT_PINA - 3 * (pin_id / 8);
 }
 
+static inline uint8_t PORT_for_pin(int pin_id)
+{
+    return PORT_PORTA - 3 * (pin_id / 8);
+}
+
+static inline uint8_t DDR_for_pin(int pin_id)
+{
+    return PORT_DDRA - 3 * (pin_id / 8);
+}
+
+static inline uint8_t bit_for_pin(int pin_id)
+{
+    return pin_id % 8;
+}
+
 void Atmega32::_pinsInit()
 {
+    this->_pin_overrides = vector<bool>(this->_num_pins);
+    
     // all pins revert to inputs again
     for (int i = MEGA32_PIN_A0; i <= MEGA32_PIN_D7; i++) {
         this->_setPinMode(i, PIN_MODE_INPUT);
@@ -116,7 +133,7 @@ void Atmega32::_onPinChanged(int pin_id, int value, int old_value)
         uint8_t port = PIN_for_pin(pin_id);
         
         // TODO: feed into ADC
-        chg_bit(this->ports[port], pin_id & 7, value);
+        chg_bit(this->ports[port], bit_for_pin(pin_id), value);
     }
 }
 
@@ -140,17 +157,49 @@ void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t value, uin
         this->ports[pin_port] = (this->ports[pin_port] & ~mask) | (value & mask);
         
         // toggle outputs proper
-        for (uint8_t i = 0; i < 8; i++)
-            if (bit_is_set(mask, i)) {
-                this->_pinWrite(pin + i, bit_is_set(value, i));
-            } else {
-                this->_setPinFloatValue(pin + i, bit_is_set(value, i));
+        for (uint8_t i = 0; i < 8; i++) {
+            if (!this->_pin_overrides[pin + i]) {
+                if (bit_is_set(mask, i)) {
+                    this->_pinWrite(pin + i, bit_is_set(value, i));
+                } else {
+                    this->_setPinFloatValue(pin + i, bit_is_set(value, i));
+                }
             }
+        }
     } else if (is_DDR_port(port)) {
-        for (uint8_t i = 0; i < 8; i++)
-            if (bit_is_set(value, i) != bit_is_set(prev_val, i)) {
-                this->_setPinMode(pin + i, bit_is_set(value, i) ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
+        for (uint8_t i = 0; i < 8; i++) {
+            if (!this->_pin_overrides[pin + i]) {
+                if (bit_is_set(value, i) != bit_is_set(prev_val, i)) {
+                    this->_setPinMode(pin + i, bit_is_set(value, i) ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
+                }
             }
+        }
     }
 }
 
+void Atmega32::_enablePinOverride(int pin_id, int mode, int float_value)
+{
+    if (!is_dataport_pin(pin_id))
+        fail("Tried to override non-dataport pin #%d", pin_id);
+    
+    this->_pin_overrides[pin_id] = true;
+    this->_setPinMode(pin_id, mode);
+    this->_setPinFloatValue(pin_id, float_value);
+}
+
+void Atmega32::_disablePinOverride(int pin_id)
+{
+    if (!is_dataport_pin(pin_id))
+        fail("Tried to unoverride non-dataport pin #%d", pin_id);
+ 
+    uint8_t bit = bit_for_pin(pin_id);
+    bool is_out = bit_is_set(DDR_for_pin(pin_id), bit);
+    
+    this->_pin_overrides[pin_id] = false;
+    this->_setPinMode(pin_id, is_out ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
+    if (is_out) {
+        this->_pinWrite(pin_id, bit_is_set(PORT_for_pin(pin_id), bit));
+    } else {
+        this->_setPinFloatValue(pin_id, bit_is_set(PORT_for_pin(pin_id), bit));
+    }
+}

@@ -150,7 +150,6 @@ static char const * const PORT_NAMES[0x40] = {
 #define FLAG_C          0
 
 // IRQs
-
 #define IRQ_RESET                1
 #define IRQ_INT0                 2
 #define IRQ_INT1                 3
@@ -172,6 +171,10 @@ static char const * const PORT_NAMES[0x40] = {
 #define IRQ_ANA_COMP            19
 #define IRQ_TWI                 20
 #define IRQ_SPM_RDY             21
+
+// Pins
+#define PIN_PA0                 0x00
+#define PIN_PA7                 0x07
 
 // Other
 #define TWI_STATUS_START        0x08
