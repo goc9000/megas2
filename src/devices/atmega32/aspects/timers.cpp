@@ -9,8 +9,8 @@
 
 #include "utils/bit_macros.h"
 #include "utils/fail.h"
-#include "atmega32.h"
-#include "defs.h"
+#include "devices/atmega32/atmega32.h"
+#include "devices/atmega32/defs.h"
 
 using namespace std;
 

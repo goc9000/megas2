@@ -58,11 +58,11 @@ protected:
     
     void _dumpRegisters();
     void _dumpSram();
-#include "inc_twi_aspect.h"
-#include "inc_spi_aspect.h"
-#include "inc_timers_aspect.h"
-#include "inc_pins_aspect.h"
-#include "inc_adc_aspect.h"
+#include "aspects/twi.h"
+#include "aspects/spi.h"
+#include "aspects/timers.h"
+#include "aspects/pins.h"
+#include "aspects/adc.h"
 };
 
 #endif
