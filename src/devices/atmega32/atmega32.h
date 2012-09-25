@@ -55,11 +55,7 @@ protected:
     uint16_t _get16BitReg(uint8_t reg);
   
     void _handleIrqs();
-    
-    void _dumpRegisters();
-    void _dumpSram();
-    void _dumpPortRead(const char *header, uint8_t port, int8_t bit, uint8_t &value);
-    void _dumpPortWrite(const char *header, uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
+#include "aspects/debug.h"
 #include "aspects/twi.h"
 #include "aspects/spi.h"
 #include "aspects/timers.h"
