@@ -146,13 +146,7 @@ void Atmega32::_onPortRead(uint8_t port, int8_t bit, uint8_t &value)
     } else if (is_adc_port(port)) {
         this->_adcHandleRead(port, bit, value);
     } else {
-        if (bit < 0) {
-            printf("%04x: IN %s(%02x) == %02x\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port,
-                value);
-        } else {
-            printf("%04x: IN %s(%02x).%d == %02x\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port, bit,
-                (value >> bit) & 1);
-        }
+        this->_dumpPortRead("UNSUPP", port, bit, value);
     }
 }
 
@@ -189,13 +183,7 @@ void Atmega32::_onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t pre
     } else if (is_adc_port(port)) {
         this->_adcHandleWrite(port, bit, value, prev_val, cleared);
     } else {
-        if (bit < 0) {
-            printf("%04x: OUT %s(%02x) <- %02x (was %02x)\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port,
-                value, prev_val);
-        } else {
-            printf("%04x: OUT %s(%02x).%d <- %d (was %d)\n", this->core.last_inst_pc * 2, PORT_NAMES[port], port, bit,
-                (value >> bit) & 1, (prev_val >> bit) & 1);
-        }
+        this->_dumpPortWrite("UNSUPP", port, bit, value, prev_val, cleared);
     }
 }
 
@@ -273,4 +261,65 @@ void Atmega32::_dumpSram()
         }
         printf("\n");
     }
+}
+
+void Atmega32::_dumpPortRead(const char *header, uint8_t port, int8_t bit, uint8_t &value)
+{
+    char buffer[1024];
+    int len = 0;
+    
+    len += sprintf(buffer + len, "%04x: ", this->core.last_inst_pc * 2);
+    
+    if (header) {
+        len += sprintf(buffer + len, "%s: ", header);
+    }
+    
+    len += sprintf(buffer + len, "READ from %s", PORT_NAMES[port]);
+    if (bit != -1) {
+        len += sprintf(buffer + len, ":%d", bit);
+    }
+    
+    len += sprintf(buffer + len, " = ");
+    
+    if (bit == -1) {
+        len += sprintf(buffer + len, "%02x", value);
+    } else {
+        len += sprintf(buffer + len, "%d (full: %02x)", bit_is_set(value, bit), value);
+    }
+    
+    buffer[len] = 0;
+    printf("%s\n", buffer);
+}
+
+void Atmega32::_dumpPortWrite(const char *header, uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
+{
+    char buffer[1024];
+    int len = 0;
+    
+    len += sprintf(buffer + len, "%04x: ", this->core.last_inst_pc * 2);
+    
+    if (header) {
+        len += sprintf(buffer + len, "%s: ", header);
+    }
+    
+    len += sprintf(buffer + len, "WRITE to %s", PORT_NAMES[port]);
+    if (bit != -1) {
+        len += sprintf(buffer + len, ":%d", bit);
+    }
+    
+    len += sprintf(buffer + len, " : ");
+    
+    if (bit == -1) {
+        len += sprintf(buffer + len, "%02x->%02x", prev_val, value);
+    } else {
+        len += sprintf(buffer + len, "%d->%d (full: %02x->%02x)",
+            bit_is_set(prev_val, bit), bit_is_set(value, bit), prev_val, value);
+    }
+    
+    if (cleared) {
+        len += sprintf(buffer + len, " cleared:%02x", cleared);
+    }
+    
+    buffer[len] = 0;
+    printf("%s\n", buffer);
 }
