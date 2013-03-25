@@ -16,7 +16,7 @@ all: $(BIN)/megas2
 
 $(BIN)/megas2: $(SOURCES)
 	@mkdir -p $(BIN)
-	g++ $(CFLAGS) $(INCLUDES) $(LIBS) -g -o $@ -Wall $(filter %.cpp,$^)
+	g++ $(CFLAGS) $(INCLUDES) -g -o $@ -Wall $(filter %.cpp,$^) $(LIBS)
 
 clean:
 	rm -rf $(BIN)
