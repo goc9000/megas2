@@ -77,15 +77,13 @@ void SimpleLed::render(Dashboard *dash)
     TTF_Font *font = dash->getFont(this->_size-4);
     if (!font)
         return;
-    
-    SDL_Color color = {(this->_color >> 24) & 0xff,
-                       (this->_color >> 16) & 0xff,
-                       (this->_color >> 8) & 0xff};
-    SDL_Surface *text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), color);
-    
-    if (text_surface) {
-        SDL_Rect where = {this->_x+this->_size+this->_size/2, this->_y + 2, 0, 0};
-        SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
-        SDL_FreeSurface(text_surface);
-    }
+
+    SDL_Surface *text_surface;
+    text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), SDLColor(this->_color));
+    if (!text_surface)
+        return;
+        
+    SDLRect where(this->_x + this->_size + this->_size/2, this->_y + 2, 0, 0);
+    SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
+    SDL_FreeSurface(text_surface);
 }

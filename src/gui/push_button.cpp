@@ -11,21 +11,24 @@ PinInitData const PIN_INIT_DATA[PUSH_BUTTON_PIN_COUNT] = {
     { "OUT", PIN_MODE_OUTPUT, 0 }  // OUTPUT
 };
 
-PushButton::PushButton(void) : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
+PushButton::PushButton(void)
+    : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_up_value = 0;
     this->_down_value = 1;
     this->_setPressed(false);
 }
 
-PushButton::PushButton(int up_value, int down_value) : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
+PushButton::PushButton(int up_value, int down_value)
+    : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_up_value = up_value;
     this->_down_value = down_value;
     this->_setPressed(false);
 }
 
-PushButton::PushButton(Json::Value &json_data) : Entity(json_data), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
+PushButton::PushButton(Json::Value &json_data)
+    : Entity(json_data), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_up_value = 0;
     this->_down_value = 1;
@@ -127,16 +130,14 @@ void SimplePushButton::render(Dashboard *dash)
     if (!font)
         return;
     
-    SDL_Color color = {(this->_color >> 24) & 0xff,
-                       (this->_color >> 16) & 0xff,
-                       (this->_color >> 8) & 0xff};
-    SDL_Surface *text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), color);
-    
-    if (text_surface) {
-        SDL_Rect where = {this->_x+this->_size+this->_size/2, this->_y + 2, 0, 0};
-        SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
-        SDL_FreeSurface(text_surface);
-    }
+    SDL_Surface *text_surface;
+    text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), SDLColor(this->_color));
+    if (!text_surface)
+        return;
+        
+    SDLRect where(this->_x + this->_size + this->_size / 2, this->_y + 2, 0, 0);
+    SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
+    SDL_FreeSurface(text_surface);
 }
 
 bool SimplePushButton::handleEvent(Dashboard *dash, SDL_Event *event)

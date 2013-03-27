@@ -2,6 +2,7 @@
 #define _H_DASHBOARD_WIDGET_H
 
 #include <SDL/SDL.h>
+#include <utils/sdl_utils.h>
 
 #include <json/json.h>
 
