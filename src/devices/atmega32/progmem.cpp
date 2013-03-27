@@ -88,10 +88,10 @@ void ProgMem::_processElfSymbolTable(ELFIO::elfio& elf, ELFIO::section* section)
     
     for (unsigned int i = 0; i < symbols.get_symbols_num(); i++) {
         std::string name;
-        ELFIO::Elf64_Addr value;
-        ELFIO::Elf_Xword size;
+        ELFIO::Elf64_Addr value = 0;
+        ELFIO::Elf_Xword size = 0;
         unsigned char bind;
-        unsigned char type;
+        unsigned char type = 0;
         ELFIO::Elf_Half section_index;
         unsigned char other;
         
