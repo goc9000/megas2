@@ -9,7 +9,6 @@
 
 #include "utils/bit_macros.h"
 #include "utils/fail.h"
-#include "gelf.h"
 #include "progmem.h"
 
 using namespace std;
@@ -29,11 +28,16 @@ void ProgMem::clear()
 void ProgMem::loadElf(const char *filename)
 {
     this->clear();
+    
+    ELFIO::elfio elf;
+    
+    if (!elf.load(filename))
+        fail("Cannot open file '%s' as ELF", filename);
+    if (elf.get_class() != ELFCLASS32)
+        fail("Invalid ELF class (expected ELFCLASS32)");
 
-    Elf *elf = this->_openElf(filename);
     this->_processElfSections(elf);
-    this->_loadProgramSegments(elf);    
-    elf_end(elf);
+    this->_loadProgramSegments(elf);
 }
 
 uint8_t ProgMem::readByte(unsigned int byte_addr)
@@ -70,104 +74,70 @@ void ProgMem::dumpRamSyms()
     }
 }
 
-void ProgMem::_processElfSections(Elf *elf)
+void ProgMem::_processElfSections(ELFIO::elfio& elf)
 {
-    Elf_Scn *section = NULL;
-    while ((section = elf_nextscn(elf, section))) {
-        GElf_Shdr shdr;
-        gelf_getshdr(section, &shdr);
-
-        if (shdr.sh_type == SHT_SYMTAB) {
-            this->_processElfSymbolTable(elf, section);
-        }
+    for (unsigned int i = 0; i < elf.sections.size(); i++) {
+        if (elf.sections[i]->get_type() == SHT_SYMTAB)
+            this->_processElfSymbolTable(elf, elf.sections[i]);
     }
 }
 
-void ProgMem::_processElfSymbolTable(Elf *elf, Elf_Scn *section)
+void ProgMem::_processElfSymbolTable(ELFIO::elfio& elf, ELFIO::section* section)
 {
-    GElf_Shdr shdr;
-    gelf_getshdr(section, &shdr);
-
-    Elf_Data *data = NULL;
-    while ((data = elf_getdata(section, data))) {
-        int count = shdr.sh_size / shdr.sh_entsize;
-
-        for (int i = 0; i < count; i++) {
-            GElf_Sym sym;
-            gelf_getsym(data, i, &sym);
-
-            uint8_t sym_type = sym.st_info & 0xf;
-            char *sym_name = elf_strptr(elf, shdr.sh_link, sym.st_name);
-
-            if (sym_type == STT_FUNC) {
-                this->flash_syms.push_back(Symbol(sym_name, sym.st_value, sym.st_size, false));
-            } else if (sym_type == STT_OBJECT) {
-                if (sym.st_value >= 0x100000) {
-                    this->ram_syms.push_back(Symbol(sym_name, sym.st_value & 0xfffff, sym.st_size, true));
+    const ELFIO::symbol_section_accessor symbols(elf, section);
+    
+    for (unsigned int i = 0; i < symbols.get_symbols_num(); i++) {
+        std::string name;
+        ELFIO::Elf64_Addr value;
+        ELFIO::Elf_Xword size;
+        unsigned char bind;
+        unsigned char type;
+        ELFIO::Elf_Half section_index;
+        unsigned char other;
+        
+        symbols.get_symbol(i, name, value, size, bind, type, section_index, other);
+        
+        switch (type) {
+            case STT_FUNC:
+                this->flash_syms.push_back(Symbol(name.c_str(), value, size, false));
+                break;
+            case STT_OBJECT:
+                if (value >= 0x100000) {
+                    this->ram_syms.push_back(Symbol(name.c_str(), value & 0xfffff, size, true));
                 } else {
-                    this->flash_syms.push_back(Symbol(sym_name, sym.st_value, sym.st_size, true));
+                    this->flash_syms.push_back(Symbol(name.c_str(), value, size, true));
                 }
-            }
+                break;
         }
     }
-
+    
     sort(this->flash_syms.begin(), this->flash_syms.end());
     sort(this->ram_syms.begin(), this->ram_syms.end());
     this->_computeSymbolCover();
 }
 
-Elf * ProgMem::_openElf(const char *filename)
-{
-    int fd, temp;
-    Elf *elf;
-    GElf_Ehdr ehdr;
-
-    if (elf_version(EV_CURRENT) == EV_NONE)
-        fail("Cannot init ELF library: %s", elf_errmsg(-1));
-    if ((fd = open(filename, O_RDONLY, 0)) < 0)
-        fail("Cannot open file '%s'", filename);
-    if (!(elf = elf_begin(fd, ELF_C_READ, NULL)))
-        fail("elf_begin() failed: %s", elf_errmsg(-1));
-    if (elf_kind(elf) != ELF_K_ELF)
-        fail("File '%s' is not an ELF object", filename);
-    if (gelf_getehdr(elf, &ehdr) == NULL)
-        fail("gelf_getehdr() failed: %s", elf_errmsg(-1));
-    if ((temp = gelf_getclass(elf)) == ELFCLASSNONE)
-        fail("gelf_getclass() failed: %s", elf_errmsg(-1));
-    if (temp != ELFCLASS32)
-        fail("Invalid ELF class (expected 32-bit)");
-
-    return elf;
-}
-
-void ProgMem::_loadProgramSegments(Elf *elf)
+void ProgMem::_loadProgramSegments(ELFIO::elfio& elf)
 {
     bool exec_found = false;
 
-    size_t file_size;
-    char *raw_data = elf_rawfile(elf, &file_size);
-
-    size_t count;
-    elf_getphdrnum(elf, &count);
-    for (unsigned int i = 0; i < count; i++) {
-        GElf_Phdr phdr;
-        gelf_getphdr(elf, i, &phdr);
-
-        if (phdr.p_type != PT_LOAD) continue;
-        if (!phdr.p_filesz) continue; // ignore .bss
-
-        if (phdr.p_paddr & 1)
-            fail("ELF segment #%d starts at odd address (%04x)", i, (int)phdr.p_paddr);
-        if (phdr.p_paddr + phdr.p_filesz > 2*this->flash_size)
-            fail("ELF segment #%d too long (addr=%04x, length=%d bytes)",
-                i, (int)phdr.p_paddr, (int)phdr.p_filesz);
-
-        if (phdr.p_offset + phdr.p_filesz >= file_size)
-            fail("ELF segment #%d corrupt (extends past end of file)", i);
-
-        memcpy(this->flash + phdr.p_paddr/2, raw_data + phdr.p_offset, phdr.p_filesz);
+    for (unsigned int i = 0; i < elf.segments.size(); i++) {
+        const ELFIO::segment* seg = elf.segments[i];
         
-        exec_found |= (phdr.p_flags & PF_X);
+        unsigned int ph_addr = seg->get_physical_address();
+        unsigned int seg_size = seg->get_file_size();
+        
+        if (seg->get_type() != PT_LOAD) continue;
+        if (seg_size == 0) continue; // ignore .bss
+        
+        if (ph_addr & 1)
+            fail("ELF segment #%d starts at odd address (%04x)", i, ph_addr);
+        if (ph_addr + seg_size > 2*this->flash_size)
+            fail("ELF segment #%d too long (addr=%04x, length=%d bytes)",
+                i, ph_addr, seg_size);
+        
+        memcpy(this->flash + ph_addr/2, seg->get_data(), seg_size);
+        
+        exec_found |= (seg->get_flags() & PF_X);
     }
     
     if (!exec_found)

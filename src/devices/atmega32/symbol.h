@@ -7,7 +7,7 @@ using namespace std;
 
 class Symbol {
 public:
-    Symbol(char *name, int address, int length, bool is_data) :
+    Symbol(const char *name, int address, int length, bool is_data) :
         name(name), address(address), length(length), is_data(is_data) { }
     void dump();
     bool operator< (const Symbol &other) const;

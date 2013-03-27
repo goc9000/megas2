@@ -4,8 +4,9 @@
 #include <vector>
 #include <inttypes.h>
 
+#include <elfio/elfio.hpp>
+
 #include "symbol.h"
-#include "gelf.h"
 
 using namespace std;
 
@@ -30,10 +31,9 @@ public:
     vector<Symbol> flash_syms;
     vector<Symbol> ram_syms;
 private:
-    Elf * _openElf(const char *filename);
-    void _processElfSections(Elf *elf);
-    void _processElfSymbolTable(Elf *elf, Elf_Scn *section);
-    void _loadProgramSegments(Elf *elf);
+    void _processElfSections(ELFIO::elfio& elf);
+    void _processElfSymbolTable(ELFIO::elfio& elf, ELFIO::section* section);
+    void _loadProgramSegments(ELFIO::elfio& elf);
     void _computeSymbolCover();
 
     Symbol* sym_at[2*PROGMEM_MAX_FLASH_SIZE];

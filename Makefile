@@ -9,14 +9,14 @@ INCLUDES = -I$(SRC)
 SOURCES = $(shell find $(SRC) -name '*.cpp' -o -name '*.h')
 
 SOURCES += $(LIB)/jsoncpp/jsoncpp.cpp
-INCLUDES += -I$(LIB)/jsoncpp
+INCLUDES += -I$(LIB)/jsoncpp -I$(LIB)
 CFLAGS += -DJSON_IS_AMALGAMATION
 
 all: $(BIN)/megas2
 
 $(BIN)/megas2: $(SOURCES)
 	@mkdir -p $(BIN)
-	g++ $(CFLAGS) $(INCLUDES) -g -o $@ -Wall $(filter %.cpp,$^) $(LIBS)
+	g++ $(CFLAGS) $(INCLUDES) -g -o $@ $(filter %.cpp,$^) $(LIBS)
 
 clean:
 	rm -rf $(BIN)
