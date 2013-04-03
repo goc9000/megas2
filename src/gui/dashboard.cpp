@@ -128,10 +128,31 @@ TTF_Font * Dashboard::getMonoFont(int size)
 
 void Dashboard::putText(int x, int y, const char *text, int size, int color)
 {
+    this->_putText(x, y, text, size, color, false);
+}
+
+void Dashboard::putText(int x, int y, const string& text, int size, int color)
+{
+    this->_putText(x, y, text.c_str(), size, color, false);
+}
+
+void Dashboard::putMonoText(int x, int y, const char *text, int size, int color)
+{
+    this->_putText(x, y, text, size, color, true);
+}
+
+void Dashboard::putMonoText(int x, int y, const string& text, int size, int color)
+{
+    this->_putText(x, y, text.c_str(), size, color, true);
+}
+
+void Dashboard::_putText(int x, int y, const char *text, int size, int color,
+    bool mono)
+{
     if (strlen(text) == 0)
         return;
     
-    TTF_Font *font = this->getFont(size);
+    TTF_Font *font = mono ? this->getMonoFont(size) : this->getFont(size);
     if (!font)
         return;
     
@@ -143,29 +164,6 @@ void Dashboard::putText(int x, int y, const char *text, int size, int color)
     SDLRect where(x, y, 0, 0);
     SDL_BlitSurface(text_surface, NULL, this->screen, &where);
     SDL_FreeSurface(text_surface);
-}
-
-void Dashboard::putText(int x, int y, const string& text, int size, int color)
-{
-    this->putText(x, y, text.c_str(), size, color);
-    
-    /*
-    if (this->_caption == "")
-        return;
-    
-    TTF_Font *font = dash->getFont(this->_size-4);
-    if (!font)
-        return;
-
-    SDL_Surface *text_surface;
-    text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), SDLColor(this->_color));
-    if (!text_surface)
-        return;
-        
-    SDLRect where(this->_x + this->_size + this->_size/2, this->_y + 2, 0, 0);
-    SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
-    SDL_FreeSurface(text_surface);
-    */
 }
 
 void Dashboard::reset()

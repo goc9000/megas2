@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#include "progmem.h"
+#include "devices/mcu/progmem.h"
 
 class Atmega32;
 

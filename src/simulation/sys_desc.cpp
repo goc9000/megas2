@@ -16,6 +16,7 @@
 #include "gui/dashboard.h"
 #include "gui/led.h"
 #include "gui/push_button.h"
+#include "gui/pc_indicator.h"
 
 #include "sys_desc.h"
 #include "utils/fail.h"
@@ -106,6 +107,8 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new SimpleLed(json_data);
     } else if (type == "SimplePushButton") {
         return new SimplePushButton(json_data);
+    } else if (type == "PCIndicator") {
+        return new PCIndicator(json_data, this);
     } else if (type == "Dashboard") {
         return new Dashboard(json_data, this);
     }

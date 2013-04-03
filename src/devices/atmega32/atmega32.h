@@ -10,6 +10,7 @@
 #include "simulation/entity.h"
 #include "simulation/sim_device.h"
 #include "devices/device.h"
+#include "devices/mcu/mcu.h"
 
 #define MEGA32_PIN_COUNT     32
 
@@ -20,7 +21,8 @@
 #define MEGA32_PIN_D         24
 #define MEGA32_PIN_D7        31
 
-class Atmega32 : public Entity, public I2cDevice, public SpiDevice, public PinDevice, public SimulatedDevice {
+class Atmega32 : public Entity, public Mcu, public I2cDevice, public SpiDevice,
+    public PinDevice, public SimulatedDevice {
     friend uint8_t read_port(Atmega32Core *core, uint8_t port);
     friend bool read_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit);
     friend void write_port(Atmega32Core *core, uint8_t port, uint8_t value);
@@ -32,8 +34,11 @@ public:
     void loadProgramFromElf(const char *filename);
     void setFrequency(uint64_t frequency);
 
-    virtual void reset();
+    virtual void reset(void);
     virtual void act(int event);
+    
+    virtual int getPC(void);
+    virtual Symbol* getProgramSymbol(int pc);
 protected:
     uint64_t frequency;
     sim_time_t clock_period;

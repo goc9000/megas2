@@ -38,7 +38,7 @@ Atmega32::Atmega32(Json::Value &json_data) :
     this->reset();
 }
 
-void Atmega32::_init()
+void Atmega32::_init(void)
 {
     atmega32_core_init(&this->core, this);
     this->ports = this->core.ram + IO_BASE;
@@ -56,7 +56,7 @@ void Atmega32::loadProgramFromElf(const char *filename)
     this->core.prog_mem.loadElf(filename);
 }
 
-void Atmega32::reset()
+void Atmega32::reset(void)
 {
     memset(this->core.ram, 0, RAM_SIZE);
     this->core.pc = 0;
@@ -77,11 +77,22 @@ void Atmega32::act(int event)
 {
     this->_handleIrqs();
     this->_runTimers();
+    
     atmega32_core_step(&this->core);
 
     if (this->simulation) {
         this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + this->clock_period);
     }
+}
+
+int Atmega32::getPC(void)
+{
+    return this->core.pc;
+}
+
+Symbol* Atmega32::getProgramSymbol(int pc)
+{
+    return this->core.prog_mem.flashSymbolAt(2 * pc);
 }
 
 void Atmega32::_handleIrqs()

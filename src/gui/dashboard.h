@@ -34,6 +34,8 @@ public:
     
     void putText(int x, int y, const string& text, int size, int color);
     void putText(int x, int y, const char *text, int size, int color);
+    void putMonoText(int x, int y, const string& text, int size, int color);
+    void putMonoText(int x, int y, const char *text, int size, int color);
 
     virtual void reset();
     virtual void act(int event);
@@ -46,6 +48,8 @@ private:
     map<int, TTF_Font *> _mono_font_cache;
     
     SDL_Surface *_background;
+    
+    void _putText(int x, int y, const char *text, int size, int color, bool mono);
     
     void _init(int width, int height, const char *bkgd_filename);
 };
