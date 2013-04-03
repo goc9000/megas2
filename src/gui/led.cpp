@@ -66,24 +66,9 @@ SimpleLed::SimpleLed(Json::Value &json_data) : Led(json_data)
 void SimpleLed::render(Dashboard *dash)
 {
     (this->_lit ? filledCircleColor : circleColor)(dash->screen,
-        this->_x+this->_size/2,
-        this->_y+this->_size/2,
-        this->_size/2,
-        this->_color);
+        this->_x + this->_size/2, this->_y + this->_size/2,
+        this->_size / 2, this->_color);
     
-    if (this->_caption == "")
-        return;
-    
-    TTF_Font *font = dash->getFont(this->_size-4);
-    if (!font)
-        return;
-
-    SDL_Surface *text_surface;
-    text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), SDLColor(this->_color));
-    if (!text_surface)
-        return;
-        
-    SDLRect where(this->_x + this->_size + this->_size/2, this->_y + 2, 0, 0);
-    SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
-    SDL_FreeSurface(text_surface);
+    dash->putText(this->_x + 3 * this->_size / 2, this->_y + 2,
+        this->_caption, this->_size - 4, this->_color);
 }

@@ -126,6 +126,48 @@ TTF_Font * Dashboard::getMonoFont(int size)
     return font;
 }
 
+void Dashboard::putText(int x, int y, const char *text, int size, int color)
+{
+    if (strlen(text) == 0)
+        return;
+    
+    TTF_Font *font = this->getFont(size);
+    if (!font)
+        return;
+    
+    SDL_Surface *text_surface;
+    text_surface = TTF_RenderText_Solid(font, text, SDLColor(color));
+    if (!text_surface)
+        return;
+    
+    SDLRect where(x, y, 0, 0);
+    SDL_BlitSurface(text_surface, NULL, this->screen, &where);
+    SDL_FreeSurface(text_surface);
+}
+
+void Dashboard::putText(int x, int y, const string& text, int size, int color)
+{
+    this->putText(x, y, text.c_str(), size, color);
+    
+    /*
+    if (this->_caption == "")
+        return;
+    
+    TTF_Font *font = dash->getFont(this->_size-4);
+    if (!font)
+        return;
+
+    SDL_Surface *text_surface;
+    text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), SDLColor(this->_color));
+    if (!text_surface)
+        return;
+        
+    SDLRect where(this->_x + this->_size + this->_size/2, this->_y + 2, 0, 0);
+    SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
+    SDL_FreeSurface(text_surface);
+    */
+}
+
 void Dashboard::reset()
 {
     if (this->simulation) {

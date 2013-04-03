@@ -31,6 +31,9 @@ public:
     
     TTF_Font *getFont(int size);
     TTF_Font *getMonoFont(int size);
+    
+    void putText(int x, int y, const string& text, int size, int color);
+    void putText(int x, int y, const char *text, int size, int color);
 
     virtual void reset();
     virtual void act(int event);

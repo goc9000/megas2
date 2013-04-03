@@ -107,37 +107,17 @@ void SimplePushButton::_init(int x, int y, int size, int color, const char *capt
 
 void SimplePushButton::render(Dashboard *dash)
 {
-    rectangleColor(dash->screen,
-        this->_x,
-        this->_y,
-        this->_x + this->_size - 1,
-        this->_y + this->_size - 1,
-        this->_color);
+    rectangleColor(dash->screen, this->_x, this->_y,
+        this->_x + this->_size - 1, this->_y + this->_size - 1, this->_color);
     
     if (this->_pressed) {
-        boxColor(dash->screen,
-            this->_x + 4,
-            this->_y + 4,
-            this->_x + this->_size - 4 - 1,
-            this->_y + this->_size - 4 - 1,
+        boxColor(dash->screen, this->_x + 4, this->_y + 4,
+            this->_x + this->_size - 4 - 1, this->_y + this->_size - 4 - 1,
             this->_color);
     }
     
-    if (this->_caption == "")
-        return;
-    
-    TTF_Font *font = dash->getFont(this->_size-4);
-    if (!font)
-        return;
-    
-    SDL_Surface *text_surface;
-    text_surface = TTF_RenderText_Solid(font, this->_caption.c_str(), SDLColor(this->_color));
-    if (!text_surface)
-        return;
-        
-    SDLRect where(this->_x + this->_size + this->_size / 2, this->_y + 2, 0, 0);
-    SDL_BlitSurface(text_surface, NULL, dash->screen, &where);
-    SDL_FreeSurface(text_surface);
+    dash->putText(this->_x + 3 * this->_size / 2, this->_y + 2, this->_caption,
+        this->_size - 4, this->_color);
 }
 
 bool SimplePushButton::handleEvent(Dashboard *dash, SDL_Event *event)
