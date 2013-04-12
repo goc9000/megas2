@@ -14,6 +14,7 @@
 
 #define SDCARD_PIN_SLAVE_SELECT    0
 
+
 class SdCard : public Entity, public SpiDevice, public PinDevice, public SimulatedDevice {
 public:
     SdCard(const char *backing_file_name, unsigned capacity);
@@ -51,7 +52,7 @@ private:
 
     void _init(const char *backing_file_name, unsigned capacity);
     
-    virtual void _onPinChanged(int pin_id, int value, int old_value);
+    virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
     
     virtual void _onSpiSlaveSelect(bool select);
     uint8_t _handleSpiData(uint8_t data);

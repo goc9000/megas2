@@ -15,21 +15,25 @@ using namespace std;
 
 #define PUSH_BUTTON_PIN_OUTPUT 0
 
+const pin_val_t PUSH_BUTTON_DEFAULT_UP_VALUE = 0.0;
+const pin_val_t PUSH_BUTTON_DEFAULT_DOWN_VALUE = PIN_VAL_VCC;
+
+
 class PushButton : public Entity, public DashboardWidget, public PinDevice
 {
 public:
     PushButton();
-    PushButton(int up_value, int down_value);
+    PushButton(pin_val_t up_value, pin_val_t down_value);
     PushButton(Json::Value &json_data);
     
     virtual void render(Dashboard *dash) = 0;
 protected:
-    int _up_value;
-    int _down_value;
+    pin_val_t _up_value;
+    pin_val_t _down_value;
     bool _pressed;
     
     void _setPressed(bool pressed);
-    virtual void _onPinChanged(int pin_id, int value, int old_value);
+    virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
 };
 
 class SimplePushButton : public PushButton

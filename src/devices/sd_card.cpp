@@ -39,7 +39,7 @@ using namespace std;
 // Pin initialization data
 
 PinInitData const PIN_INIT_DATA[SDCARD_PIN_COUNT] = {
-    { "SS", PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
+    { "SS", PIN_MODE_INPUT, PIN_VAL_VCC }  // SLAVE_SELECT
 };
 
 uint8_t compute_crc7(uint8_t *buffer, int length)
@@ -126,11 +126,11 @@ void SdCard::reset()
     this->block_size = 512;
 }
 
-void SdCard::_onPinChanged(int pin_id, int value, int old_value)
+void SdCard::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 {
     switch (pin_id) {
         case SDCARD_PIN_SLAVE_SELECT:
-            this->_spiSlaveSelect(!value);
+            this->_spiSlaveSelect(!this->_pins[pin_id].readDigital());
             return;
     }
 }

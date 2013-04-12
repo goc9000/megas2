@@ -20,9 +20,9 @@ Led::Led(Json::Value &json_data) : Entity(json_data), PinDevice(LED_PIN_COUNT, P
     this->_lit = false;
 }
 
-void Led::_onPinChanged(int pin_id, int value, int old_value)
+void Led::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 {
-    this->_lit = !!value;
+    this->_lit = value > SIMPLE_LED_LIGHTING_TRESHOLD;
 }
 
 SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)

@@ -23,8 +23,10 @@ public:
 protected:
     bool _lit;
     
-    virtual void _onPinChanged(int pin_id, int value, int old_value);
+    virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
 };
+
+const pin_val_t SIMPLE_LED_LIGHTING_TRESHOLD = 0.6;
 
 class SimpleLed : public Led
 {

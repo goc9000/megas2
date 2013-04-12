@@ -85,15 +85,17 @@ void Enc28J60::_initRegs()
     this->phy_regs[REG_PHLCON] = 0x3422;
 }
 
-void Enc28J60::_onPinChanged(int pin_id, int value, int old_value)
+void Enc28J60::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 {
+    bool digi_val = this->_pins[pin_id].readDigital();
+    
     switch (pin_id) {
         case E28J_PIN_RESET:
-            if (!value)
+            if (!digi_val)
                 this->reset();
             return;
         case E28J_PIN_SLAVE_SELECT:
-            this->_spiSlaveSelect(!value);
+            this->_spiSlaveSelect(!digi_val);
             return;
     }
 }

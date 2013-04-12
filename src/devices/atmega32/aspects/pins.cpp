@@ -121,19 +121,19 @@ void Atmega32::_pinsInit()
     
     // all pins revert to inputs again
     for (int i = MEGA32_PIN_A0; i <= MEGA32_PIN_D7; i++) {
-        this->_setPinMode(i, PIN_MODE_INPUT);
-        this->_setPinFloatValue(i, 0);
-        this->_pinWrite(i, 0);
+        this->_pins[i].setMode(PIN_MODE_INPUT);
+        this->_pins[i].setFloatValueDigital(0);
+        this->_pins[i].writeDigital(0);
     }
 }
 
-void Atmega32::_onPinChanged(int pin_id, int value, int old_value)
+void Atmega32::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 {
     if (is_dataport_pin(pin_id)) {
         uint8_t port = PIN_for_pin(pin_id);
         
         // TODO: feed into ADC
-        chg_bit(this->ports[port], bit_for_pin(pin_id), value);
+        chg_bit(this->ports[port], bit_for_pin(pin_id), this->_pins[pin_id].readDigital());
     }
 }
 
@@ -160,9 +160,9 @@ void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t value, uin
         for (uint8_t i = 0; i < 8; i++) {
             if (!this->_pin_overrides[pin + i]) {
                 if (bit_is_set(mask, i)) {
-                    this->_pinWrite(pin + i, bit_is_set(value, i));
+                    this->_pins[pin + i].writeDigital(bit_is_set(value, i));
                 } else {
-                    this->_setPinFloatValue(pin + i, bit_is_set(value, i));
+                    this->_pins[pin + i].setFloatValueDigital(bit_is_set(value, i));
                 }
             }
         }
@@ -170,21 +170,21 @@ void Atmega32::_handleDataPortWrite(uint8_t port, int8_t bit, uint8_t value, uin
         for (uint8_t i = 0; i < 8; i++) {
             if (!this->_pin_overrides[pin + i]) {
                 if (bit_is_set(value, i) != bit_is_set(prev_val, i)) {
-                    this->_setPinMode(pin + i, bit_is_set(value, i) ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
+                    this->_pins[pin + i].setMode(bit_is_set(value, i) ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
                 }
             }
         }
     }
 }
 
-void Atmega32::_enablePinOverride(int pin_id, int mode, int float_value)
+void Atmega32::_enablePinOverride(int pin_id, int mode, pin_val_t float_value)
 {
     if (!is_dataport_pin(pin_id))
         fail("Tried to override non-dataport pin #%d", pin_id);
     
     this->_pin_overrides[pin_id] = true;
-    this->_setPinMode(pin_id, mode);
-    this->_setPinFloatValue(pin_id, float_value);
+    this->_pins[pin_id].setMode(mode);
+    this->_pins[pin_id].setFloatValue(float_value);
 }
 
 void Atmega32::_disablePinOverride(int pin_id)
@@ -196,10 +196,10 @@ void Atmega32::_disablePinOverride(int pin_id)
     bool is_out = bit_is_set(DDR_for_pin(pin_id), bit);
     
     this->_pin_overrides[pin_id] = false;
-    this->_setPinMode(pin_id, is_out ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
+    this->_pins[pin_id].setMode(is_out ? PIN_MODE_OUTPUT : PIN_MODE_INPUT);
     if (is_out) {
-        this->_pinWrite(pin_id, bit_is_set(PORT_for_pin(pin_id), bit));
+        this->_pins[pin_id].writeDigital(bit_is_set(PORT_for_pin(pin_id), bit));
     } else {
-        this->_setPinFloatValue(pin_id, bit_is_set(PORT_for_pin(pin_id), bit));
+        this->_pins[pin_id].setFloatValueDigital(bit_is_set(PORT_for_pin(pin_id), bit));
     }
 }

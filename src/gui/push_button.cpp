@@ -14,12 +14,12 @@ PinInitData const PIN_INIT_DATA[PUSH_BUTTON_PIN_COUNT] = {
 PushButton::PushButton(void)
     : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_up_value = 0;
-    this->_down_value = 1;
+    this->_up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
+    this->_down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
     this->_setPressed(false);
 }
 
-PushButton::PushButton(int up_value, int down_value)
+PushButton::PushButton(pin_val_t up_value, pin_val_t down_value)
     : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_up_value = up_value;
@@ -30,27 +30,25 @@ PushButton::PushButton(int up_value, int down_value)
 PushButton::PushButton(Json::Value &json_data)
     : Entity(json_data), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_up_value = 0;
-    this->_down_value = 1;
+    this->_up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
+    this->_down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
     this->_setPressed(false);
     
     if (json_data.isMember("up_value")) {
-        this->_up_value = (json_data["up_value"].isString() && (json_data["up_value"].asString() == "Z"))
-            ? PIN_VAL_Z : json_data["up_value"].asInt();
+        this->_up_value = parse_json_pin_value(json_data["up_value"]);
     }
     if (json_data.isMember("down_value")) {
-        this->_down_value = (json_data["down_value"].isString() && (json_data["down_value"].asString() == "Z"))
-            ? PIN_VAL_Z : json_data["down_value"].asInt();
+        this->_down_value = parse_json_pin_value(json_data["down_value"]);
     }
 }
 
 void PushButton::_setPressed(bool pressed)
 {
     this->_pressed = pressed;
-    this->_pinWrite(PUSH_BUTTON_PIN_OUTPUT, this->_pressed ? this->_down_value : this->_up_value);
+    this->_pins[PUSH_BUTTON_PIN_OUTPUT].write(this->_pressed ? this->_down_value : this->_up_value);
 }
 
-void PushButton::_onPinChanged(int pin_id, int value, int old_value)
+void PushButton::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 {
 }
 

@@ -61,7 +61,7 @@ void Atmega32::_setAdcEnabled(bool enabled)
     
     if (enabled) {
         for (int i = PIN_PA0; i <= PIN_PA7; i++)
-            this->_enablePinOverride(i, PIN_MODE_INPUT, PIN_VAL_Z);
+            this->_enablePinOverride(i, PIN_MODE_INPUT, PIN_VAL_VCC);
     } else {
         for (int i = PIN_PA0; i <= PIN_PA7; i++)
             this->_disablePinOverride(i);

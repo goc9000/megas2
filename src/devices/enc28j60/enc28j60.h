@@ -18,6 +18,7 @@
 #define E28J_PHY_REGS_COUNT     0x20
 #define E28J_ETH_BUFFER_SIZE    0x2000
 
+
 class Enc28J60 : public Entity, public PinDevice, public SpiDevice, public SimulatedDevice {
 public:
     Enc28J60();
@@ -40,7 +41,7 @@ private:
 
     void _initRegs();
 
-    virtual void _onPinChanged(int pin_id, int value, int old_value);
+    virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
     
     virtual void _onSpiSlaveSelect(bool select);
     uint8_t _handleSpiData(uint8_t data);

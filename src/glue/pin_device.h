@@ -1,9 +1,7 @@
 #ifndef _H_PIN_DEVICE_H
 #define _H_PIN_DEVICE_H
 
-#include <inttypes.h>
-#include <vector>
-
+#include "pin.h"
 #include "pin_ref.h"
 #include "simulation/entity_lookup.h"
 
@@ -12,16 +10,10 @@ using namespace std;
 #define PIN_MODE_INPUT   0
 #define PIN_MODE_OUTPUT  1
 
-#define PIN_VAL_Z        0x0FFFFFFF
+const pin_val_t DEFAULT_VCC = 5.0;
+const pin_val_t DEFAULT_LOGIC_THRESHOLD = 1.5;
 
-class Pin;
 class AnalogBus;
-
-struct PinInitData {
-    const char *pin_name;
-    int mode;
-    int float_value;
-};
 
 class PinDevice {
     friend class Pin;
@@ -29,19 +21,17 @@ public:
     PinDevice(int num_pins, PinInitData const * const init_data);
     void connectPinToBus(int pin_id, AnalogBus *bus);
     void disconnectPinFromBus(int pin_id, AnalogBus *bus);
-    void drivePin(int pin_id, int data);
-    int queryPin(int pin_id);
+    void drivePin(int pin_id, pin_val_t data);
+    pin_val_t queryPin(int pin_id);
     int lookupPin(const char *pin_name);
 protected:
     Pin *_pins;
     int _num_pins;
     
-    void _pinWrite(int pin_id, int data);
-    int _pinRead(int pin_id);
-    void _setPinMode(int pin_id, int mode);
-    void _setPinFloatValue(int pin_id, int float_value);
+    pin_val_t _vcc;
+    pin_val_t _logic_threshold;
     
-    virtual void _onPinChanged(int pin_id, int value, int old_value) = 0;
+    virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value) = 0;
 };
 
 #endif
