@@ -1,6 +1,8 @@
 #ifndef _H_ATMEGA32_DEFS_H
 #define _H_ATMEGA32_DEFS_H
 
+#include "atmega32.h"
+
 // Flash size is in 16-bit words
 #define MEGA32_FLASH_SIZE  0x4000
 
@@ -9,7 +11,7 @@
 #define IO_BASE            0x0020   
 #define SRAM_BASE          0x0060
 
-static char const * const PORT_NAMES[0x40] = {
+static char const * const PORT_NAMES[MEGA32_PORT_COUNT] = {
     "TWBR", "TWSR", "TWAR", "TWDR", "ADCL", "ADCH", "ADCSRA", "ADMUX",
     "ACSR", "UBRRL", "UCSRB", "UCSRA", "UDR", "SPCR", "SPSR", "SPDR",
     "PIND", "DDRD", "PORTD", "PINC", "DDRC", "PORTC", "PINB", "DDRB",
@@ -188,32 +190,5 @@ static char const * const PORT_NAMES[0x40] = {
 #define TWI_STATUS_R_DATA_ACK   0x50
 #define TWI_STATUS_R_DATA_NACK  0x58
 #define TWI_STATUS_IDLE         0xf8
-
-static inline bool is_data_port(uint8_t port)
-{
-    return ((port >= PORT_PIND) && (port <= PORT_PORTA));
-}
-
-static inline bool is_twi_port(uint8_t port)
-{
-    return ((port >= PORT_TWBR) && (port <= PORT_TWDR)) || (port == PORT_TWCR);
-}
-
-static inline bool is_spi_port(uint8_t port)
-{
-    return ((port >= PORT_SPCR) && (port <= PORT_SPDR));
-}
-
-static inline bool is_timer_port(uint8_t port)
-{
-    return ((port >= PORT_ASSR) && (port <= PORT_TCCR1A))
-        || (port == PORT_TCNT0) || (port == PORT_TCCR0) || (port == PORT_TIFR)
-        || (port == PORT_TIMSK)  || (port == PORT_OCR0);
-}
-
-static inline bool is_adc_port(uint8_t port)
-{
-    return (port >= PORT_ADCL) && (port <= PORT_ADMUX);
-}
 
 #endif

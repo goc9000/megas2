@@ -27,6 +27,17 @@ void Atmega32::_twiInit()
     this->ports[PORT_TWDR] = 0xff;
     this->ports[PORT_TWCR] = 0x00;
     
+    this->port_metas[PORT_TWSR].write_mask = 0x03;
+    this->port_metas[PORT_TWCR].write_mask = 0x75;
+    this->port_metas[PORT_TWCR].clearable_mask = 0x80;
+    
+    for (int port = PORT_TWBR; port <= PORT_TWDR; port++) {
+        this->port_metas[port].read_handler = &Atmega32::_twiHandleRead;
+        this->port_metas[port].write_handler = &Atmega32::_twiHandleWrite;
+    }
+    this->port_metas[PORT_TWCR].read_handler = &Atmega32::_twiHandleRead;
+    this->port_metas[PORT_TWCR].write_handler = &Atmega32::_twiHandleWrite;
+    
     this->twi_has_floor = false;
     this->twi_start_just_sent = false;
 }

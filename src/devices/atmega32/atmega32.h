@@ -12,6 +12,8 @@
 #include "devices/device.h"
 #include "devices/mcu/mcu.h"
 
+#define MEGA32_PORT_COUNT    64
+
 #define MEGA32_PIN_COUNT     32
 
 #define MEGA32_PIN_A0         0
@@ -20,6 +22,16 @@
 #define MEGA32_PIN_C         16
 #define MEGA32_PIN_D         24
 #define MEGA32_PIN_D7        31
+
+class Atmega32;
+
+struct Atmega32PortMeta
+{
+    uint8_t write_mask;
+    uint8_t clearable_mask;
+    void (Atmega32::*read_handler)(uint8_t, int8_t, uint8_t &);
+    void (Atmega32::*write_handler)(uint8_t, int8_t, uint8_t, uint8_t, uint8_t);
+};
 
 class Atmega32 : public Entity, public Mcu, public I2cDevice, public SpiDevice,
     public PinDevice, public SimulatedDevice {
@@ -46,14 +58,16 @@ protected:
     Atmega32Core core;
     
     uint8_t *ports; // shortcut
+    Atmega32PortMeta port_metas[MEGA32_PORT_COUNT];
 
     void _init();
 
-    uint8_t _getPortWriteMask(uint8_t port);
-    uint8_t _getPortClearableMask(uint8_t port);
     void _onPortRead(uint8_t port, int8_t bit, uint8_t &value);
     uint8_t _onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint8_t prev_val);
     void _onPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
+    
+    void _unsuppPortRead(uint8_t port, int8_t bit, uint8_t &value);
+    void _unsuppPortWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
     
     uint16_t _get16BitPort(uint8_t port);
     void _put16BitPort(uint8_t port, uint16_t value);

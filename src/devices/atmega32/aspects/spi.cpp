@@ -19,7 +19,14 @@ void Atmega32::_spiInit()
     this->ports[PORT_SPCR] = 0x00;
     this->ports[PORT_SPSR] = 0x00;
     this->ports[PORT_SPDR] = 0xff;
-
+ 
+    this->port_metas[PORT_SPSR].write_mask = 0x01;
+    
+    for (int port = PORT_SPCR; port <= PORT_SPDR; port++) {
+        this->port_metas[port].read_handler = &Atmega32::_spiHandleRead;
+        this->port_metas[port].write_handler = &Atmega32::_spiHandleWrite;
+    }
+    
     this->spi_stat_read = false;
 }
 

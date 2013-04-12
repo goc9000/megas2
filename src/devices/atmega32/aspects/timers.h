@@ -11,8 +11,9 @@ protected:
 
     void _timersInit();
     void _runTimers();
-    void _timersHandleRead(uint8_t port, int8_t bit, uint8_t &value);
-    void _timersHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
+    
+    void _timersCommonHandleRead(uint8_t port, int8_t bit, uint8_t &value);
+    void _timersCommonHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
 
     void _triggerTimerIrq(uint8_t flags);
     uint8_t _handleTimerIrqs();

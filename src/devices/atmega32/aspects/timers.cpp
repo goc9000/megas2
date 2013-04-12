@@ -14,21 +14,6 @@
 
 using namespace std;
 
-static bool is_timer0_port(uint8_t port)
-{
-    return (port == PORT_TCNT0) || (port == PORT_TCCR0) || (port == PORT_TIFR);
-}
-
-static bool is_timer1_port(uint8_t port)
-{
-    return (port >= PORT_ICR1L) && (port <= PORT_TCCR1A);
-}
-
-static bool is_timer2_port(uint8_t port)
-{
-    return (port >= PORT_ASSR) && (port <= PORT_TCCR2);
-}
-
 static int prescaler_bit_01(int clksel)
 {
     switch (clksel) {
@@ -59,7 +44,18 @@ static int prescaler_bit_2(int clksel)
 
 void Atmega32::_timersInit()
 {
-    // all timer ports default to 0
+    this->ports[PORT_TIFR] = 0;
+    this->ports[PORT_TIMSK] = 0;
+    
+    this->port_metas[PORT_TIFR].write_mask = 0x00;
+    
+    this->port_metas[PORT_TIFR].clearable_mask = 0xff;
+    
+    this->port_metas[PORT_TIFR].read_handler = &Atmega32::_timersCommonHandleRead;
+    this->port_metas[PORT_TIFR].write_handler = &Atmega32::_timersCommonHandleWrite;
+    this->port_metas[PORT_TIMSK].read_handler = &Atmega32::_timersCommonHandleRead;
+    this->port_metas[PORT_TIMSK].write_handler = &Atmega32::_timersCommonHandleWrite;
+    
     this->prescaler01 = 0;
     this->prescaler2 = 0;
     
@@ -88,30 +84,12 @@ void Atmega32::_runTimers()
         this->_timer2Tick();
 }
 
-void Atmega32::_timersHandleRead(uint8_t port, int8_t bit, uint8_t &value)
+void Atmega32::_timersCommonHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
-    if (is_timer0_port(port)) {
-        this->_timer0HandleRead(port, bit, value);
-    } else if (is_timer1_port(port)) {
-        this->_timer1HandleRead(port, bit, value);
-    } else if (is_timer2_port(port)) {
-        this->_timer2HandleRead(port, bit, value);
-    } else {
-        // handle common ports
-    }
 }
 
-void Atmega32::_timersHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
+void Atmega32::_timersCommonHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
-    if (is_timer0_port(port)) {
-        this->_timer0HandleWrite(port, bit, value, prev_val, cleared);
-    } else if (is_timer1_port(port)) {
-        this->_timer1HandleWrite(port, bit, value, prev_val, cleared);
-    } else if (is_timer2_port(port)) {
-        this->_timer2HandleWrite(port, bit, value, prev_val, cleared);
-    } else {
-        // handle common ports
-    }
 }
 
 void Atmega32::_triggerTimerIrq(uint8_t flags)
@@ -135,6 +113,16 @@ uint8_t Atmega32::_handleTimerIrqs()
 
 void Atmega32::_timer0Init()
 {
+    this->ports[PORT_TCNT0] = 0;
+    this->ports[PORT_TCCR0] = 0;
+    this->ports[PORT_OCR0] = 0;
+    
+    this->port_metas[PORT_TCNT0].read_handler = &Atmega32::_timer0HandleRead;
+    this->port_metas[PORT_TCNT0].write_handler = &Atmega32::_timer0HandleWrite;
+    this->port_metas[PORT_TCCR0].read_handler = &Atmega32::_timer0HandleRead;
+    this->port_metas[PORT_TCCR0].write_handler = &Atmega32::_timer0HandleWrite;
+    this->port_metas[PORT_OCR0].read_handler = &Atmega32::_timer0HandleRead;
+    this->port_metas[PORT_OCR0].write_handler = &Atmega32::_timer0HandleWrite;
 }
 
 void Atmega32::_timer0Tick()
@@ -153,6 +141,19 @@ void Atmega32::_timer0HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8
 
 void Atmega32::_timer1Init()
 {
+    for (int port = PORT_ICR1L; port <= PORT_TCCR1A; port++)
+        this->ports[port] = 0;
+    
+    this->port_metas[PORT_TCCR1A].write_mask = 0xf3;
+    this->port_metas[PORT_TCCR1B].write_mask = 0xdf;
+    
+    this->port_metas[PORT_TCCR1A].clearable_mask = 0xc0;
+    
+    for (int port = PORT_ICR1L; port <= PORT_TCCR1A; port++) {
+        this->port_metas[port].read_handler = &Atmega32::_timer1HandleRead;
+        this->port_metas[port].write_handler = &Atmega32::_timer1HandleWrite;
+    }
+    
     this->timer1_temp_high_byte = 0;
 }
 
@@ -223,6 +224,13 @@ void Atmega32::_timer1HandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8
 
 void Atmega32::_timer2Init()
 {
+    for (int port = PORT_ASSR; port <= PORT_TCCR2; port++)
+        this->ports[port] = 0;
+    
+    for (int port = PORT_ASSR; port <= PORT_TCCR2; port++) {
+        this->port_metas[port].read_handler = &Atmega32::_timer2HandleRead;
+        this->port_metas[port].write_handler = &Atmega32::_timer2HandleWrite;
+    }
 }
 
 void Atmega32::_timer2Tick()

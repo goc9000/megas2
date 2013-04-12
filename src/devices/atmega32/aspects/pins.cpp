@@ -51,6 +51,11 @@ extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT] = {
     { "D7", PIN_MODE_INPUT, 0 }  // D7
 };
 
+static inline bool is_data_port(uint8_t port)
+{
+    return ((port >= PORT_PIND) && (port <= PORT_PORTA));
+}
+
 static inline bool is_PIN_port(uint8_t port)
 {
     return is_data_port(port) && (((port - PORT_PIND) % 3) == 0);
@@ -117,6 +122,12 @@ static inline uint8_t bit_for_pin(int pin_id)
 
 void Atmega32::_pinsInit()
 {
+    for (int port = PORT_PIND; port <= PORT_PORTA; port++) {
+        this->ports[port] = 0;
+        this->port_metas[port].read_handler = &Atmega32::_handleDataPortRead;
+        this->port_metas[port].write_handler = &Atmega32::_handleDataPortWrite;
+    }
+    
     this->_pin_overrides = vector<bool>(this->_num_pins);
     
     // all pins revert to inputs again

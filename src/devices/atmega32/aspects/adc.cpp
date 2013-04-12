@@ -16,7 +16,19 @@ using namespace std;
 
 void Atmega32::_adcInit()
 {
-    // all ADC ports default to 0
+    for (int port = PORT_ADCL; port <= PORT_ADMUX; port++)
+        this->ports[port] = 0;
+    
+    this->port_metas[PORT_ADCSRA].write_mask = 0xef;
+    this->port_metas[PORT_ADCL].write_mask = 0x00;
+    this->port_metas[PORT_ADCH].write_mask = 0x00;
+    
+    this->port_metas[PORT_ADCSRA].clearable_mask = 0x10;
+    
+    for (int port = PORT_ADCL; port <= PORT_ADMUX; port++) {
+        this->port_metas[port].read_handler = &Atmega32::_adcHandleRead;
+        this->port_metas[port].write_handler = &Atmega32::_adcHandleWrite;
+    }
     
     this->adc_enabled = false;
     this->adc_result_locked = false;
@@ -24,11 +36,14 @@ void Atmega32::_adcInit()
 
 void Atmega32::_adcHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
+    this->_dumpPortRead("ADC", port, bit, value);
 }
 
 void Atmega32::_adcHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     bool enable;
+    
+    this->_dumpPortWrite("ADC", port, bit, value, prev_val, cleared);
     
     switch (port) {
         case PORT_ADCSRA:
