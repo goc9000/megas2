@@ -36,7 +36,21 @@ void Atmega32::_adcInit()
 
 void Atmega32::_adcHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
-    this->_dumpPortRead("ADC", port, bit, value);
+    int result_shift = bit_is_set(this->ports[PORT_ADMUX], B_ADLAR) ? 6 : 0;
+    
+    switch (port) {
+        case PORT_ADCL:
+            value = low_byte(this->adc_result << result_shift);
+            this->adc_result_locked = true;
+            break;
+        case PORT_ADCH:
+            value = high_byte(this->adc_result << result_shift);
+            this->adc_result_locked = false;
+            break;
+        default:
+            this->_dumpPortRead("ADC", port, bit, value);
+            break;
+    }
 }
 
 void Atmega32::_adcHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
@@ -77,6 +91,9 @@ void Atmega32::_setAdcEnabled(bool enabled)
     if (enabled) {
         for (int i = PIN_PA0; i <= PIN_PA7; i++)
             this->_enablePinOverride(i, PIN_MODE_INPUT, PIN_VAL_VCC);
+        
+        this->adc_result = 0;
+        this->adc_result_locked = false;
     } else {
         for (int i = PIN_PA0; i <= PIN_PA7; i++)
             this->_disablePinOverride(i);

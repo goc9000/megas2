@@ -5,6 +5,7 @@ public:
 
 protected:
     bool adc_enabled;
+    uint16_t adc_result;
     bool adc_result_locked;
     
     void _adcInit();

@@ -109,6 +109,8 @@ static char const * const PORT_NAMES[MEGA32_PORT_COUNT] = {
 #define B_ADATE         5
 #define B_ADIF          4
 #define B_ADIE          3
+// Bit balues for ADMUX
+#define B_ADLAR         5
 // Bit values for SPSR 
 #define B_SPIF          7
 // Bit values for SPCR
