@@ -14,14 +14,17 @@
 
 #define MEGA32_PORT_COUNT    64
 
-#define MEGA32_PIN_COUNT     32
+#define MEGA32_PIN_COUNT     33
 
-#define MEGA32_PIN_A0         0
-#define MEGA32_PIN_A          0
-#define MEGA32_PIN_B          8
-#define MEGA32_PIN_C         16
-#define MEGA32_PIN_D         24
-#define MEGA32_PIN_D7        31
+#define MEGA32_PIN_PA0        0
+#define MEGA32_PIN_PA7        7
+#define MEGA32_PIN_PB0        8
+#define MEGA32_PIN_PB7       15
+#define MEGA32_PIN_PC0       16
+#define MEGA32_PIN_PC7       23
+#define MEGA32_PIN_PD0       24
+#define MEGA32_PIN_PD7       31
+#define MEGA32_PIN_AREF      32
 
 class Atmega32;
 

@@ -65,6 +65,18 @@ bool Pin::readDigital(void)
 }
 
 /**
+ * Checks whether the pin is disconnected.
+ * 
+ * This is equivalent to the pin receiving Z (high impedance) from the environment.
+ *
+ * @return True if the pin is disconnected
+ */
+bool Pin::isDisconnected(void)
+{
+    return (this->last_input == PIN_VAL_Z);
+}
+
+/**
  * Drives the pin to a specific value from the *inside*.
  * 
  * @param value The value to set the pin to

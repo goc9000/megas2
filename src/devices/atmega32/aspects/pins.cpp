@@ -89,7 +89,7 @@ static inline uint8_t DDR_for_PORT(uint8_t port)
 static inline int pin_for_port(uint8_t port)
 {
     if (is_data_port(port)) {
-        return MEGA32_PIN_A + 8 * ((PORT_PORTA - port)/3);
+        return MEGA32_PIN_PA0 + 8 * ((PORT_PORTA - port)/3);
     }
 
     return -1;
@@ -97,7 +97,7 @@ static inline int pin_for_port(uint8_t port)
 
 static inline bool is_dataport_pin(int pin_id)
 {
-    return (pin_id >= MEGA32_PIN_A0) && (pin_id <= MEGA32_PIN_D7);
+    return (pin_id >= MEGA32_PIN_PA0) && (pin_id <= MEGA32_PIN_PD7);
 }
 
 static inline uint8_t PIN_for_pin(int pin_id)
@@ -131,7 +131,7 @@ void Atmega32::_pinsInit()
     this->_pin_overrides = vector<bool>(this->_num_pins);
     
     // all pins revert to inputs again
-    for (int i = MEGA32_PIN_A0; i <= MEGA32_PIN_D7; i++) {
+    for (int i = MEGA32_PIN_PA0; i <= MEGA32_PIN_PD7; i++) {
         this->_pins[i].setMode(PIN_MODE_INPUT);
         this->_pins[i].setFloatValueDigital(0);
         this->_pins[i].writeDigital(0);

@@ -14,6 +14,13 @@
 
 using namespace std;
 
+const pin_val_t ADC_REF_VBG = 1.22;
+const pin_val_t ADC_REF_V256 = 2.56;
+
+const pin_val_t ADC_REF_EPSILON = 0.0001;
+
+const int MAX_ADC_VALUE = 0x3ff;
+
 void Atmega32::_adcInit()
 {
     for (int port = PORT_ADCL; port <= PORT_ADMUX; port++)
@@ -66,7 +73,6 @@ void Atmega32::_adcHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t 
                 this->_setAdcEnabled(enable);
             }
             if (!enable) break;
-            break;
     }
 }
 
@@ -89,13 +95,108 @@ void Atmega32::_setAdcEnabled(bool enabled)
     this->adc_enabled = enabled;
     
     if (enabled) {
-        for (int i = PIN_PA0; i <= PIN_PA7; i++)
+        for (int i = MEGA32_PIN_PA0; i <= MEGA32_PIN_PA7; i++)
             this->_enablePinOverride(i, PIN_MODE_INPUT, PIN_VAL_VCC);
-        
-        this->adc_result = 0;
-        this->adc_result_locked = false;
     } else {
-        for (int i = PIN_PA0; i <= PIN_PA7; i++)
+        for (int i = MEGA32_PIN_PA0; i <= MEGA32_PIN_PA7; i++)
             this->_disablePinOverride(i);
     }
+    
+    clear_bit(this->ports[PORT_ADCSRA], B_ADSC);
+    this->adc_result = 0;
+    this->adc_result_locked = false;
+}
+
+uint16_t Atmega32::_getAdcMeasurement()
+{
+    pin_val_t diff_input = this->_getAdcPosVoltage() - this->_getAdcNegVoltage();
+    pin_val_t ref = max(this->_getAdcRefVoltage(), ADC_REF_EPSILON);
+    
+    diff_input *= this->_getAdcGain();
+        
+    double normalized = (double)(MAX_ADC_VALUE * diff_input) / ref;
+    
+    if (this->_adcInDifferentialMode()) {
+        normalized = max(normalized, (double)(-1 - (MAX_ADC_VALUE >> 1)));
+        normalized = min(normalized, (double)(MAX_ADC_VALUE >> 1));
+    } else {
+        normalized = max(normalized, 0.0);
+        normalized = min(normalized, (double)MAX_ADC_VALUE);
+    }
+    
+    return ((int)normalized) & MAX_ADC_VALUE;
+}
+
+pin_val_t Atmega32::_getAdcRefVoltage()
+{
+    uint8_t ref = (this->adc_last_admux >> 6) & 3;
+    
+    bool has_aref = !this->_pins[MEGA32_PIN_AREF].isDisconnected();
+    
+    switch (ref) {
+        case 0:
+            if (!has_aref)
+                fail("Used AREF as ADC reference with nothing connected to AREF pin");
+            return this->_pins[MEGA32_PIN_AREF].read();
+        case 1:
+            if (has_aref)
+                fail("Used AVCC as ADC reference with AREF pin connected");
+            return this->_vcc;
+        case 2:
+            fail("Used reserved ADC reference REFS=10");
+            break;
+        case 3:
+            if (has_aref)
+                fail("Used V2.56 as ADC reference with AREF pin connected");
+            return ADC_REF_V256;
+    }
+    
+    return 0.0;
+}
+
+pin_val_t Atmega32::_getAdcPosVoltage()
+{
+    uint8_t mux = this->adc_last_admux & 0x1f;
+    
+    if (((mux >> 3) & 0x03) == 0x01) {
+        return this->_pins[MEGA32_PIN_PA0 + ((mux & 4) >> 1) + (mux & 1)].read();
+    } else if (mux == 0x1e) {
+        return ADC_REF_VBG;
+    } else if (mux == 0x1f) {
+        return 0.0;
+    }
+    
+    return this->_pins[MEGA32_PIN_PA0 + (mux & 7)].read();
+}
+
+pin_val_t Atmega32::_getAdcNegVoltage()
+{
+    uint8_t mux = this->adc_last_admux & 0x1f;
+    
+    if (((mux >> 3) & 0x03) == 0x01) {
+        return this->_pins[MEGA32_PIN_PA0 + ((mux & 4) >> 1)].read();
+    } else if ((mux >= 0x10) && (mux <= 0x1d)) {
+        return this->_pins[MEGA32_PIN_PA0 + 1 + ((mux >> 3) & 1)].read();
+    }
+    
+    return 0.0;
+}
+
+double Atmega32::_getAdcGain()
+{
+    switch ((this->adc_last_admux >> 1) & 0x0f) {
+        case 4: case 6:
+            return 10.0;
+        case 5: case 7:
+            return 200.0;
+        default:
+            return 1.0;
+    }
+}
+
+bool Atmega32::_adcInDifferentialMode()
+{
+    uint8_t mux = this->adc_last_admux & 0x1f;
+    
+    return (mux >= 0x10) && (mux <= 0x1d);
 }

@@ -65,6 +65,7 @@ public:
     void disconnectFromBus(AnalogBus *bus);
     pin_val_t read(void);
     bool readDigital(void);
+    bool isDisconnected(void);
     void write(pin_val_t value);
     void writeDigital(bool value);
     pin_val_t query(void);

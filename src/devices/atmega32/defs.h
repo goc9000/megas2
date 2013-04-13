@@ -176,10 +176,6 @@ static char const * const PORT_NAMES[MEGA32_PORT_COUNT] = {
 #define IRQ_TWI                 20
 #define IRQ_SPM_RDY             21
 
-// Pins
-#define PIN_PA0                 0x00
-#define PIN_PA7                 0x07
-
 // Other
 #define TWI_STATUS_START        0x08
 #define TWI_STATUS_RESTART      0x10
