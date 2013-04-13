@@ -17,6 +17,8 @@ protected:
     
     void _setAdcEnabled(bool enabled);
     
+    void _startAdcConversion();
+    void _completeAdcConversion();
     uint16_t _getAdcMeasurement();
     pin_val_t _getAdcRefVoltage();
     pin_val_t _getAdcPosVoltage();

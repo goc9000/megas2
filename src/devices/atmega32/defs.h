@@ -189,4 +189,8 @@ static char const * const PORT_NAMES[MEGA32_PORT_COUNT] = {
 #define TWI_STATUS_R_DATA_NACK  0x58
 #define TWI_STATUS_IDLE         0xf8
 
+// Simulation events
+#define SIM_EVENT_TICK                     0
+#define SIM_EVENT_ADC_COMPLETE_CONVERSION  1
+
 #endif

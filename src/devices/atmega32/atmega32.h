@@ -32,6 +32,7 @@ struct Atmega32PortMeta
 {
     uint8_t write_mask;
     uint8_t clearable_mask;
+    uint8_t unclearable_mask;
     void (Atmega32::*read_handler)(uint8_t, int8_t, uint8_t &);
     void (Atmega32::*write_handler)(uint8_t, int8_t, uint8_t, uint8_t, uint8_t);
 };

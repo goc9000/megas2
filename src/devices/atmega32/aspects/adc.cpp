@@ -21,16 +21,20 @@ const pin_val_t ADC_REF_EPSILON = 0.0001;
 
 const int MAX_ADC_VALUE = 0x3ff;
 
+const int ADC_CYCLES_FOR_CONVERSION = 15;
+
+
 void Atmega32::_adcInit()
 {
     for (int port = PORT_ADCL; port <= PORT_ADMUX; port++)
         this->ports[port] = 0;
     
-    this->port_metas[PORT_ADCSRA].write_mask = 0xef;
+    this->port_metas[PORT_ADCSRA].write_mask = 0xff - _BV(B_ADIF);
     this->port_metas[PORT_ADCL].write_mask = 0x00;
     this->port_metas[PORT_ADCH].write_mask = 0x00;
     
-    this->port_metas[PORT_ADCSRA].clearable_mask = 0x10;
+    this->port_metas[PORT_ADCSRA].clearable_mask = _BV(B_ADIF);
+    this->port_metas[PORT_ADCSRA].unclearable_mask = _BV(B_ADSC);
     
     for (int port = PORT_ADCL; port <= PORT_ADMUX; port++) {
         this->port_metas[port].read_handler = &Atmega32::_adcHandleRead;
@@ -54,17 +58,12 @@ void Atmega32::_adcHandleRead(uint8_t port, int8_t bit, uint8_t &value)
             value = high_byte(this->adc_result << result_shift);
             this->adc_result_locked = false;
             break;
-        default:
-            this->_dumpPortRead("ADC", port, bit, value);
-            break;
     }
 }
 
 void Atmega32::_adcHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
     bool enable;
-    
-    this->_dumpPortWrite("ADC", port, bit, value, prev_val, cleared);
     
     switch (port) {
         case PORT_ADCSRA:
@@ -73,6 +72,10 @@ void Atmega32::_adcHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t 
                 this->_setAdcEnabled(enable);
             }
             if (!enable) break;
+            
+            if (bit_was_set(prev_val, value, B_ADSC)) {
+                this->_startAdcConversion();
+            }
     }
 }
 
@@ -107,22 +110,42 @@ void Atmega32::_setAdcEnabled(bool enabled)
     this->adc_result_locked = false;
 }
 
+void Atmega32::_startAdcConversion()
+{
+    set_bit(this->ports[PORT_ADCSRA], B_ADSC);
+    this->adc_last_admux = this->ports[PORT_ADMUX];
+    
+    int adc_prescaler_factor = max(2, (1 << (this->ports[PORT_ADCSRA] & 7)));
+    sim_time_t adc_clock_period = this->clock_period * adc_prescaler_factor;
+    
+    this->simulation->scheduleEvent(this, SIM_EVENT_ADC_COMPLETE_CONVERSION,
+        this->simulation->time + adc_clock_period * ADC_CYCLES_FOR_CONVERSION);
+}
+
+void Atmega32::_completeAdcConversion()
+{
+    if (!this->adc_result_locked) {
+        this->adc_result = this->_getAdcMeasurement();
+        set_bit(this->ports[PORT_ADCSRA], B_ADIF);
+    }
+    
+    clear_bit(this->ports[PORT_ADCSRA], B_ADSC);
+}
+
 uint16_t Atmega32::_getAdcMeasurement()
 {
+    int up_bound = this->_adcInDifferentialMode() ? (MAX_ADC_VALUE >> 1) : MAX_ADC_VALUE;
+    int lo_bound = this->_adcInDifferentialMode() ? (-1 - (MAX_ADC_VALUE >> 1)) : 0;
+    
     pin_val_t diff_input = this->_getAdcPosVoltage() - this->_getAdcNegVoltage();
     pin_val_t ref = max(this->_getAdcRefVoltage(), ADC_REF_EPSILON);
     
     diff_input *= this->_getAdcGain();
-        
-    double normalized = (double)(MAX_ADC_VALUE * diff_input) / ref;
     
-    if (this->_adcInDifferentialMode()) {
-        normalized = max(normalized, (double)(-1 - (MAX_ADC_VALUE >> 1)));
-        normalized = min(normalized, (double)(MAX_ADC_VALUE >> 1));
-    } else {
-        normalized = max(normalized, 0.0);
-        normalized = min(normalized, (double)MAX_ADC_VALUE);
-    }
+    double normalized = (double)(up_bound * diff_input) / ref;
+    
+    normalized = max(normalized, (double)lo_bound);
+    normalized = min(normalized, (double)up_bound);
     
     return ((int)normalized) & MAX_ADC_VALUE;
 }

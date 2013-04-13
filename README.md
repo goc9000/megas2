@@ -82,7 +82,8 @@ The following is an inventory of the emulation limitations in `megas2`.
 
 #### ADC
 
-* Not supported
+* Auto Trigger Modes not supported
+* All conversions take 15 ADC clock cycles
 
 #### SPI
 
@@ -124,6 +125,5 @@ The following is an inventory of the emulation limitations in `megas2`.
 
 ### Interconnection
 
-* Tri-state and directionality not explicitly supported
-* Analog pins not supported
+* Simple support for tri-state and directionality
 

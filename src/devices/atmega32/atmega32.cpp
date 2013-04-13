@@ -12,8 +12,6 @@
 
 using namespace std;
 
-#define SIM_EVENT_TICK   0
-
 extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT];
 
 Atmega32::Atmega32() :
@@ -47,6 +45,7 @@ void Atmega32::_init(void)
     for (unsigned int i = 0; i < MEGA32_PORT_COUNT; i++) {
         this->port_metas[i].write_mask = 0xff;
         this->port_metas[i].clearable_mask = 0x00;
+        this->port_metas[i].unclearable_mask = 0x00;
         this->port_metas[i].read_handler = &Atmega32::_unsuppPortRead;
         this->port_metas[i].write_handler = &Atmega32::_unsuppPortWrite;
     }
@@ -85,12 +84,20 @@ void Atmega32::reset(void)
 void Atmega32::act(int event)
 {
     this->_handleIrqs();
-    this->_runTimers();
     
-    atmega32_core_step(&this->core);
+    switch (event) {
+        case SIM_EVENT_TICK:
+            this->_runTimers();
+            
+            atmega32_core_step(&this->core);
 
-    if (this->simulation) {
-        this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + this->clock_period);
+            if (this->simulation) {
+                this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + this->clock_period);
+            }
+            break;
+        case SIM_EVENT_ADC_COMPLETE_CONVERSION:
+            this->_completeAdcConversion();
+            break;
     }
 }
 
@@ -130,11 +137,15 @@ uint8_t Atmega32::_onPortPreWrite(uint8_t port, int8_t bit, uint8_t &value, uint
 {
     uint8_t write_mask = this->port_metas[port].write_mask;
     uint8_t clear_mask = this->port_metas[port].clearable_mask;
+    uint8_t uncl_mask = this->port_metas[port].unclearable_mask;
     
     if (bit != -1) {
         write_mask &= (1 << bit);
         clear_mask &= (1 << bit);
+        uncl_mask &= (1 << bit);
     }
+    
+    value |= uncl_mask & prev_val;
     
     uint8_t cleared = value & clear_mask;
     

@@ -143,7 +143,6 @@ void Atmega32::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
     if (is_dataport_pin(pin_id)) {
         uint8_t port = PIN_for_pin(pin_id);
         
-        // TODO: feed into ADC
         chg_bit(this->ports[port], bit_for_pin(pin_id), this->_pins[pin_id].readDigital());
     }
 }
