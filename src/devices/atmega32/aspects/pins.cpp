@@ -48,7 +48,8 @@ extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT] = {
     { "D4", PIN_MODE_INPUT, 0 }, // D4
     { "D5", PIN_MODE_INPUT, 0 }, // D5
     { "D6", PIN_MODE_INPUT, 0 }, // D6
-    { "D7", PIN_MODE_INPUT, 0 }  // D7
+    { "D7", PIN_MODE_INPUT, 0 }, // D7
+    { "AREF", PIN_MODE_INPUT, PIN_VAL_VCC } // AREF
 };
 
 static inline bool is_data_port(uint8_t port)
