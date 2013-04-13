@@ -25,6 +25,7 @@ private:
     void _initFromJson(Json::Value &json_data);
     void _initEntitiesFromJson(Json::Value &json_data);
     Entity * _parseEntity(Json::Value &json_data);
+    void _parseEntityConnections(Entity *entity, Json::Value &json_data);
 };
 
 #endif

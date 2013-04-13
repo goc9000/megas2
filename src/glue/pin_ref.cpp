@@ -31,3 +31,12 @@ PinReference::PinReference(Json::Value &json_value, EntityLookup *lookup)
         fail("Pin '%s' not found in devices '%s'", pin_name, dev_id);
     }
 }
+
+PinReference::PinReference(PinDevice *device, const char *pin_name)
+{
+    this->device = device;
+    this->pin_id = device->lookupPin(pin_name);
+    if (this->pin_id < 0) {
+        fail("Pin '%s' not found in device", pin_name);
+    }
+}

@@ -13,6 +13,7 @@ class PinReference {
 public:
     PinReference(PinDevice *device, int pin_id) : device(device), pin_id(pin_id) {};
     PinReference(Json::Value &json_data, EntityLookup *lookup);
+    PinReference(PinDevice *device, const char *pin_name);
     
     PinDevice *device;
     int pin_id;

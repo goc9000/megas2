@@ -78,6 +78,7 @@ void SystemDescription::_initEntitiesFromJson(Json::Value &json_data)
     for (Json::ValueIterator it = json_data.begin(); it != json_data.end(); it++) {
         Entity *ent = this->_parseEntity(*it);
         this->entities.push_back(ent);
+        this->_parseEntityConnections(ent, *it);
     }
 }
 
@@ -116,4 +117,33 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
     fail("Unsupported entity type '%s'", type.c_str());
 
     return NULL;
+}
+
+void SystemDescription::_parseEntityConnections(Entity *entity, Json::Value &json_data)
+{
+    if (!json_data.isMember("connect"))
+        return;
+     
+    PinDevice *pin_device = dynamic_cast<PinDevice *>(entity);
+    if (!pin_device) {
+        fail("Device '%s' is not a pin device", entity->id.c_str());
+    }
+    
+    Json::Value pin_dict = json_data["connect"];
+    if (!pin_dict.isObject())
+        return;
+    
+    for (Json::ValueIterator it = pin_dict.begin(); it != pin_dict.end() ; it++) {
+        if (!it.key().isString())
+            fail("Keys in 'connect' object should be strings denoting pin names");
+        
+        PinReference pin1(pin_device, it.key().asString().c_str());
+        PinReference pin2(*it, this);
+        
+        AnalogBus *wire = new AnalogBus();
+        wire->addDevicePin(pin1);
+        wire->addDevicePin(pin2);
+        
+        this->entities.push_back(wire);
+    }
 }
