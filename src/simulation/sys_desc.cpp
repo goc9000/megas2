@@ -8,6 +8,7 @@
 #include "devices/enc28j60/enc28j60.h"
 #include "devices/ds1307.h"
 #include "devices/sd_card.h"
+#include "devices/voltage_src.h"
 
 #include "glue/i2c_bus.h"
 #include "glue/spi_bus.h"
@@ -104,6 +105,8 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new SpiBus(json_data, this);
     } else if (type == "AnalogBus") {
         return new AnalogBus(json_data, this);
+    } else if (type == "VoltageSource") {
+        return new VoltageSource(json_data);
     } else if (type == "SimpleLed") {
         return new SimpleLed(json_data);
     } else if (type == "SimplePushButton") {
