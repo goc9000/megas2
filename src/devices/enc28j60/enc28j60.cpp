@@ -27,6 +27,7 @@ Enc28J60::Enc28J60()
     : Entity("enc28j60", "ENC28J60"), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
 {
     this->full_duplex_wired = true;
+    this->link_up = true;
     
     this->reset();
 }
@@ -35,6 +36,7 @@ Enc28J60::Enc28J60(Json::Value &json_data)
     : Entity(json_data), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
 {
     this->full_duplex_wired = true;
+    this->link_up = true;
 
     if (json_data.isMember("full_duplex")) {
         this->setFullDuplexWired(json_data["full_duplex"].asBool());
@@ -52,6 +54,15 @@ void Enc28J60::reset()
 void Enc28J60::setFullDuplexWired(bool wired)
 {
     this->full_duplex_wired = wired;
+}
+
+void Enc28J60::setLinkUp(bool link_up)
+{
+    this->link_up = link_up;
+    chg_bit(this->phy_regs[REG_PHSTAT2], B_LSTAT, link_up);
+    
+    if (!link_up)
+        clear_bit(this->phy_regs[REG_PHSTAT1], B_LLSTAT);
 }
 
 void Enc28J60::_initRegs()
@@ -81,7 +92,8 @@ void Enc28J60::_initRegs()
     this->phy_regs[REG_PHSTAT1] = _BV(B_PFDPX) | _BV(B_PHDPX);
     this->phy_regs[REG_PHID1] = 0x0083;
     this->phy_regs[REG_PHID2] = 0x1400;
-    this->phy_regs[REG_PHSTAT2] = (this->full_duplex_wired * _BV(B_DPXSTAT));
+    this->phy_regs[REG_PHSTAT2] = (this->full_duplex_wired * _BV(B_DPXSTAT)) |
+        (this->link_up * _BV(B_LSTAT));
     this->phy_regs[REG_PHLCON] = 0x3422;
 }
 
@@ -371,7 +383,7 @@ uint16_t Enc28J60::_readPhyReg(uint8_t reg)
     // clear status bits
     switch (reg) {
         case REG_PHSTAT1:
-            this->phy_regs[reg] = (value & ~(_BV(B_JABBER) | _BV(B_LLSTAT))) | (_BV(B_LLSTAT) * this->_linkIsUp());
+            this->phy_regs[reg] = (value & ~(_BV(B_JABBER) | _BV(B_LLSTAT))) | (_BV(B_LLSTAT) * this->link_up);
             break;
         case REG_PHIR:
             this->phy_regs[reg] = value & ~(_BV(B_PLNKIF) | _BV(B_PGIF));
@@ -384,9 +396,4 @@ uint16_t Enc28J60::_readPhyReg(uint8_t reg)
 void Enc28J60::_writePhyReg(uint8_t reg, uint16_t value)
 {
     this->phy_regs[reg] = value;
-}
-
-bool Enc28J60::_linkIsUp()
-{
-    return true;
 }

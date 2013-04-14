@@ -26,6 +26,7 @@ public:
         
     virtual void reset();
     void setFullDuplexWired(bool wired);
+    void setLinkUp(bool link_up);
     
     bool spiReceiveData(uint8_t &data);
 private:
@@ -34,6 +35,7 @@ private:
     uint8_t eth_buffer[E28J_ETH_BUFFER_SIZE];
 
     bool full_duplex_wired;
+    bool link_up;
 
     int state;
     uint8_t cmd_byte;
@@ -66,8 +68,6 @@ private:
     void _onMiiRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val);
     uint16_t _readPhyReg(uint8_t reg);
     void _writePhyReg(uint8_t reg, uint16_t value);
-
-    bool _linkIsUp();
 };
 
 #endif
