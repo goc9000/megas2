@@ -32,7 +32,6 @@ PushButton::PushButton(Json::Value &json_data)
 {
     this->_up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
     this->_down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
-    this->_setPressed(false);
     
     if (json_data.isMember("up_value")) {
         this->_up_value = parse_json_pin_value(json_data["up_value"]);
@@ -40,6 +39,8 @@ PushButton::PushButton(Json::Value &json_data)
     if (json_data.isMember("down_value")) {
         this->_down_value = parse_json_pin_value(json_data["down_value"]);
     }
+    
+    this->_setPressed(false);
 }
 
 void PushButton::_setPressed(bool pressed)
