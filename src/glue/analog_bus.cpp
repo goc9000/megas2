@@ -67,8 +67,6 @@ int AnalogBus::query(void)
 
 void AnalogBus::update(void)
 {
-    int prev_value = this->query();
- 
     int value = PIN_VAL_Z;
     
     for (vector<PinReference>::iterator it = this->_pins.begin(); it != this->_pins.end(); it++) {
@@ -78,10 +76,8 @@ void AnalogBus::update(void)
             value = v;
     }
     
-    if (value != prev_value) {
-        this->_value = value;
+    this->_value = value;
         
-        for (vector<PinReference>::iterator it = this->_pins.begin(); it != this->_pins.end(); it++)
-            it->device->drivePin(it->pin_id, this->_value);
-    }
+    for (vector<PinReference>::iterator it = this->_pins.begin(); it != this->_pins.end(); it++)
+        it->device->drivePin(it->pin_id, this->_value);
 }
