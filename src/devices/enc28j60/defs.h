@@ -4,7 +4,9 @@
 #define E28J_REVISION_ID              0x05
 
 #define OPCODE_READ_CONTROL_REG       0
+#define OPCODE_READ_BUFFER_MEMORY     1
 #define OPCODE_WRITE_CONTROL_REG      2
+#define OPCODE_WRITE_BUFFER_MEMORY    3
 #define OPCODE_BIT_FIELD_SET          4
 #define OPCODE_BIT_FIELD_CLEAR        5
 

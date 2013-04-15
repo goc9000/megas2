@@ -15,6 +15,7 @@ using namespace std;
 #define STATE_RECEIVING_COMMAND_ARG   1
 #define STATE_PRE_RESPONDING          2
 #define STATE_RESPONDING              3
+#define STATE_RECEIVING_BUFFER_DATA   4
 
 // Pin initialization data
 
@@ -136,6 +137,8 @@ uint8_t Enc28J60::_handleSpiData(uint8_t data)
             return this->_handleCommandStart(data);
         case STATE_RECEIVING_COMMAND_ARG:
             return this->_handleCommandArg(data);
+        case STATE_RECEIVING_BUFFER_DATA:
+            return this->_handleBufferData(data);
         case STATE_PRE_RESPONDING:
             this->state = STATE_RESPONDING;
             return 0xff;
@@ -160,6 +163,11 @@ uint8_t Enc28J60::_handleCommandStart(uint8_t data)
             this->cmd_byte = data;
             this->state = STATE_RECEIVING_COMMAND_ARG;
             return 0xff;
+        case OPCODE_WRITE_BUFFER_MEMORY:
+            if ((data & 0x1f) != 0x1a)
+                break;
+            this->state = STATE_RECEIVING_BUFFER_DATA;
+            return 0xff;
     }
     
     fail("Invalid command byte received by ENC28J60: %02x", data);
@@ -178,6 +186,20 @@ uint8_t Enc28J60::_handleCommandArg(uint8_t data)
             return this->_execBitFieldClear(this->cmd_byte & 0x1f, data);
         case OPCODE_BIT_FIELD_SET:
             return this->_execBitFieldSet(this->cmd_byte & 0x1f, data);
+    }
+    
+    return 0xff;
+}
+
+uint8_t Enc28J60::_handleBufferData(uint8_t data)
+{
+    uint16_t ptr = this->_get16BitReg(REG_EWRPTL) & (E28J_ETH_BUFFER_SIZE - 1);
+    
+    this->eth_buffer[ptr] = data;
+    
+    if (bit_is_set(this->regs[REG_ECON2], B_AUTOINC)) {
+        ptr = (ptr + 1) & (E28J_ETH_BUFFER_SIZE - 1);
+        this->_set16BitReg(REG_EWRPTL, ptr);
     }
     
     return 0xff;
@@ -396,4 +418,15 @@ uint16_t Enc28J60::_readPhyReg(uint8_t reg)
 void Enc28J60::_writePhyReg(uint8_t reg, uint16_t value)
 {
     this->phy_regs[reg] = value;
+}
+
+uint16_t Enc28J60::_get16BitReg(uint8_t low_byte_reg)
+{
+    return ((uint16_t)this->regs[low_byte_reg + 1] << 8) + this->regs[low_byte_reg];
+}
+
+void Enc28J60::_set16BitReg(uint8_t low_byte_reg, uint16_t value)
+{
+    this->regs[low_byte_reg] = low_byte(value);
+    this->regs[low_byte_reg + 1] = high_byte(value);
 }

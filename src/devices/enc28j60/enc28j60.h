@@ -49,6 +49,7 @@ private:
     uint8_t _handleSpiData(uint8_t data);
     uint8_t _handleCommandStart(uint8_t data);
     uint8_t _handleCommandArg(uint8_t data);
+    uint8_t _handleBufferData(uint8_t data);
     
     uint8_t _execReadCtrlReg(uint8_t reg);
     uint8_t _execWriteCtrlReg(uint8_t reg, uint8_t data);
@@ -68,6 +69,9 @@ private:
     void _onMiiRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val);
     uint16_t _readPhyReg(uint8_t reg);
     void _writePhyReg(uint8_t reg, uint16_t value);
+    
+    uint16_t _get16BitReg(uint8_t low_byte_reg);
+    void _set16BitReg(uint8_t low_byte_reg, uint16_t value);
 };
 
 #endif
