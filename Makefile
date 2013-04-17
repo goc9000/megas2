@@ -3,7 +3,7 @@ SRC = ./src
 LIB = ./lib
 OBJ = ./obj
 LIBS = -lelf -lSDL -lSDL_gfx -lSDL_image -lSDL_ttf -lrt
-CFLAGS = -O3 -Wall
+CFLAGS = -std=gnu++11 -O3 -Wall
 #-fwhole-program -flto
 
 INCLUDES = -I$(SRC)
