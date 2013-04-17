@@ -113,34 +113,10 @@ void Enc28J60::setLinkUp(bool link_up)
 
 void Enc28J60::_initRegs()
 {
-    memset(this->regs, 0, E28J_REGS_COUNT);
-    this->regs[REG_ECON2] = _BV(B_AUTOINC);
-    this->regs[REG_ERDPTL] = 0xfa;
-    this->regs[REG_ERDPTH] = 0x05;
-    this->regs[REG_ERXSTL] = 0xfa;
-    this->regs[REG_ERXSTH] = 0x05;
-    this->regs[REG_ERXNDL] = 0xff;
-    this->regs[REG_ERXNDH] = 0x1f;
-    this->regs[REG_ERXRDPTL] = 0xfa;
-    this->regs[REG_ERXRDPTH] = 0x05;
-    this->regs[REG_ERXFCON] = _BV(B_UCEN) | _BV(B_CRCEN) | _BV(B_BCEN);
-    this->regs[REG_MACON2] = _BV(B_MARST);
-    this->regs[REG_MACLCON1] = 0x0f;
-    this->regs[REG_MACLCON2] = 0x37;
-    this->regs[REG_MAMXFLH] = 0x06;
-    this->regs[REG_MAPHSUP] = 0x10;
-    this->regs[REG_EREVID] = E28J_REVISION_ID;
-    this->regs[REG_ECOCON] = 0x04;
-    this->regs[REG_EPAUSH] = 0x10;
-
-    memset(this->phy_regs, 0, E28J_PHY_REGS_COUNT);
-    this->phy_regs[REG_PHCON1] = _BV(B_PPWRSV) | (this->full_duplex_wired * _BV(B_PDPXMD));
-    this->phy_regs[REG_PHSTAT1] = _BV(B_PFDPX) | _BV(B_PHDPX);
-    this->phy_regs[REG_PHID1] = 0x0083;
-    this->phy_regs[REG_PHID2] = 0x1400;
-    this->phy_regs[REG_PHSTAT2] = (this->full_duplex_wired * _BV(B_DPXSTAT)) |
-        (this->link_up * _BV(B_LSTAT));
-    this->phy_regs[REG_PHLCON] = 0x3422;
+    for (int i = 0; i < E28J_REGS_COUNT; i++)
+        this->regs[i] = this->_getRegResetValue(i);
+    for (int i = 0; i < E28J_PHY_REGS_COUNT; i++)
+        this->phy_regs[i] = this->_getPhyRegResetValue(i);
 }
 
 void Enc28J60::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
@@ -372,6 +348,32 @@ uint8_t Enc28J60::_getRegClearableMask(uint8_t reg)
     return 0x00;
 }
 
+uint8_t Enc28J60::_getRegResetValue(uint8_t reg)
+{
+    switch (reg) {
+        case REG_ECON2: return _BV(B_AUTOINC);
+        case REG_ERDPTL: return 0xfa;
+        case REG_ERDPTH: return 0x05;
+        case REG_ERXSTL: return 0xfa;
+        case REG_ERXSTH: return 0x05;
+        case REG_ERXNDL: return 0xff;
+        case REG_ERXNDH: return 0x1f;
+        case REG_ERXRDPTL: return 0xfa;
+        case REG_ERXRDPTH: return 0x05;
+        case REG_ERXFCON: return _BV(B_UCEN) | _BV(B_CRCEN) | _BV(B_BCEN);
+        case REG_MACON2: return _BV(B_MARST);
+        case REG_MACLCON1: return 0x0f;
+        case REG_MACLCON2: return 0x37;
+        case REG_MAMXFLH: return 0x06;
+        case REG_MAPHSUP: return 0x10;
+        case REG_EREVID: return E28J_REVISION_ID;
+        case REG_ECOCON: return 0x04;
+        case REG_EPAUSH: return 0x10;
+    }
+    
+    return 0x00;
+}
+
 uint16_t Enc28J60::_getPhyRegWriteMask(uint8_t reg)
 {
     switch (reg) {
@@ -384,6 +386,21 @@ uint16_t Enc28J60::_getPhyRegWriteMask(uint8_t reg)
         case REG_PHLCON: return 0xffff;
         case REG_PHIE: return 0xffff;
         case REG_PHIR: return 0x0000;
+    }
+    
+    return 0x0000;
+}
+
+uint16_t Enc28J60::_getPhyRegResetValue(uint8_t reg)
+{
+    switch (reg) {
+        case REG_PHCON1: return _BV(B_PPWRSV) | (this->full_duplex_wired * _BV(B_PDPXMD));
+        case REG_PHSTAT1: return _BV(B_PFDPX) | _BV(B_PHDPX);
+        case REG_PHID1: return 0x0083;
+        case REG_PHID2: return 0x1400;
+        case REG_PHSTAT2: return (this->full_duplex_wired * _BV(B_DPXSTAT)) |
+            (this->link_up * _BV(B_LSTAT));
+        case REG_PHLCON: return 0x3422;
     }
     
     return 0x0000;

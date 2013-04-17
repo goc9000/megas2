@@ -63,7 +63,9 @@ private:
     uint8_t _mapRegister(uint8_t reg);
     uint8_t _getRegWriteMask(uint8_t reg);
     uint8_t _getRegClearableMask(uint8_t reg);
+    uint8_t _getRegResetValue(uint8_t reg);
     uint16_t _getPhyRegWriteMask(uint8_t reg);
+    uint16_t _getPhyRegResetValue(uint8_t reg);
     uint8_t _adjustRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val);
     
     void _onRegRead(uint8_t reg, uint8_t &value);
