@@ -19,6 +19,8 @@
 #include "gui/push_button.h"
 #include "gui/pc_indicator.h"
 
+#include "networking/virtual_net.h"
+
 #include "sys_desc.h"
 #include "utils/fail.h"
 
@@ -107,6 +109,8 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new AnalogBus(json_data, this);
     } else if (type == "VoltageSource") {
         return new VoltageSource(json_data);
+    } else if (type == "VirtualNetwork") {
+        return new VirtualNetwork(json_data, this);
     } else if (type == "SimpleLed") {
         return new SimpleLed(json_data);
     } else if (type == "SimplePushButton") {

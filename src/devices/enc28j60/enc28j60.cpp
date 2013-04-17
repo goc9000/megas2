@@ -6,16 +6,22 @@
 
 #include "utils/bit_macros.h"
 #include "utils/fail.h"
+#include "utils/net_utils.h"
+
 #include "enc28j60.h"
 #include "defs.h"
 
 using namespace std;
+
+#define MIN_ETHERNET_FRAME_SIZE      64
 
 #define STATE_RECEIVING_COMMAND       0
 #define STATE_RECEIVING_COMMAND_ARG   1
 #define STATE_PRE_RESPONDING          2
 #define STATE_RESPONDING              3
 #define STATE_RECEIVING_BUFFER_DATA   4
+
+const sim_time_t DEFAULT_RECEIVE_FRAMES_INTERVAL = ms_to_sim_time(100);
 
 // Pin initialization data
 
@@ -25,7 +31,7 @@ PinInitData const PIN_INIT_DATA[E28J_PIN_COUNT] = {
 };
 
 Enc28J60::Enc28J60()
-    : Entity("enc28j60", "ENC28J60"), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
+    : Entity("enc28j60", "ENC28J60"), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA), NetworkDevice()
 {
     this->full_duplex_wired = true;
     this->link_up = true;
@@ -34,7 +40,7 @@ Enc28J60::Enc28J60()
 }
 
 Enc28J60::Enc28J60(Json::Value &json_data)
-    : Entity(json_data), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA)
+    : Entity(json_data), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA), NetworkDevice()
 {
     this->full_duplex_wired = true;
     this->link_up = true;
@@ -50,6 +56,45 @@ void Enc28J60::reset()
 {
     this->_initRegs();
     memset(this->eth_buffer, 0, E28J_ETH_BUFFER_SIZE);
+    
+    if (this->simulation) {
+        this->simulation->unscheduleAll(this);
+        this->simulation->scheduleEvent(this, SIM_EVENT_RECEIVE_FRAMES,
+            this->simulation->time + DEFAULT_RECEIVE_FRAMES_INTERVAL);
+    }
+}
+
+void Enc28J60::act(int event)
+{
+    switch (event) {
+        case SIM_EVENT_RECEIVE_FRAMES:
+            this->doReceiveFrames();
+            
+            if (this->simulation) {
+                this->simulation->scheduleEvent(this, SIM_EVENT_RECEIVE_FRAMES,
+                    this->simulation->time + DEFAULT_RECEIVE_FRAMES_INTERVAL);
+            }
+            break;
+    }
+}
+
+void Enc28J60::doReceiveFrames(void)
+{
+    string frame;
+    
+    while (true) {
+        frame = this->getPendingFrame();
+        if (frame == "")
+            return;
+        
+        mac_addr_t dest_mac(frame.c_str(), 6);
+        mac_addr_t src_mac(frame.c_str() + 6, 6);
+        
+        if (frame.length() < MIN_ETHERNET_FRAME_SIZE) {
+            warn("Received runt frame (%d bytes)", frame.length());
+            continue;
+        }
+    }
 }
 
 void Enc28J60::setFullDuplexWired(bool wired)

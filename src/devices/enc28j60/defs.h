@@ -290,6 +290,9 @@ static char const * const REG_NAMES[128] = {
     "EPAUSL", "EPAUSH", "(7AH)", "EIE", "EIR", "ESTAT", "ECON2", "ECON1"
 };
 
+// Simulation events
+#define SIM_EVENT_RECEIVE_FRAMES   0
+
 static inline bool is_common_reg(uint8_t reg)
 {
     return (reg & 0x1f) >= 0x1b;

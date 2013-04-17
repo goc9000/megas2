@@ -8,6 +8,7 @@
 #include "devices/device.h"
 #include "simulation/entity.h"
 #include "simulation/sim_device.h"
+#include "networking/net_device.h"
 
 #define E28J_PIN_COUNT          2
 
@@ -19,15 +20,18 @@
 #define E28J_ETH_BUFFER_SIZE    0x2000
 
 
-class Enc28J60 : public Entity, public PinDevice, public SpiDevice, public SimulatedDevice {
+class Enc28J60 : public Entity, public PinDevice, public SpiDevice,
+    public SimulatedDevice, public NetworkDevice {
 public:
     Enc28J60();
     Enc28J60(Json::Value &json_data);
         
     virtual void reset();
+    virtual void act(int event);
     void setFullDuplexWired(bool wired);
     void setLinkUp(bool link_up);
     
+    void doReceiveFrames(void);
     bool spiReceiveData(uint8_t &data);
 private:
     uint8_t regs[E28J_REGS_COUNT];
@@ -40,7 +44,7 @@ private:
     int state;
     uint8_t cmd_byte;
     uint8_t response_byte;
-
+    
     void _initRegs();
 
     virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
