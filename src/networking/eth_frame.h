@@ -42,4 +42,6 @@ public:
 protected:
 };
 
+ostream& operator << (std::ostream& os, const EthernetFrame& frame);
+
 #endif

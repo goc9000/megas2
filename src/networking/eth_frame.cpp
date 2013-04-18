@@ -167,3 +167,15 @@ void EthernetFrame::padTo(int pad_length)
     
     this->payload += string(extra, 0);
 }
+
+ostream& operator << (std::ostream& os, const EthernetFrame& frame)
+{
+    os << "src=" << frame.src_mac << " dest=" << frame.dest_mac << " etype=";
+    
+    char buf[16];
+    buf[sprintf(buf, "%04x", frame.ethertype)] = 0;
+    
+    os << buf << " (" << frame.totalLength() << " bytes)";
+    
+    return os;
+}
