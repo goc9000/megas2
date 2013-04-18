@@ -23,6 +23,9 @@ struct mac_addr_t {
     string toString(void) const;
 } __attribute__((packed));
 
+bool operator== (const mac_addr_t& addr1, const mac_addr_t& addr2);
+ostream& operator << (std::ostream& os, const mac_addr_t& addr);
+
 struct ipv4_addr_t {
     uint8_t octets[4];
     
@@ -33,7 +36,6 @@ struct ipv4_addr_t {
     struct sockaddr_in toSockAddr(void) const;
 } __attribute__((packed));
 
-ostream& operator << (std::ostream& os, const mac_addr_t& addr);
 ostream& operator << (std::ostream& os, const ipv4_addr_t& addr);
 
 #endif

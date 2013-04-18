@@ -295,6 +295,21 @@
 #define B_TXSTAT_LENGTH_CHECK_ERROR          21
 #define B_TXSTAT_CRC_ERROR                   20
 
+// Receive status flags
+#define B_RXSTAT_IS_VLAN                     30
+#define B_RXSTAT_IS_UNSUPP_CONTROL           29
+#define B_RXSTAT_IS_PAUSE                    28
+#define B_RXSTAT_IS_CONTROL                  27
+#define B_RXSTAT_DRIBBLE                     26
+#define B_RXSTAT_BROADCAST                   25
+#define B_RXSTAT_MULTICAST                   24
+#define B_RXSTAT_OK                          23
+#define B_RXSTAT_INVALID_LENGTH              22
+#define B_RXSTAT_LENGTH_CHECK_ERROR          21
+#define B_RXSTAT_CRC_ERROR                   20
+#define B_RXSTAT_CARRIER_EVENT               18
+#define B_RXSTAT_LONG_DROP_EVENT             16
+
 static char const * const REG_NAMES[128] = {
     "ERDPTL", "ERDPTH", "EWRPTL", "EWRPTH", "ETXSTL", "ETXSTH", "ETXNDL", "ETXNDH",
     "ERXSTL", "ERXSTH", "ERXNDL", "ERXNDH", "ERXRDPTL", "ERXRDPTH", "ERXWRPTL", "ERXWRPTH",

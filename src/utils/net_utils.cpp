@@ -58,6 +58,12 @@ ostream& operator << (std::ostream& os, const mac_addr_t& addr)
     return os;
 }
 
+bool operator== (const mac_addr_t& addr1, const mac_addr_t& addr2)
+{
+    return !memcmp(addr1.octets, addr2.octets, 6);
+}
+
+
 ipv4_addr_t::ipv4_addr_t(void)
 {
 }

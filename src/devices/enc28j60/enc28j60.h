@@ -31,12 +31,15 @@ public:
     void setFullDuplexWired(bool wired);
     void setLinkUp(bool link_up);
     
+    mac_addr_t getMacAddress(void) const;
+    
     void doReceiveFrames(void);
     bool spiReceiveData(uint8_t &data);
 private:
     uint8_t regs[E28J_REGS_COUNT];
     uint16_t phy_regs[E28J_PHY_REGS_COUNT];
     uint8_t eth_buffer[E28J_ETH_BUFFER_SIZE];
+    uint8_t reg_ERXRDPTL_shadow;
 
     bool full_duplex_wired;
     bool link_up;
@@ -58,6 +61,16 @@ private:
     void checkFinalTxFrameLength(const EthernetFrame& frame, bool allow_huge,
         uint64_t& tx_status);
 
+    void doReceiveFrame(const EthernetFrame& frame);
+    bool receptionEnabled(void) const;
+    bool filterFrame(const EthernetFrame& frame) const;
+    uint32_t getRxStatusFlags(const EthernetFrame& frame) const;
+    void doRxBufferSanityChecks(void) const;
+    bool fitsInBuffer(const EthernetFrame& frame) const;
+    uint16_t getFreeBufferSpace(void) const;
+    uint16_t wrapToRxBuffer(uint16_t pointer) const;
+    void loadReceivedFrame(const EthernetFrame& frame, uint32_t rx_status);
+    
     virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
     
     virtual void _onSpiSlaveSelect(bool select);
@@ -65,6 +78,7 @@ private:
     uint8_t _handleCommandStart(uint8_t data);
     uint8_t _handleCommandArg(uint8_t data);
     uint8_t _handleBufferData(uint8_t data);
+    uint8_t _respondWithBufferData(void);
     
     uint8_t _execReadCtrlReg(uint8_t reg);
     uint8_t _execWriteCtrlReg(uint8_t reg, uint8_t data);
@@ -87,7 +101,7 @@ private:
     uint16_t _readPhyReg(uint8_t reg);
     void _writePhyReg(uint8_t reg, uint16_t value);
     
-    uint16_t _get16BitReg(uint8_t low_byte_reg);
+    uint16_t _get16BitReg(uint8_t low_byte_reg) const;
     void _set16BitReg(uint8_t low_byte_reg, uint16_t value);
 };
 

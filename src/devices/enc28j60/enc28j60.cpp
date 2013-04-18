@@ -15,11 +15,12 @@ using namespace std;
 
 #define MIN_ETHERNET_FRAME_SIZE      64
 
-#define STATE_RECEIVING_COMMAND       0
-#define STATE_RECEIVING_COMMAND_ARG   1
-#define STATE_PRE_RESPONDING          2
-#define STATE_RESPONDING              3
-#define STATE_RECEIVING_BUFFER_DATA   4
+#define STATE_RECEIVING_COMMAND             0
+#define STATE_RECEIVING_COMMAND_ARG         1
+#define STATE_PRE_RESPONDING                2
+#define STATE_RESPONDING                    3
+#define STATE_RECEIVING_BUFFER_DATA         4
+#define STATE_RESPONDING_WITH_BUFFER_DATA   5
 
 const sim_time_t DEFAULT_RECEIVE_FRAMES_INTERVAL = ms_to_sim_time(100);
 
@@ -82,6 +83,20 @@ void Enc28J60::setLinkUp(bool link_up)
         clear_bit(this->phy_regs[REG_PHSTAT1], B_LLSTAT);
 }
 
+mac_addr_t Enc28J60::getMacAddress(void) const
+{
+    uint8_t buffer[6];
+    
+    buffer[0] = this->regs[REG_MAADR5];
+    buffer[1] = this->regs[REG_MAADR4];
+    buffer[2] = this->regs[REG_MAADR3];
+    buffer[3] = this->regs[REG_MAADR2];
+    buffer[4] = this->regs[REG_MAADR1];
+    buffer[5] = this->regs[REG_MAADR0];
+    
+    return mac_addr_t(buffer, 6);
+}
+
 void Enc28J60::act(int event)
 {
     switch (event) {
@@ -103,8 +118,186 @@ void Enc28J60::doReceiveFrames(void)
         if (frame.is_null)
             return;
         
-        // Reception NIY
+        this->doReceiveFrame(frame);
     }
+}
+
+void Enc28J60::doReceiveFrame(const EthernetFrame& frame)
+{
+    if (!this->receptionEnabled())
+        return;
+    if (!this->filterFrame(frame))
+        return;
+    
+    uint32_t rx_status = this->getRxStatusFlags(frame);
+
+    this->doRxBufferSanityChecks();
+    
+    if (!this->fitsInBuffer(frame)) {
+        warn("ENC28J60 dropped frame because of insufficient buffer space");
+        return;
+    }
+    
+    this->loadReceivedFrame(frame, rx_status);
+}
+
+bool Enc28J60::filterFrame(const EthernetFrame& frame) const
+{
+    if (frame.totalLength() < MIN_ETHERNET_FRAME_SIZE) {
+        warn("Received runt frame (%d bytes)", frame.totalLength());
+        return false;
+    }
+    if (!bit_is_set(this->regs[REG_MACON3], B_HFRMEN) &&
+        (frame.totalLength() > this->_get16BitReg(REG_MAMXFLL)))
+        return false;
+    
+    uint8_t enabled_filters = this->regs[REG_ERXFCON] & ~(_BV(B_ANDOR) | _BV(B_CRCEN));
+    uint8_t triggered_filters = 0;
+    
+    if (frame.dest_mac == this->getMacAddress())
+        set_bit(triggered_filters, B_UCEN);
+    if (bit_is_set(this->regs[REG_ERXFCON], B_PMEN))
+        fail("Pattern Match filter not supported");
+    if (bit_is_set(this->regs[REG_ERXFCON], B_MPEN))
+        fail("Magic Packet filter not supported");
+    if (bit_is_set(this->regs[REG_ERXFCON], B_HTEN))
+        fail("Hash Table filter not supported");
+    if (frame.dest_mac.isMulticast())
+        set_bit(triggered_filters, B_MCEN);
+    if (frame.dest_mac.isBroadcast())
+        set_bit(triggered_filters, B_BCEN);
+    
+    if (bit_is_set(this->regs[REG_ERXFCON], B_ANDOR)) {
+        if (enabled_filters != triggered_filters)
+            return false;
+    } else {
+        if ((enabled_filters & triggered_filters) == 0)
+            return false;
+    }
+    
+    if (bit_is_set(this->regs[REG_ERXFCON], B_CRCEN) && frame.has_fcs && !frame.checkFcs())
+        return false;
+    
+    if (!bit_is_set(this->regs[REG_MACON1], B_PASSALL) && frame.isMacControlFrame())
+        return false;
+    
+    return true;
+}
+
+bool Enc28J60::receptionEnabled(void) const
+{
+    return
+        bit_is_set(this->regs[REG_ECON1], B_RXEN) &&
+        bit_is_set(this->regs[REG_MACON1], B_MARXEN) &&
+        !bit_is_set(this->regs[REG_ECON1], B_RXRST) &&
+        ((this->regs[REG_MACON2] & 0x8c) == 0) &&
+        !bit_is_set(this->regs[REG_MAPHSUP], B_RSTRMII) &&
+        !bit_is_set(this->phy_regs[REG_PHCON1], B_PRST);
+}
+
+uint32_t Enc28J60::getRxStatusFlags(const EthernetFrame& frame) const
+{
+    uint32_t rx_status = 0;
+    
+    chg_bit(rx_status, B_RXSTAT_IS_VLAN, frame.isVlanFrame());
+    chg_bit(rx_status, B_RXSTAT_IS_UNSUPP_CONTROL,
+        frame.isMacControlFrame() && !frame.isPauseFrame());
+    chg_bit(rx_status, B_RXSTAT_IS_PAUSE, frame.isPauseFrame());
+    chg_bit(rx_status, B_RXSTAT_IS_CONTROL, frame.isMacControlFrame());
+    chg_bit(rx_status, B_RXSTAT_BROADCAST, frame.dest_mac.isBroadcast());
+    chg_bit(rx_status, B_RXSTAT_MULTICAST, frame.dest_mac.isMulticast());
+
+    chg_bit(rx_status, B_RXSTAT_OK, frame.checkFcs() && frame.checkLengthValid());
+    chg_bit(rx_status, B_RXSTAT_INVALID_LENGTH, !frame.checkLengthValid());
+    chg_bit(rx_status, B_RXSTAT_LENGTH_CHECK_ERROR,
+        bit_is_set(this->regs[REG_MACON3], B_FRMLNEN) && !frame.checkLengthCorrect());
+
+    chg_bit(rx_status, B_RXSTAT_CRC_ERROR, !frame.checkFcs());
+    
+    rx_status += high_byte(frame.totalLength()) + (low_byte(frame.totalLength()) << 8);
+    
+    return rx_status;
+}
+
+void Enc28J60::doRxBufferSanityChecks(void) const
+{
+    uint16_t ERXWRPT = this->_get16BitReg(REG_ERXWRPTL);
+    uint16_t ERXRDPT = this->_get16BitReg(REG_ERXRDPTL);
+    uint16_t ERXST = this->_get16BitReg(REG_ERXSTL);
+    uint16_t ERXND = this->_get16BitReg(REG_ERXNDL);
+    
+    if (ERXST > ERXND)
+        fail("Sanity check ERXST <= ERXND failed");
+    if ((ERXWRPT < ERXST) || (ERXWRPT > ERXND))
+        fail("ERXWRPT outside receive buffer");
+    if ((ERXRDPT < ERXST) || (ERXRDPT > ERXND))
+        fail("ERXRDPT outside receive buffer");
+    if (ERXWRPT & 1)
+        fail("ERXWRPT is odd");
+}
+
+bool Enc28J60::fitsInBuffer(const EthernetFrame& frame) const
+{
+    int frame_size = 6 + frame.totalLength();
+    
+    if (frame_size & 1)
+        frame_size++;
+    
+    return (this->regs[REG_EPKTCNT] < 0xff) ||
+        (frame_size <= this->getFreeBufferSpace());
+}
+
+uint16_t Enc28J60::getFreeBufferSpace(void) const
+{
+    uint16_t ERXWRPT = this->_get16BitReg(REG_ERXWRPTL);
+    uint16_t ERXRDPT = this->_get16BitReg(REG_ERXRDPTL);
+    uint16_t ERXST = this->_get16BitReg(REG_ERXSTL);
+    uint16_t ERXND = this->_get16BitReg(REG_ERXNDL);
+    
+    if (ERXWRPT > ERXRDPT)
+        return (ERXND - ERXST) - (ERXWRPT - ERXRDPT);
+    else if (ERXWRPT == ERXRDPT)
+        return ERXND - ERXST;
+    else
+        return ERXRDPT - ERXWRPT - 1;
+}
+
+uint16_t Enc28J60::wrapToRxBuffer(uint16_t pointer) const
+{
+    uint16_t ERXST = this->_get16BitReg(REG_ERXSTL);
+    uint16_t ERXND = this->_get16BitReg(REG_ERXNDL);
+    
+    while (pointer > ERXND)
+        pointer -= ERXND + 1 - ERXST;
+    
+    return pointer;
+}
+
+void Enc28J60::loadReceivedFrame(const EthernetFrame& frame, uint32_t rx_status)
+{
+    uint8_t data[65536];
+    int data_len = 6 + frame.toBuffer(data + 6);
+    
+    if (data_len & 1)
+        data[data_len++] = 0;
+    
+    uint16_t ERXWRPT = this->_get16BitReg(REG_ERXWRPTL);
+    
+    int next_pkt_ptr = this->wrapToRxBuffer(ERXWRPT + data_len);
+    data[0] = low_byte(next_pkt_ptr);
+    data[1] = high_byte(next_pkt_ptr);
+    data[2] = rx_status & 0xff;
+    data[3] = (rx_status >> 8) & 0xff;
+    data[4] = (rx_status >> 16) & 0xff;
+    data[5] = (rx_status >> 24) & 0xff;
+    
+    for (int i = 0; i < data_len; i++) {
+        this->eth_buffer[ERXWRPT] = data[i];
+        ERXWRPT = this->wrapToRxBuffer(ERXWRPT + 1);
+    }
+    this->_set16BitReg(REG_ERXWRPTL, ERXWRPT);
+    
+    this->regs[REG_EPKTCNT]++;
 }
 
 void Enc28J60::doTransmission(void)
@@ -196,16 +389,11 @@ EthernetFrame Enc28J60::getFrameForTransmission(bool has_crc)
 
 void Enc28J60::detectTransmissionType(const EthernetFrame& frame, uint64_t &tx_status)
 {
-    if (frame.isMacControlFrame())
-        tx_status |= _BV(B_TXSTAT_IS_CONTROL_FRAME);
-    if (frame.isPauseFrame())
-        tx_status |= _BV(B_TXSTAT_IS_PAUSE_FRAME);
-    if (frame.isVlanFrame())
-        tx_status |= _BV(B_TXSTAT_IS_VLAN);
-    if (frame.dest_mac.isBroadcast())
-        tx_status |= _BV(B_TXSTAT_BROADCAST);
-    if (frame.dest_mac.isMulticast())
-        tx_status |= _BV(B_TXSTAT_MULTICAST);
+    chg_bit(tx_status, B_TXSTAT_IS_CONTROL_FRAME, frame.isMacControlFrame());
+    chg_bit(tx_status, B_TXSTAT_IS_PAUSE_FRAME, frame.isPauseFrame());
+    chg_bit(tx_status, B_TXSTAT_IS_VLAN, frame.isVlanFrame());
+    chg_bit(tx_status, B_TXSTAT_BROADCAST, frame.dest_mac.isBroadcast());
+    chg_bit(tx_status, B_TXSTAT_MULTICAST, frame.dest_mac.isMulticast());
 }
 
 void Enc28J60::prepareTransmisionData(EthernetFrame& frame, bool add_crc,
@@ -245,8 +433,10 @@ void Enc28J60::checkFinalTxFrameLength(const EthernetFrame& frame, bool allow_hu
             fail("Frame exceeds MAXMXFL=%d in non-huge mode", max_frame_len);
     }
     
-    tx_status = (tx_status & 0xffff0000ffff0000ULL) | frame.totalLength()
-        | ((uint64_t)frame.totalLength() << 32);
+    uint16_t frame_len = frame.totalLength();
+    uint64_t len_le = high_byte(frame_len) + (low_byte(frame_len) << 8);
+    
+    tx_status = (tx_status & 0xffff0000ffff0000ULL) + len_le + (len_le << 32);
 }
 
 void Enc28J60::_initRegs()
@@ -298,6 +488,8 @@ uint8_t Enc28J60::_handleSpiData(uint8_t data)
             return this->_handleCommandArg(data);
         case STATE_RECEIVING_BUFFER_DATA:
             return this->_handleBufferData(data);
+        case STATE_RESPONDING_WITH_BUFFER_DATA:
+            return this->_respondWithBufferData();
         case STATE_PRE_RESPONDING:
             this->state = STATE_RESPONDING;
             return 0xff;
@@ -321,6 +513,11 @@ uint8_t Enc28J60::_handleCommandStart(uint8_t data)
         case OPCODE_BIT_FIELD_SET:
             this->cmd_byte = data;
             this->state = STATE_RECEIVING_COMMAND_ARG;
+            return 0xff;
+        case OPCODE_READ_BUFFER_MEMORY:
+            if ((data & 0x1f) != 0x1a)
+                break;
+            this->state = STATE_RESPONDING_WITH_BUFFER_DATA;
             return 0xff;
         case OPCODE_WRITE_BUFFER_MEMORY:
             if ((data & 0x1f) != 0x1a)
@@ -352,7 +549,10 @@ uint8_t Enc28J60::_handleCommandArg(uint8_t data)
 
 uint8_t Enc28J60::_handleBufferData(uint8_t data)
 {
-    uint16_t ptr = this->_get16BitReg(REG_EWRPTL) & (E28J_ETH_BUFFER_SIZE - 1);
+    uint16_t ptr = this->_get16BitReg(REG_EWRPTL);
+    
+    if (ptr >= E28J_ETH_BUFFER_SIZE)
+        fail("EWRPTL set beyond ENC28J60 available memory");
     
     this->eth_buffer[ptr] = data;
     
@@ -362,6 +562,27 @@ uint8_t Enc28J60::_handleBufferData(uint8_t data)
     }
     
     return 0xff;
+}
+
+uint8_t Enc28J60::_respondWithBufferData(void)
+{
+    uint16_t ptr = this->_get16BitReg(REG_ERDPTL);
+    
+    if (ptr >= E28J_ETH_BUFFER_SIZE)
+        fail("EWRPTL set beyond ENC28J60 available memory");
+    
+    uint8_t data = this->eth_buffer[ptr];
+    
+    if (bit_is_set(this->regs[REG_ECON2], B_AUTOINC)) {
+        if (ptr == this->_get16BitReg(REG_ERXNDL))
+            ptr = this->_get16BitReg(REG_ERXSTL);
+        else
+            ptr = (ptr + 1) & (E28J_ETH_BUFFER_SIZE - 1);
+        
+        this->_set16BitReg(REG_ERDPTL, ptr);
+    }
+    
+    return data;
 }
 
 uint8_t Enc28J60::_execReadCtrlReg(uint8_t reg)
@@ -572,6 +793,20 @@ void Enc28J60::_onRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
             if (bit_is_set(value, B_TXRTS))
                 this->doTransmission();
             break;
+        case REG_ECON2:
+            if (bit_is_set(value, B_PKTDEC) && this->regs[REG_EPKTCNT]) {
+                this->regs[REG_EPKTCNT]--;
+                if (!this->regs[REG_EPKTCNT])
+                    clear_bit(this->regs[REG_EIR], B_PKTIF);
+            }
+            break;
+        case REG_ERXRDPTL:
+            this->regs[REG_ERXRDPTL] = prev_val;
+            this->reg_ERXRDPTL_shadow = value;
+            break;
+        case REG_ERXRDPTH:
+            this->regs[REG_ERXRDPTL] = this->reg_ERXRDPTL_shadow;
+            break;
     }
 }
 
@@ -629,7 +864,7 @@ void Enc28J60::_writePhyReg(uint8_t reg, uint16_t value)
     this->phy_regs[reg] = value;
 }
 
-uint16_t Enc28J60::_get16BitReg(uint8_t low_byte_reg)
+uint16_t Enc28J60::_get16BitReg(uint8_t low_byte_reg) const
 {
     return ((uint16_t)this->regs[low_byte_reg + 1] << 8) + this->regs[low_byte_reg];
 }

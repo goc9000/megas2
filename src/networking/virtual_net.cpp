@@ -126,12 +126,14 @@ void VirtualNetwork::receiveFramesThreadCode(void)
         if (count <= 0)
             break;
     
+        EthernetFrame frame = EthernetFrame(buffer, count, false);
+        frame.padTo(64);
+        frame.addFcs();
+    
         try {
             this->lock.lock();
-            
-            for (auto& device : this->devices) {
-                device->receiveFrame(EthernetFrame(buffer, count, false));
-            }
+            for (auto& device : this->devices)
+                device->receiveFrame(frame);
         } catch (exception& e) {
             this->lock.unlock();
             throw e;
