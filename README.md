@@ -121,9 +121,14 @@ The following is an inventory of the emulation limitations in `megas2`.
 
 ### ENC28J60 (Ethernet controller)
 
-* Stub available, development in progress
+* Basic send/receive is supported
+* Transmission is instantaneous and network errors never occur
+* DMA is not suppoted
+* Interrupts are not supported
+* Hash Table, Magic Packet, Pattern Match receive filters are not supported
+* Complex reset logic is not supported
 
 ### Interconnection
 
 * Simple support for tri-state and directionality
-
+* Virtual network emulation
