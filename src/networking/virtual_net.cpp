@@ -130,7 +130,7 @@ void VirtualNetwork::receiveFramesThreadCode(void)
             this->lock.lock();
             
             for (auto& device : this->devices) {
-                device->receiveFrame(buffer, count);
+                device->receiveFrame(EthernetFrame(buffer, count, false));
             }
         } catch (exception& e) {
             this->lock.unlock();
@@ -139,13 +139,16 @@ void VirtualNetwork::receiveFramesThreadCode(void)
     }
 }
 
-void VirtualNetwork::sendFrame(const string& data)
+void VirtualNetwork::sendFrame(const EthernetFrame& frame)
 {
+    char data[65536];
+    unsigned int data_len = frame.toBuffer(data);
+    
     unsigned int ptr = 0;
     int count;
     
-    while (ptr < data.length()) {
-        count = write(this->interface_fd, data.c_str() + ptr, data.length() - ptr);
+    while (ptr < data_len) {
+        count = write(this->interface_fd, data + ptr, data_len - ptr);
         if (count <= 0)
             break;
         

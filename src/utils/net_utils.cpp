@@ -98,35 +98,3 @@ ostream& operator << (std::ostream& os, const ipv4_addr_t& addr)
 
     return os;
 }
-
-static inline void crc32_feed(uint32_t &crc, unsigned char byte)
-{
-    crc ^= byte;
-    
-    for (int i = 0; i < 8; i++)
-        if (crc & 1)
-            crc = (crc >> 1) ^ 0xedb88320UL;
-        else
-            crc >>= 1;
-}
-
-uint32_t compute_fcs(const void *data, int length)
-{
-    uint32_t crc = 0xffffffffUL;
-    
-    for (int i = 0; i < length; i++)
-        crc32_feed(crc, ((const char *)data)[i]);
-    
-    crc = ~crc;
-    crc = (((crc >> 24) & 0xff) << 0) + 
-          (((crc >> 16) & 0xff) << 8) + 
-          (((crc >> 8) & 0xff) << 16) + 
-          (((crc >> 0) & 0xff) << 24);
-    
-    return crc;
-}
-
-uint32_t compute_fcs(string& data)
-{
-    return compute_fcs(data.c_str(), data.length());
-}

@@ -5,6 +5,8 @@
 #include <deque>
 #include <string>
 
+#include "eth_frame.h"
+
 #include <json/json.h>
 
 using namespace std;
@@ -24,12 +26,12 @@ protected:
     VirtualNetwork *network;
     
     mutex receive_lock;
-    deque<string> receive_buffer;
+    deque<EthernetFrame> receive_buffer;
     
-    string getPendingFrame(void);
-    void sendFrame(const string& data);
+    EthernetFrame getPendingFrame(void);
+    void sendFrame(const EthernetFrame& frame);
     
-    virtual void receiveFrame(const uint8_t *frame_data, int frame_len);
+    virtual void receiveFrame(const EthernetFrame& frame);
 };
 
 #endif

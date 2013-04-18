@@ -12,6 +12,8 @@
 #include "simulation/entity_lookup.h"
 #include "networking/net_device.h"
 
+#include "eth_frame.h"
+
 #include "utils/net_utils.h"
 
 using namespace std;
@@ -29,7 +31,7 @@ public:
     void addDevice(NetworkDevice *device);
     void removeDevice(NetworkDevice *device);
     
-    void sendFrame(const string& data);
+    void sendFrame(const EthernetFrame& frame);
 protected:
     string interface_name;
     int interface_fd;

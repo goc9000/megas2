@@ -35,28 +35,28 @@ void NetworkDevice::disconnectFromNetwork(void)
     }
 }
 
-string NetworkDevice::getPendingFrame(void)
+EthernetFrame NetworkDevice::getPendingFrame(void)
 {
     lock_guard<mutex> guard(this->receive_lock);
     
     if (this->receive_buffer.size()) {
-        string frame = this->receive_buffer.front();
+        EthernetFrame frame = this->receive_buffer.front();
         this->receive_buffer.pop_front();
         
         return frame;
     } else
-        return string();
+        return EthernetFrame();
 }
 
-void NetworkDevice::sendFrame(const string& data)
+void NetworkDevice::sendFrame(const EthernetFrame& frame)
 {
     if (this->network)
-        this->network->sendFrame(data);
+        this->network->sendFrame(frame);
 }
 
-void NetworkDevice::receiveFrame(const uint8_t *frame_data, int frame_len)
+void NetworkDevice::receiveFrame(const EthernetFrame& frame)
 {
     lock_guard<mutex> guard(this->receive_lock);
     
-    this->receive_buffer.push_back(string((char *)frame_data, frame_len));
+    this->receive_buffer.push_back(frame);
 }

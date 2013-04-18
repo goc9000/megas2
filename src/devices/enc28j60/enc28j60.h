@@ -51,9 +51,12 @@ private:
     void doTransmissionResetChecks(void);
     void checkTxFrameBounds(void);
     void getTransmissionSettings(bool& add_crc, int& pad_to, bool& huge);
-    void detectTransmissionType(uint64_t &tx_status);
-    string prepareTransmisionData(bool add_crc, int pad_to, uint64_t& tx_status);
-    void checkFinalTxFrameLength(string data, bool allow_huge, uint64_t& tx_status);
+    EthernetFrame getFrameForTransmission(bool has_crc);
+    void detectTransmissionType(const EthernetFrame& frame, uint64_t &tx_status);
+    void prepareTransmisionData(EthernetFrame& frame, bool add_crc, int pad_to,
+        uint64_t& tx_status);
+    void checkFinalTxFrameLength(const EthernetFrame& frame, bool allow_huge,
+        uint64_t& tx_status);
 
     virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
     

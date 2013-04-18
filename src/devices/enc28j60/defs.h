@@ -295,10 +295,6 @@
 #define B_TXSTAT_LENGTH_CHECK_ERROR          21
 #define B_TXSTAT_CRC_ERROR                   20
 
-// EtherTypes
-#define ETHERTYPE_VLAN                    0x8100
-#define ETHERTYPE_MAC_CONTROL             0x8808
-
 static char const * const REG_NAMES[128] = {
     "ERDPTL", "ERDPTH", "EWRPTL", "EWRPTH", "ETXSTL", "ETXSTH", "ETXNDL", "ETXNDH",
     "ERXSTL", "ERXSTH", "ERXNDL", "ERXNDH", "ERXRDPTL", "ERXRDPTH", "ERXWRPTL", "ERXWRPTH",
