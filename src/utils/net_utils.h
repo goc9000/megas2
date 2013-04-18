@@ -36,4 +36,7 @@ struct ipv4_addr_t {
 ostream& operator << (std::ostream& os, const mac_addr_t& addr);
 ostream& operator << (std::ostream& os, const ipv4_addr_t& addr);
 
+uint32_t compute_fcs(const void *data, int length);
+uint32_t compute_fcs(string& data);
+
 #endif

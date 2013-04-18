@@ -139,6 +139,20 @@ void VirtualNetwork::receiveFramesThreadCode(void)
     }
 }
 
+void VirtualNetwork::sendFrame(const string& data)
+{
+    unsigned int ptr = 0;
+    int count;
+    
+    while (ptr < data.length()) {
+        count = write(this->interface_fd, data.c_str() + ptr, data.length() - ptr);
+        if (count <= 0)
+            break;
+        
+        ptr += count;
+    }
+}
+
 void VirtualNetwork::setInterfaceIpv4(ipv4_addr_t address)
 {
     struct ifreq ifr;

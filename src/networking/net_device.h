@@ -27,6 +27,8 @@ protected:
     deque<string> receive_buffer;
     
     string getPendingFrame(void);
+    void sendFrame(const string& data);
+    
     virtual void receiveFrame(const uint8_t *frame_data, int frame_len);
 };
 

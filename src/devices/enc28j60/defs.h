@@ -271,6 +271,34 @@
 #define B_LFRQ0                       2
 #define B_STRCH                       1
 
+// Transmit override bits
+#define B_PHUGEEN                     3
+#define B_PPADEN                      2
+#define B_PCRCEN                      1
+#define B_POVERRIDE                   0
+
+// Transmit status flags
+#define B_TXSTAT_IS_VLAN                     51
+#define B_TXSTAT_BACKPRESSURE_APPLIED        50
+#define B_TXSTAT_IS_PAUSE_FRAME              49
+#define B_TXSTAT_IS_CONTROL_FRAME            48
+#define B_TXSTAT_UNDERRUN                    31
+#define B_TXSTAT_IS_GIANT                    30
+#define B_TXSTAT_LATE_COLLISION              29
+#define B_TXSTAT_EXCESSIVE_COLLISION         28
+#define B_TXSTAT_EXCESSIVE_DEFER             27
+#define B_TXSTAT_DEFER                       26
+#define B_TXSTAT_BROADCAST                   25
+#define B_TXSTAT_MULTICAST                   24
+#define B_TXSTAT_DONE                        23
+#define B_TXSTAT_INVALID_LENGTH              22
+#define B_TXSTAT_LENGTH_CHECK_ERROR          21
+#define B_TXSTAT_CRC_ERROR                   20
+
+// EtherTypes
+#define ETHERTYPE_VLAN                    0x8100
+#define ETHERTYPE_MAC_CONTROL             0x8808
+
 static char const * const REG_NAMES[128] = {
     "ERDPTL", "ERDPTH", "EWRPTL", "EWRPTH", "ETXSTL", "ETXSTH", "ETXNDL", "ETXNDH",
     "ERXSTL", "ERXSTH", "ERXNDL", "ERXNDH", "ERXRDPTL", "ERXRDPTH", "ERXWRPTL", "ERXWRPTH",

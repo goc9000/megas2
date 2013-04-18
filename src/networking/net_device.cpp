@@ -48,6 +48,12 @@ string NetworkDevice::getPendingFrame(void)
         return string();
 }
 
+void NetworkDevice::sendFrame(const string& data)
+{
+    if (this->network)
+        this->network->sendFrame(data);
+}
+
 void NetworkDevice::receiveFrame(const uint8_t *frame_data, int frame_len)
 {
     lock_guard<mutex> guard(this->receive_lock);

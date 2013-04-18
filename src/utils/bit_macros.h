@@ -1,7 +1,7 @@
 #ifndef _H_BIT_MACROS_H
 #define _H_BIT_MACROS_H
 
-#define _BV(bit) (1 << (bit))
+#define _BV(bit) (1L << (bit))
 #define low_byte(value) ((value) & 0xff)
 #define high_byte(value) (((value) >> 8) & 0xff)
 #define bit_is_set(value,bit) (((value) >> (bit)) & 1)

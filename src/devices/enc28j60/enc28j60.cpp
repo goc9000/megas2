@@ -23,6 +23,22 @@ using namespace std;
 
 const sim_time_t DEFAULT_RECEIVE_FRAMES_INTERVAL = ms_to_sim_time(100);
 
+#define PADDING_NONE                  0
+#define PADDING_AUTODETECT           -1
+
+
+static inline bool check_fcs(uint8_t *data, int data_len)
+{
+    uint32_t crc = compute_fcs(data, data_len - 4);
+    
+    return
+        (data[data_len - 4] == ((crc >> 24) & 0xff)) &&
+        (data[data_len - 3] == ((crc >> 16) & 0xff)) &&
+        (data[data_len - 2] == ((crc >> 8) & 0xff)) &&
+        (data[data_len - 1] == (crc & 0xff));
+}
+
+
 // Pin initialization data
 
 PinInitData const PIN_INIT_DATA[E28J_PIN_COUNT] = {
@@ -64,6 +80,20 @@ void Enc28J60::reset()
     }
 }
 
+void Enc28J60::setFullDuplexWired(bool wired)
+{
+    this->full_duplex_wired = wired;
+}
+
+void Enc28J60::setLinkUp(bool link_up)
+{
+    this->link_up = link_up;
+    chg_bit(this->phy_regs[REG_PHSTAT2], B_LSTAT, link_up);
+    
+    if (!link_up)
+        clear_bit(this->phy_regs[REG_PHSTAT1], B_LLSTAT);
+}
+
 void Enc28J60::act(int event)
 {
     switch (event) {
@@ -97,18 +127,164 @@ void Enc28J60::doReceiveFrames(void)
     }
 }
 
-void Enc28J60::setFullDuplexWired(bool wired)
+void Enc28J60::doTransmission(void)
 {
-    this->full_duplex_wired = wired;
+    this->doTransmissionResetChecks();
+    this->checkTxFrameBounds();
+    
+    bool add_crc = false;
+    int pad_to = PADDING_NONE;
+    bool huge_frame = false;
+    this->getTransmissionSettings(add_crc, pad_to, huge_frame);
+    
+    uint64_t tx_status = 0;
+    this->detectTransmissionType(tx_status);
+    string data = this->prepareTransmisionData(add_crc, pad_to, tx_status);
+    this->checkFinalTxFrameLength(data, huge_frame, tx_status);
+    
+    this->sendFrame(data);
+    
+    tx_status |= B_TXSTAT_DONE;
+    uint16_t frame_end = this->_get16BitReg(REG_ETXNDL);
+    for (int i = 0; i < 7; i++)
+        this->eth_buffer[frame_end + 1 + i] = (tx_status >> (8*i)) & 0xff;
+    
+    clear_bit(this->regs[REG_ECON1], B_TXRTS);
 }
 
-void Enc28J60::setLinkUp(bool link_up)
+void Enc28J60::doTransmissionResetChecks(void)
 {
-    this->link_up = link_up;
-    chg_bit(this->phy_regs[REG_PHSTAT2], B_LSTAT, link_up);
+    if (bit_is_set(this->regs[REG_ECON1], B_TXRST))
+        fail("Attempted transmit with TXRST on");
+    if (((this->regs[REG_MACON2] & 0xc3) != 0) || bit_is_set(this->regs[REG_MAPHSUP], B_RSTRMII))
+        fail("Attempted transmit with some MAC RST bits on");
+    if (bit_is_set(this->phy_regs[REG_PHCON1], B_PRST))
+        fail("Attempted transmit with PHY in reset");
+}
+
+void Enc28J60::checkTxFrameBounds(void)
+{
+    uint16_t frame_start = this->_get16BitReg(REG_ETXSTL);
+    uint16_t frame_end = this->_get16BitReg(REG_ETXNDL);
     
-    if (!link_up)
-        clear_bit(this->phy_regs[REG_PHSTAT1], B_LLSTAT);
+    if (frame_start >= E28J_ETH_BUFFER_SIZE)
+        fail("ETXST outside buffer");
+    if (frame_end >= E28J_ETH_BUFFER_SIZE)
+        fail("ETXND outside buffer");
+    if (frame_end + 7 >= E28J_ETH_BUFFER_SIZE)
+        fail("No space for status vector after ETXND");
+    if (frame_start > frame_end)
+        fail("ETXND < ETXST when attempting transmission");
+    if ((1 + frame_end - frame_start) < 16)
+        fail("Frame too short (stops before EtherType)");
+    if (frame_start & 1)
+        warn("ETXST is not even");
+}
+
+void Enc28J60::getTransmissionSettings(bool& add_crc, int& pad_to, bool& huge)
+{
+    uint16_t frame_start = this->_get16BitReg(REG_ETXSTL);
+    
+    pad_to = PADDING_NONE;
+    switch ((this->regs[REG_MACON3] >> 5) & 7) {
+        case 1: pad_to = 60; break;
+        case 3: case 7: pad_to = 64; break;
+        case 5: pad_to = PADDING_AUTODETECT; break;
+    }
+    
+    add_crc = bit_is_set(this->regs[REG_MACON3], B_TXCRCEN);
+    huge = bit_is_set(this->regs[REG_MACON3], B_HFRMEN);
+    
+    uint8_t overrides = this->eth_buffer[frame_start];
+    if (bit_is_set(overrides, B_POVERRIDE)) {
+        huge = bit_is_set(overrides, B_PHUGEEN);
+        add_crc = bit_is_set(overrides, B_PCRCEN);
+        pad_to = 60 * bit_is_set(overrides, B_PPADEN);
+    }
+}
+
+void Enc28J60::detectTransmissionType(uint64_t &tx_status)
+{
+    uint16_t frame_start = this->_get16BitReg(REG_ETXSTL);
+    
+    mac_addr_t dest_mac = mac_addr_t(this->eth_buffer + frame_start + 1, 6);
+    uint16_t ethertype = (this->eth_buffer[frame_start + 13] << 8) + 
+        this->eth_buffer[frame_start + 14];
+
+    if (ethertype == ETHERTYPE_MAC_CONTROL) {
+        tx_status |= _BV(B_TXSTAT_IS_CONTROL_FRAME);
+        if ((this->eth_buffer[frame_start + 15] == 0) &&
+            (this->eth_buffer[frame_start + 16] == 1))
+            tx_status |= _BV(B_TXSTAT_IS_PAUSE_FRAME);
+    }
+    if (ethertype == ETHERTYPE_VLAN)
+        tx_status |= _BV(B_TXSTAT_IS_VLAN);
+    
+    if (dest_mac.isBroadcast())
+        tx_status |= _BV(B_TXSTAT_BROADCAST);
+    if (dest_mac.isMulticast())
+        tx_status |= _BV(B_TXSTAT_MULTICAST);
+}
+
+string Enc28J60::prepareTransmisionData(bool add_crc, int pad_to, uint64_t& tx_status)
+{
+    uint8_t data[65536];
+    int data_len;
+    
+    uint16_t frame_start = this->_get16BitReg(REG_ETXSTL);
+    uint16_t frame_end = this->_get16BitReg(REG_ETXNDL);
+    
+    data_len = frame_end - frame_start;
+    memcpy(data, this->eth_buffer + frame_start + 1, data_len);
+    
+    if (pad_to == PADDING_AUTODETECT)
+        pad_to = bit_is_set(tx_status, B_TXSTAT_IS_VLAN) ? 64 : 60;
+    
+    if (pad_to > 0) {
+        if (!add_crc)
+            fail("Automatic padding not allowed when TXCRCEN = 0");
+        
+        if (data_len < pad_to) {
+            memset(data + data_len, 0, data_len - pad_to);
+            data_len = pad_to;
+        }
+    }
+    
+    if (add_crc) {
+        uint32_t crc = compute_fcs(data, data_len);
+        data[data_len++] = (crc >> 24) & 0xff;
+        data[data_len++] = (crc >> 16) & 0xff;
+        data[data_len++] = (crc >> 8) & 0xff;
+        data[data_len++] = crc & 0xff;
+    } else if (!check_fcs(data, data_len)) {
+        tx_status |= B_TXSTAT_CRC_ERROR;
+        warn("Incorrect CRC for transmitted packet");
+    }
+        
+    return string((char *)data, data_len);
+}
+
+void Enc28J60::checkFinalTxFrameLength(string data, bool allow_huge, uint64_t& tx_status)
+{
+    uint16_t ethertype = (data[12] << 8) + data[13];
+    
+    if (ethertype < 1536) {
+        if (ethertype > 1500)
+            tx_status |= B_TXSTAT_INVALID_LENGTH;
+        if (ethertype != (data.length() - 18))
+            tx_status = B_TXSTAT_LENGTH_CHECK_ERROR;
+    }
+    
+    uint16_t max_frame_len = this->_get16BitReg(REG_MAMXFLL);
+    
+    if (data.length() > max_frame_len) {
+        tx_status |= B_TXSTAT_IS_GIANT;
+        
+        if (!allow_huge)
+            fail("Frame exceeds MAXMXFL=%d in non-huge mode", max_frame_len);
+    }
+    
+    tx_status = (tx_status & 0xffff0000ffff0000ULL) | data.length() | (data.length() << 32);
 }
 
 void Enc28J60::_initRegs()
@@ -418,6 +594,7 @@ void Enc28J60::_onRegRead(uint8_t reg, uint8_t &value)
 {
     if (is_mii_reg(reg)) {
         this->_onMiiRegRead(reg, value);
+        return;
     }
 }
 
@@ -425,6 +602,14 @@ void Enc28J60::_onRegWrite(uint8_t reg, uint8_t value, uint8_t prev_val)
 {
     if (is_mii_reg(reg)) {
         this->_onMiiRegWrite(reg, value, prev_val);
+        return;
+    }
+    
+    switch (reg) {
+        case REG_ECON1:
+            if (bit_is_set(value, B_TXRTS))
+                this->doTransmission();
+            break;
     }
 }
 

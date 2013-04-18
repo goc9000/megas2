@@ -46,6 +46,14 @@ private:
     uint8_t response_byte;
     
     void _initRegs();
+    
+    void doTransmission(void);
+    void doTransmissionResetChecks(void);
+    void checkTxFrameBounds(void);
+    void getTransmissionSettings(bool& add_crc, int& pad_to, bool& huge);
+    void detectTransmissionType(uint64_t &tx_status);
+    string prepareTransmisionData(bool add_crc, int pad_to, uint64_t& tx_status);
+    void checkFinalTxFrameLength(string data, bool allow_huge, uint64_t& tx_status);
 
     virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
     

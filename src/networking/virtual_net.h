@@ -28,6 +28,8 @@ public:
     
     void addDevice(NetworkDevice *device);
     void removeDevice(NetworkDevice *device);
+    
+    void sendFrame(const string& data);
 protected:
     string interface_name;
     int interface_fd;
