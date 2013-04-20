@@ -71,6 +71,7 @@ void Atmega32::reset(void)
     
     this->_twiInit();
     this->_spiInit();
+    this->_usartInit();
     this->_timersInit();
     this->_pinsInit();
     this->_adcInit();

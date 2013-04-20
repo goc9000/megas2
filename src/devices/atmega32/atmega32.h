@@ -84,6 +84,7 @@ protected:
 #include "aspects/timers.h"
 #include "aspects/pins.h"
 #include "aspects/adc.h"
+#include "aspects/usart.h"
 };
 
 #endif
