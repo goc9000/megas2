@@ -29,7 +29,7 @@ Ds1307::Ds1307(Json::Value &json_data) : Entity(json_data)
 
 void Ds1307::act(int event)
 {
-    printf("Ds1307 ticks!\n");
+    //printf("Ds1307 ticks!\n");
 
     if (this->simulation) {
         this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + sec_to_sim_time(1));
@@ -63,7 +63,7 @@ bool Ds1307::i2cReceiveAddress(uint8_t address, bool write)
     
     this->i2c_listening = true;
     
-printf("***** RTC recognizes address (write:%d)\n", write);
+//printf("***** RTC recognizes address (write:%d)\n", write);
     
     return true;
 }
@@ -73,7 +73,7 @@ bool Ds1307::i2cReceiveData(uint8_t data)
     if (!this->i2c_listening)
         return false;
     
-    printf("********* RTC: Received %02x\n", data);
+    //printf("********* RTC: Received %02x\n", data);
     
     return true;
 }
