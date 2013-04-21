@@ -54,7 +54,7 @@ void NetworkDevice::sendFrame(const EthernetFrame& frame)
         this->network->sendFrame(frame);
 }
 
-void NetworkDevice::receiveFrame(const EthernetFrame& frame)
+void NetworkDevice::onReceiveFrame(const EthernetFrame& frame)
 {
     lock_guard<mutex> guard(this->receive_lock);
     

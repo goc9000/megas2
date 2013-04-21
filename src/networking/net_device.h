@@ -31,7 +31,7 @@ protected:
     EthernetFrame getPendingFrame(void);
     void sendFrame(const EthernetFrame& frame);
     
-    virtual void receiveFrame(const EthernetFrame& frame);
+    virtual void onReceiveFrame(const EthernetFrame& frame);
 };
 
 #endif

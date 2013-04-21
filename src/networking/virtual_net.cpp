@@ -133,7 +133,7 @@ void VirtualNetwork::receiveFramesThreadCode(void)
         try {
             this->lock.lock();
             for (auto& device : this->devices)
-                device->receiveFrame(frame);
+                device->onReceiveFrame(frame);
         } catch (exception& e) {
             this->lock.unlock();
             throw e;
