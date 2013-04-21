@@ -3,7 +3,8 @@
 public:
 
 protected:
-    uint8_t _reg_UBRRH;
+    uint8_t _reg_UCSRC;
+    uint64_t _last_UBRRH_access;
 
     void _usartInit();
     void _usartHandleRead(uint8_t port, int8_t bit, uint8_t &value);

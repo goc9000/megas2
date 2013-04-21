@@ -19,8 +19,8 @@ void Atmega32::_usartInit()
     this->ports[PORT_UDR] = 0x00;
     this->ports[PORT_UCSRA] = 0x20;
     this->ports[PORT_UCSRB] = 0x00;
-    this->ports[PORT_UCSRC] = 0x86;
-    this->_reg_UBRRH = 0x00;
+    this->_reg_UCSRC = 0x86;
+    this->ports[PORT_UBRRH] = 0x00;
     this->ports[PORT_UBRRL] = 0x00;
     
     this->port_metas[PORT_UCSRA].write_mask = 0x43;
@@ -30,14 +30,33 @@ void Atmega32::_usartInit()
         this->port_metas[port].read_handler = &Atmega32::_usartHandleRead;
         this->port_metas[port].write_handler = &Atmega32::_usartHandleWrite;
     }
-    this->port_metas[PORT_UCSRC].read_handler = &Atmega32::_usartHandleRead;
-    this->port_metas[PORT_UCSRC].write_handler = &Atmega32::_usartHandleWrite;
+    this->port_metas[PORT_UBRRH].read_handler = &Atmega32::_usartHandleRead;
+    this->port_metas[PORT_UBRRH].write_handler = &Atmega32::_usartHandleWrite;
 }
 
 void Atmega32::_usartHandleRead(uint8_t port, int8_t bit, uint8_t &value)
 {
+    switch (port) {
+        case PORT_UBRRH:
+            if (this->_last_UBRRH_access == this->cycle_count - 1) {
+                value = this->_reg_UCSRC;
+                return;
+            }
+            this->_last_UBRRH_access = this->cycle_count;
+            break;
+    }
 }
 
 void Atmega32::_usartHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared)
 {
+    switch (port) {
+        case PORT_UBRRH:
+            if (bit_is_set(value, B_URSEL)) {
+                this->ports[PORT_UBRRH] = prev_val;
+                this->_reg_UCSRC = value;
+            } else {
+                this->ports[PORT_UBRRH] = value & 0x0f;
+            }
+            break;
+    }
 }

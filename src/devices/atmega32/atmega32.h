@@ -58,6 +58,8 @@ public:
 protected:
     uint64_t frequency;
     sim_time_t clock_period;
+    
+    uint64_t cycle_count;
 
     Atmega32Core core;
     
