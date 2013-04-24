@@ -9,3 +9,5 @@ protected:
     void _usartInit();
     void _usartHandleRead(uint8_t port, int8_t bit, uint8_t &value);
     void _usartHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_t prev_val, uint8_t cleared);
+    
+    void onRS232Receive(uint8_t data);

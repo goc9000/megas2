@@ -7,6 +7,7 @@
 #include "glue/pin_device.h"
 #include "glue/i2c_device.h"
 #include "glue/spi_device.h"
+#include "glue/rs232_device.h"
 #include "simulation/entity.h"
 #include "simulation/sim_device.h"
 #include "devices/device.h"
@@ -38,7 +39,7 @@ struct Atmega32PortMeta
 };
 
 class Atmega32 : public Entity, public Mcu, public I2cDevice, public SpiDevice,
-    public PinDevice, public SimulatedDevice {
+    public RS232Device, public PinDevice, public SimulatedDevice {
     friend uint8_t read_port(Atmega32Core *core, uint8_t port);
     friend bool read_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit);
     friend void write_port(Atmega32Core *core, uint8_t port, uint8_t value);

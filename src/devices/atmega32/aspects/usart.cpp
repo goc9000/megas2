@@ -23,7 +23,8 @@ void Atmega32::_usartInit()
     this->ports[PORT_UBRRH] = 0x00;
     this->ports[PORT_UBRRL] = 0x00;
     
-    this->port_metas[PORT_UCSRA].write_mask = 0x43;
+    this->port_metas[PORT_UCSRA].write_mask = 0x03;
+    this->port_metas[PORT_UCSRA].clearable_mask = 0x40;
     this->port_metas[PORT_UCSRB].write_mask = 0xfd;
     
     for (int port = PORT_UBRRL; port <= PORT_UDR; port++) {
@@ -59,4 +60,8 @@ void Atmega32::_usartHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_
             }
             break;
     }
+}
+
+void Atmega32::onRS232Receive(uint8_t data)
+{
 }
