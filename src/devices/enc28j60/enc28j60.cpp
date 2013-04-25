@@ -35,8 +35,10 @@ PinInitData const PIN_INIT_DATA[E28J_PIN_COUNT] = {
     { "SS", PIN_MODE_INPUT, 1 }  // SLAVE_SELECT
 };
 
+#define DEFAULT_NAME "ENC28J60"
+
 Enc28J60::Enc28J60()
-    : Entity("enc28j60", "ENC28J60"), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA), NetworkDevice()
+    : Entity(DEFAULT_NAME), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA), NetworkDevice()
 {
     this->full_duplex_wired = true;
     this->link_up = true;
@@ -45,7 +47,7 @@ Enc28J60::Enc28J60()
 }
 
 Enc28J60::Enc28J60(Json::Value &json_data)
-    : Entity(json_data), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA), NetworkDevice()
+    : Entity(DEFAULT_NAME, json_data), PinDevice(E28J_PIN_COUNT, PIN_INIT_DATA), NetworkDevice()
 {
     this->full_duplex_wired = true;
     this->link_up = true;

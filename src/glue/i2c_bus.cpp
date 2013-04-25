@@ -6,11 +6,14 @@
 
 using namespace std;
 
-I2cBus::I2cBus() : Entity("i2cbus", "I2C Bus")
+#define DEFAULT_NAME "I2C bus"
+
+I2cBus::I2cBus() : Entity(DEFAULT_NAME)
 {
 }
 
-I2cBus::I2cBus(Json::Value &json_data, EntityLookup *lookup) : Entity(json_data)
+I2cBus::I2cBus(Json::Value &json_data, EntityLookup *lookup)
+    : Entity(DEFAULT_NAME, json_data)
 {
     if (json_data.isMember("devices")) {
         if (!json_data["devices"].isArray()) {

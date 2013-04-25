@@ -4,8 +4,10 @@
 #include "pc_indicator.h"
 #include "utils/fail.h"
 
+#define DEFAULT_NAME "PC indicator"
+
 PCIndicator::PCIndicator(Mcu* mcu, int x, int y, int size, int color)
-    : Entity("led", "PC Indicator")
+    : Entity(DEFAULT_NAME)
 {
     this->_mcu = mcu;
     this->_x = x;
@@ -14,7 +16,8 @@ PCIndicator::PCIndicator(Mcu* mcu, int x, int y, int size, int color)
     this->_color = color;
 }
 
-PCIndicator::PCIndicator(Json::Value &json_data, EntityLookup *lookup) : Entity(json_data)
+PCIndicator::PCIndicator(Json::Value &json_data, EntityLookup *lookup)
+    : Entity(DEFAULT_NAME, json_data)
 {
     this->_size = 16;
     this->_color = DashboardWidget::COLOR_BLACK;

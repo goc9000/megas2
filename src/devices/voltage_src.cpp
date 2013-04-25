@@ -8,20 +8,22 @@ PinInitData const PIN_INIT_DATA[VOLTAGE_SRC_PIN_COUNT] = {
     { "OUT", PIN_MODE_OUTPUT, 0 }  // OUTPUT
 };
 
+#define DEFAULT_NAME "Voltage source"
+
 VoltageSource::VoltageSource(void)
-    : Entity("voltage_src", "Voltage Source"), PinDevice(VOLTAGE_SRC_PIN_COUNT, PIN_INIT_DATA)
+    : Entity(DEFAULT_NAME), PinDevice(VOLTAGE_SRC_PIN_COUNT, PIN_INIT_DATA)
 {
     this->setValue(0.0);
 }
 
 VoltageSource::VoltageSource(pin_val_t value)
-    : Entity("voltage_src", "Voltage Source"), PinDevice(VOLTAGE_SRC_PIN_COUNT, PIN_INIT_DATA)
+    : Entity(DEFAULT_NAME), PinDevice(VOLTAGE_SRC_PIN_COUNT, PIN_INIT_DATA)
 {
     this->setValue(value);
 }
 
 VoltageSource::VoltageSource(Json::Value &json_data)
-    : Entity(json_data), PinDevice(VOLTAGE_SRC_PIN_COUNT, PIN_INIT_DATA)
+    : Entity(DEFAULT_NAME, json_data), PinDevice(VOLTAGE_SRC_PIN_COUNT, PIN_INIT_DATA)
 {
     if (json_data.isMember("value"))
         this->setValue(parse_json_pin_value(json_data["value"]));

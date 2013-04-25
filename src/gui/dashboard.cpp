@@ -8,20 +8,20 @@
 
 // TODO: add cleanup for TTF_* objects
 
-Dashboard::Dashboard(const char *bkgd_image_filename)
-    : Entity("dashboard", "Dashboard")
+#define DEFAULT_NAME "Dashboard"
+
+Dashboard::Dashboard(const char *bkgd_image_filename) : Entity(DEFAULT_NAME)
 {
     this->_init(0, 0, bkgd_image_filename);
 }
 
-Dashboard::Dashboard(int width, int height)
-    : Entity("dashboard", "Dashboard")
+Dashboard::Dashboard(int width, int height) : Entity(DEFAULT_NAME)
 {
     this->_init(width, height, NULL);
 }
 
 Dashboard::Dashboard(Json::Value &json_data, EntityLookup *lookup)
-    : Entity(json_data)
+    : Entity(DEFAULT_NAME, json_data)
 {
     if (json_data.isMember("background")) {
         this->_init(0, 0, json_data["background"].asCString());

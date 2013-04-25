@@ -5,11 +5,14 @@
 
 using namespace std;
 
-AnalogBus::AnalogBus() : Entity("analogbus", "Analog Bus")
+#define DEFAULT_NAME "Analog bus"
+
+AnalogBus::AnalogBus() : Entity(DEFAULT_NAME)
 {
 }
 
-AnalogBus::AnalogBus(Json::Value &json_data, EntityLookup *lookup) : Entity(json_data)
+AnalogBus::AnalogBus(Json::Value &json_data, EntityLookup *lookup)
+    : Entity(DEFAULT_NAME, json_data)
 {
     if (json_data.isMember("pins")) {
         if (!json_data["pins"].isArray()) {

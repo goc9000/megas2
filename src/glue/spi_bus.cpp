@@ -6,11 +6,14 @@
 
 using namespace std;
 
-SpiBus::SpiBus() : Entity("spibus", "SPI Bus")
+#define DEFAULT_NAME "SPI bus"
+
+SpiBus::SpiBus() : Entity(DEFAULT_NAME)
 {
 }
 
-SpiBus::SpiBus(Json::Value &json_data, EntityLookup *lookup) : Entity(json_data)
+SpiBus::SpiBus(Json::Value &json_data, EntityLookup *lookup)
+    : Entity(DEFAULT_NAME, json_data)
 {
     if (json_data.isMember("devices")) {
         if (!json_data["devices"].isArray()) {

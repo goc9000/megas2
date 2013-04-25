@@ -22,9 +22,9 @@ const pin_val_t PUSH_BUTTON_DEFAULT_DOWN_VALUE = PIN_VAL_VCC;
 class PushButton : public Entity, public DashboardWidget, public PinDevice
 {
 public:
-    PushButton();
-    PushButton(pin_val_t up_value, pin_val_t down_value);
-    PushButton(Json::Value &json_data);
+    PushButton(const char *default_name);
+    PushButton(const char *default_name, pin_val_t up_value, pin_val_t down_value);
+    PushButton(const char *default_name, Json::Value &json_data);
     
     virtual void render(Dashboard *dash) = 0;
 protected:

@@ -14,15 +14,17 @@ using namespace std;
 
 extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT];
 
+#define DEFAULT_NAME "ATMEGA32"
+
 Atmega32::Atmega32() :
-    Entity("atmega32", "ATMEGA32"), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
+    Entity(DEFAULT_NAME), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
     this->_init();
     this->reset();
 }
 
 Atmega32::Atmega32(Json::Value &json_data) :
-    Entity(json_data), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
+    Entity(DEFAULT_NAME, json_data), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
     this->_init();
 

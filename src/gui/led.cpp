@@ -10,12 +10,14 @@ PinInitData const PIN_INIT_DATA[LED_PIN_COUNT] = {
     { "IN", PIN_MODE_INPUT, 0 }  // INPUT
 };
 
-Led::Led(void) : Entity("led", "LED"), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
+Led::Led(const char *default_name)
+    : Entity(default_name), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_lit = false;
 }
 
-Led::Led(Json::Value &json_data) : Entity(json_data), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
+Led::Led(const char *default_name, Json::Value &json_data)
+    : Entity(default_name, json_data), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_lit = false;
 }
@@ -26,6 +28,7 @@ void Led::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 }
 
 SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
+    : Led("Simple LED")
 {
     this->_x = x;
     this->_y = y;
@@ -34,7 +37,7 @@ SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
     this->_caption = caption;
 }
 
-SimpleLed::SimpleLed(Json::Value &json_data) : Led(json_data)
+SimpleLed::SimpleLed(Json::Value &json_data) : Led("Simple LED", json_data)
 {
     this->_size = 16;
     this->_color = DashboardWidget::COLOR_BLACK;

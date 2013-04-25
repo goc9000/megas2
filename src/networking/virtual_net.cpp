@@ -14,16 +14,17 @@
 
 #include "utils/fail.h"
 
+#define DEFAULT_NAME "Virtual network"
 
 VirtualNetwork::VirtualNetwork(ipv4_addr_t ipv4_address)
-    : Entity("virtual_net", "Virtual Network")
+    : Entity(DEFAULT_NAME)
 {
     this->interface_name = DEFAULT_VNET_NAME;
     this->ipv4_address = ipv4_address;
 }
 
 VirtualNetwork::VirtualNetwork(string interface_name, ipv4_addr_t ipv4_address)
-    : Entity("virtual_net", "Virtual Network")
+    : Entity(DEFAULT_NAME)
 {
     this->interface_name = interface_name;
     this->ipv4_address = ipv4_address;
@@ -32,7 +33,7 @@ VirtualNetwork::VirtualNetwork(string interface_name, ipv4_addr_t ipv4_address)
 }
 
 VirtualNetwork::VirtualNetwork(Json::Value &json_data, EntityLookup *lookup)
-    : Entity(json_data)
+    : Entity(DEFAULT_NAME, json_data)
 {
     this->interface_name = DEFAULT_VNET_NAME;
     

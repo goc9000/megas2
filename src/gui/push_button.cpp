@@ -11,24 +11,24 @@ PinInitData const PIN_INIT_DATA[PUSH_BUTTON_PIN_COUNT] = {
     { "OUT", PIN_MODE_OUTPUT, 0 }  // OUTPUT
 };
 
-PushButton::PushButton(void)
-    : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
+PushButton::PushButton(const char *default_name)
+    : Entity(default_name), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
     this->_down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
     this->_setPressed(false);
 }
 
-PushButton::PushButton(pin_val_t up_value, pin_val_t down_value)
-    : Entity("pushbutton", "Push Button"), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
+PushButton::PushButton(const char *default_name, pin_val_t up_value, pin_val_t down_value)
+    : Entity(default_name), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_up_value = up_value;
     this->_down_value = down_value;
     this->_setPressed(false);
 }
 
-PushButton::PushButton(Json::Value &json_data)
-    : Entity(json_data), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
+PushButton::PushButton(const char *default_name, Json::Value &json_data)
+    : Entity(default_name, json_data), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
     this->_down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
@@ -54,19 +54,20 @@ void PushButton::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 }
 
 SimplePushButton::SimplePushButton(int x, int y, int size, int color, const char *caption)
-    : PushButton()
+    : PushButton("Simple push button")
 {
     this->_init(x, y, size, color, caption);
 }
 
 SimplePushButton::SimplePushButton(int up_value, int down_value, int x, int y, int size,
     int color, const char *caption)
-    : PushButton(up_value, down_value)
+    : PushButton("Simple push button", up_value, down_value)
 {
     this->_init(x, y, size, color, caption);
 }
 
-SimplePushButton::SimplePushButton(Json::Value &json_data) : PushButton(json_data)
+SimplePushButton::SimplePushButton(Json::Value &json_data)
+    : PushButton("Simple push button", json_data)
 {
     this->_size = 16;
     this->_color = DashboardWidget::COLOR_BLACK;

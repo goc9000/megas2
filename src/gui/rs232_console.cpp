@@ -4,8 +4,10 @@
 #include "rs232_console.h"
 #include "utils/fail.h"
 
+#define DEFAULT_NAME "RS232 console"
+
 RS232Console::RS232Console(int x, int y, int rows, int columns, int font_size)
-    : Entity("led", "PC Indicator")
+    : Entity(DEFAULT_NAME)
 {
     this->x = x;
     this->y = y;
@@ -14,7 +16,8 @@ RS232Console::RS232Console(int x, int y, int rows, int columns, int font_size)
     this->font_size = font_size;
 }
 
-RS232Console::RS232Console(Json::Value &json_data, EntityLookup *lookup) : Entity(json_data)
+RS232Console::RS232Console(Json::Value &json_data, EntityLookup *lookup)
+    : Entity(DEFAULT_NAME, json_data)
 {
     this->rows = 40;
     this->columns = 20;

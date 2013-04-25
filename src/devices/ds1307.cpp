@@ -10,13 +10,15 @@ using namespace std;
 
 #define SIM_EVENT_TICK   0
 
-Ds1307::Ds1307(uint8_t i2c_address) : Entity("ds1307", "DS1307")
+#define DEFAULT_NAME "DS1307"
+
+Ds1307::Ds1307(uint8_t i2c_address) : Entity(DEFAULT_NAME)
 {
     this->i2c_addr = i2c_address;
     this->reset();
 }
 
-Ds1307::Ds1307(Json::Value &json_data) : Entity(json_data)
+Ds1307::Ds1307(Json::Value &json_data) : Entity(DEFAULT_NAME, json_data)
 {
     if (json_data.isMember("i2c_address")) {
         this->i2c_addr = json_data["i2c_address"].asInt();

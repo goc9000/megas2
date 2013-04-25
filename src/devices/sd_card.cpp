@@ -73,14 +73,16 @@ uint16_t compute_crc16(uint8_t *buffer, int length)
     return crc;
 }
 
+#define DEFAULT_NAME "SD card"
+
 SdCard::SdCard(const char *backing_file_name, unsigned capacity)
-    : Entity("sdcard", "SD Card"), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
+    : Entity(DEFAULT_NAME), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
 {
     this->_init(backing_file_name, capacity);
 }
 
 SdCard::SdCard(Json::Value &json_data)
-    : Entity(json_data), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
+    : Entity(DEFAULT_NAME, json_data), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
 {
     const char *backing_file_name = NULL;
     unsigned capacity = 0;

@@ -16,8 +16,8 @@ using namespace std;
 class Led : public Entity, public DashboardWidget, public PinDevice
 {
 public:
-    Led();
-    Led(Json::Value &json_data);
+    Led(const char *default_name);
+    Led(const char *default_name, Json::Value &json_data);
     
     virtual void render(Dashboard *dash) = 0;
 protected:
