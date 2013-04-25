@@ -97,7 +97,7 @@ void Pin::write(pin_val_t value)
  */
 void Pin::writeDigital(bool value)
 {
-    this->write(value ? PIN_VAL_VCC : 0);
+    this->write(value ? PIN_VAL_VCC : PIN_VAL_0);
 }
 
 /**
@@ -149,7 +149,7 @@ void Pin::setFloatValue(pin_val_t value)
 
 void Pin::setFloatValueDigital(bool value)
 {
-    this->setFloatValue(value ? PIN_VAL_VCC : 0);
+    this->setFloatValue(value ? PIN_VAL_VCC : PIN_VAL_0);
 }
 
 void Pin::setMode(int mode)

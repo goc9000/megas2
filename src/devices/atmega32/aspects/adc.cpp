@@ -142,7 +142,7 @@ uint16_t Atmega32::_getAdcMeasurement()
     
     diff_input *= this->_getAdcGain();
     
-    double normalized = (double)(up_bound * diff_input) / ref;
+    double normalized = (up_bound * diff_input) / ref;
     
     normalized = max(normalized, (double)lo_bound);
     normalized = min(normalized, (double)up_bound);
