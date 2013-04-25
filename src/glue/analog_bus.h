@@ -21,10 +21,10 @@ public:
     void addDevicePin(PinReference &pinref);
     void removeDevicePin(PinDevice *device, int pin_id);
     void removeDevicePin(PinReference &pinref);
-    int query(void);
+    pin_val_t query(void);
     void update(void);
 private:
-    int _value;
+    pin_val_t _value;
     
     vector<PinReference> _pins;
 };

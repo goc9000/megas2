@@ -63,17 +63,17 @@ void AnalogBus::removeDevicePin(PinReference &pinref)
     this->removeDevicePin(pinref.device, pinref.pin_id);
 }
 
-int AnalogBus::query(void)
+pin_val_t AnalogBus::query(void)
 {
     return this->_value;
 }
 
 void AnalogBus::update(void)
 {
-    int value = PIN_VAL_Z;
+    pin_val_t value = PIN_VAL_Z;
     
     for (vector<PinReference>::iterator it = this->_pins.begin(); it != this->_pins.end(); it++) {
-        int v = it->device->queryPin(it->pin_id);
+        pin_val_t v = it->device->queryPin(it->pin_id);
 
         if (v != PIN_VAL_Z)
             value = v;
