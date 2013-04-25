@@ -14,9 +14,9 @@ PinInitData const PIN_INIT_DATA[PUSH_BUTTON_PIN_COUNT] = {
 PushButton::PushButton(const char *default_name)
     : Entity(default_name), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
-    this->_down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
-    this->_setPressed(false);
+    _up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
+    _down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
+    _setPressed(false);
 }
 
 PushButton::PushButton(const char *default_name, pin_val_t up_value, pin_val_t down_value)
@@ -24,21 +24,17 @@ PushButton::PushButton(const char *default_name, pin_val_t up_value, pin_val_t d
 {
     this->_up_value = up_value;
     this->_down_value = down_value;
-    this->_setPressed(false);
+    _setPressed(false);
 }
 
 PushButton::PushButton(const char *default_name, Json::Value &json_data)
     : Entity(default_name, json_data), PinDevice(PUSH_BUTTON_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
-    this->_down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
+    _up_value = PUSH_BUTTON_DEFAULT_UP_VALUE;
+    _down_value = PUSH_BUTTON_DEFAULT_DOWN_VALUE;
     
-    if (json_data.isMember("up_value")) {
-        this->_up_value = parse_json_pin_value(json_data["up_value"]);
-    }
-    if (json_data.isMember("down_value")) {
-        this->_down_value = parse_json_pin_value(json_data["down_value"]);
-    }
+    parseOptionalJsonParam(_up_value, json_data, "up_value");
+    parseOptionalJsonParam(_down_value, json_data, "down_value");
     
     this->_setPressed(false);
 }

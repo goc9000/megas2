@@ -46,6 +46,4 @@ const pin_val_t PIN_VAL_0 = pin_val_t(0.0);
 const pin_val_t PIN_VAL_Z = pin_val_t::z();
 const pin_val_t PIN_VAL_VCC = pin_val_t::vcc();
 
-pin_val_t parse_json_pin_value(Json::Value &json_value);
-
 #endif

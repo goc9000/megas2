@@ -7,6 +7,8 @@
 
 #include <json/json.h>
 
+#include "glue/pin_val.h"
+
 #include "utils/fail.h"
 
 using namespace std;
@@ -79,6 +81,26 @@ public:
             fail("Parameter '%s' must be a string", param_name);
     
         value = json_value.asString();
+    }
+    
+    template<typename T>
+    typename enable_if<is_same<T, pin_val_t>::value, void>::type
+    parseJsonParamInternal(T& value, Json::Value &json_value, const char *param_name)
+    {
+        if (json_value.isString()) {
+            if (json_value.asString() == "Z") {
+                value = PIN_VAL_Z;
+                return;
+            } else if (json_value.asString() == "VCC") {
+                value = PIN_VAL_VCC;
+                return;
+            }
+        } else if (json_value.isNumeric()) {
+            value = pin_val_t(json_value.asDouble());
+            return;
+        }
+        
+        fail("Pin value '%s' is not numeric, 'VCC' or 'Z'", json_value.asString().c_str());
     }
 };
 
