@@ -36,6 +36,9 @@ public:
     void putText(int x, int y, const char *text, int size, int color);
     void putMonoText(int x, int y, const string& text, int size, int color);
     void putMonoText(int x, int y, const char *text, int size, int color);
+    
+    void measureText(const string& text, int size, bool mono, int& with, int& height);
+    void measureText(const char *text, int size, bool mono, int& with, int& height);
 
     virtual void reset();
     virtual void act(int event);

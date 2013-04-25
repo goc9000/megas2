@@ -3,9 +3,14 @@
 
 #include <inttypes.h>
 
+#include "simulation/entity.h"
+#include "simulation/entity_lookup.h"
+
 class RS232Device {
 public:
     RS232Device(void);
+    RS232Device(Json::Value &json_data, EntityLookup *lookup);
+    
     void connectToRS232Peer(RS232Device *peer);
     void disconnectFromRS232Peer(void);
     

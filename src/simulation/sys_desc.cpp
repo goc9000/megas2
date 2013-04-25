@@ -18,6 +18,7 @@
 #include "gui/led.h"
 #include "gui/push_button.h"
 #include "gui/pc_indicator.h"
+#include "gui/rs232_console.h"
 
 #include "networking/virtual_net.h"
 
@@ -117,6 +118,8 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
         return new SimplePushButton(json_data);
     } else if (type == "PCIndicator") {
         return new PCIndicator(json_data, this);
+    } else if (type == "RS232Console") {
+        return new RS232Console(json_data, this);
     } else if (type == "Dashboard") {
         return new Dashboard(json_data, this);
     }

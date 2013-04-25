@@ -166,6 +166,20 @@ void Dashboard::_putText(int x, int y, const char *text, int size, int color,
     SDL_FreeSurface(text_surface);
 }
 
+void Dashboard::measureText(const string& text, int size, bool mono, int& width, int& height)
+{
+    this->measureText(text.c_str(), size, mono, width, height);
+}
+
+void Dashboard::measureText(const char *text, int size, bool mono, int& width, int& height)
+{
+    TTF_Font *font = mono ? this->getMonoFont(size) : this->getFont(size);
+    if (!font)
+        return;
+    
+    TTF_SizeText(font, text, &width, &height);
+}
+
 void Dashboard::reset()
 {
     if (this->simulation) {

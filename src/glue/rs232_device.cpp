@@ -5,9 +5,28 @@
 
 using namespace std;
 
-RS232Device::RS232Device()
+RS232Device::RS232Device(void)
 {
     this->rs232_peer = NULL;
+}
+
+RS232Device::RS232Device(Json::Value &json_data, EntityLookup *lookup)
+{
+    this->rs232_peer = NULL;
+    
+    if (json_data.isMember("rs232_peer")) {
+        const char *dev_id = json_data["rs232_peer"].asCString();
+        
+        Entity *ent = lookup->lookupEntity(dev_id);
+        if (!ent) {
+            fail("Device '%s' not defined at this point", dev_id);
+        }
+
+        this->rs232_peer = dynamic_cast<RS232Device *>(ent);
+        if (this->rs232_peer == NULL) {
+            fail("Device '%s' is not an RS232 device", dev_id);
+        }
+    }
 }
 
 void RS232Device::connectToRS232Peer(RS232Device *peer)
