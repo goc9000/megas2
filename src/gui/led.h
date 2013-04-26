@@ -31,7 +31,7 @@ const pin_val_t SIMPLE_LED_LIGHTING_TRESHOLD = 0.6;
 class SimpleLed : public Led
 {
 public:
-    SimpleLed(int x, int y, int size, int color, const char *caption);
+    SimpleLed(int x, int y, int size, SDLColor color, const char *caption);
     SimpleLed(Json::Value &json_data);
     
     virtual void render(Dashboard *dash);
@@ -39,7 +39,7 @@ protected:
     int _x;
     int _y;
     int _size;
-    int _color;
+    SDLColor _color;
     string _caption;
 };
 

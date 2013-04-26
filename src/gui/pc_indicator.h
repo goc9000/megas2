@@ -12,7 +12,7 @@ using namespace std;
 class PCIndicator : public Entity, public DashboardWidget
 {
 public:
-    PCIndicator(Mcu *mcu, int x, int y, int size, int color);
+    PCIndicator(Mcu *mcu, int x, int y, int size, SDLColor color);
     PCIndicator(Json::Value &json_data, EntityLookup *lookup);
     
     virtual void render(Dashboard *dash);
@@ -21,7 +21,7 @@ protected:
     int _x;
     int _y;
     int _size;
-    int _color;
+    SDLColor _color;
 };
 
 #endif

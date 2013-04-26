@@ -39,8 +39,8 @@ protected:
 class SimplePushButton : public PushButton
 {
 public:
-    SimplePushButton(int x, int y, int size, int color, const char *caption);
-    SimplePushButton(int up_value, int down_value, int x, int y, int size, int color, const char *caption);
+    SimplePushButton(int x, int y, int size, SDLColor color, const char *caption);
+    SimplePushButton(int up_value, int down_value, int x, int y, int size, SDLColor color, const char *caption);
     SimplePushButton(Json::Value &json_data);
     
     virtual void render(Dashboard *dash);
@@ -49,10 +49,10 @@ protected:
     int _x;
     int _y;
     int _size;
-    int _color;
+    SDLColor _color;
     string _caption;
     
-    void _init(int x, int y, int size, int color, const char *caption);
+    void _init(int x, int y, int size, SDLColor color, const char *caption);
 };
 
 #endif

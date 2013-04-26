@@ -27,7 +27,7 @@ void Led::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
     _lit = value > SIMPLE_LED_LIGHTING_TRESHOLD;
 }
 
-SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
+SimpleLed::SimpleLed(int x, int y, int size, SDLColor color, const char *caption)
     : Led("Simple LED")
 {
     this->_x = x;
@@ -40,7 +40,7 @@ SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
 SimpleLed::SimpleLed(Json::Value &json_data) : Led("Simple LED", json_data)
 {
     _size = 16;
-    _color = DashboardWidget::COLOR_BLACK;
+    _color = SDLColor::BLACK;
     _caption = "";
     
     parseJsonParam(_x, json_data, "x");
@@ -56,10 +56,8 @@ SimpleLed::SimpleLed(Json::Value &json_data) : Led("Simple LED", json_data)
 
 void SimpleLed::render(Dashboard *dash)
 {
-    (this->_lit ? filledCircleColor : circleColor)(dash->screen,
-        this->_x + this->_size/2, this->_y + this->_size/2,
-        this->_size / 2, this->_color);
+    (_lit ? filledCircleColor : circleColor)(dash->screen,
+        _x + _size/2, _y + _size/2, _size / 2, _color.toUInt32());
     
-    dash->putText(this->_x + 3 * this->_size / 2, this->_y + 2,
-        this->_caption, this->_size - 4, this->_color);
+    dash->putText(_x + 3 * _size / 2, _y + 2, _caption, _size - 4, _color);
 }

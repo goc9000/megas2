@@ -1,6 +1,6 @@
 #include "dash_widget.h"
 
-int DashboardWidget::parseColor(Json::Value &json_data)
+SDLColor DashboardWidget::parseColor(Json::Value &json_data)
 {
     int r = 0;
     int g = 0;
@@ -20,7 +20,7 @@ int DashboardWidget::parseColor(Json::Value &json_data)
         a = json_data["a"].asInt();
     }
 
-    return (r << 24) + (g << 16) + (b << 8) + a;
+    return SDLColor(r, g, b, a);
 }
 
 bool DashboardWidget::handleEvent(Dashboard *dash, SDL_Event *event)

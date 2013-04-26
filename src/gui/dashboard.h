@@ -32,10 +32,10 @@ public:
     TTF_Font *getFont(int size);
     TTF_Font *getMonoFont(int size);
     
-    void putText(int x, int y, const string& text, int size, int color);
-    void putText(int x, int y, const char *text, int size, int color);
-    void putMonoText(int x, int y, const string& text, int size, int color);
-    void putMonoText(int x, int y, const char *text, int size, int color);
+    void putText(int x, int y, const string& text, int size, SDLColor color);
+    void putText(int x, int y, const char *text, int size, SDLColor color);
+    void putMonoText(int x, int y, const string& text, int size, SDLColor color);
+    void putMonoText(int x, int y, const char *text, int size, SDLColor color);
     
     void measureText(const string& text, int size, bool mono, int& with, int& height);
     void measureText(const char *text, int size, bool mono, int& with, int& height);
@@ -52,7 +52,7 @@ private:
     
     SDL_Surface *_background;
     
-    void _putText(int x, int y, const char *text, int size, int color, bool mono);
+    void _putText(int x, int y, const char *text, int size, SDLColor color, bool mono);
     
     void _init(int width, int height, const char *bkgd_filename);
 };

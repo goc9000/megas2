@@ -49,14 +49,14 @@ void PushButton::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 {
 }
 
-SimplePushButton::SimplePushButton(int x, int y, int size, int color, const char *caption)
+SimplePushButton::SimplePushButton(int x, int y, int size, SDLColor color, const char *caption)
     : PushButton("Simple push button")
 {
     _init(x, y, size, color, caption);
 }
 
 SimplePushButton::SimplePushButton(int up_value, int down_value, int x, int y, int size,
-    int color, const char *caption)
+    SDLColor color, const char *caption)
     : PushButton("Simple push button", up_value, down_value)
 {
     _init(x, y, size, color, caption);
@@ -66,7 +66,7 @@ SimplePushButton::SimplePushButton(Json::Value &json_data)
     : PushButton("Simple push button", json_data)
 {
     _size = 16;
-    _color = DashboardWidget::COLOR_BLACK;
+    _color = SDLColor::BLACK;
     _caption = "";
     
     parseJsonParam(_x, json_data, "x");
@@ -80,7 +80,7 @@ SimplePushButton::SimplePushButton(Json::Value &json_data)
     parseOptionalJsonParam(_caption, json_data, "caption");
 }
 
-void SimplePushButton::_init(int x, int y, int size, int color, const char *caption)
+void SimplePushButton::_init(int x, int y, int size, SDLColor color, const char *caption)
 {
     this->_x = x;
     this->_y = y;
@@ -91,17 +91,15 @@ void SimplePushButton::_init(int x, int y, int size, int color, const char *capt
 
 void SimplePushButton::render(Dashboard *dash)
 {
-    rectangleColor(dash->screen, this->_x, this->_y,
-        this->_x + this->_size - 1, this->_y + this->_size - 1, this->_color);
+    rectangleColor(dash->screen, _x, _y, _x + _size - 1, _y + _size - 1,
+        _color.toUInt32());
     
-    if (this->_pressed) {
-        boxColor(dash->screen, this->_x + 4, this->_y + 4,
-            this->_x + this->_size - 4 - 1, this->_y + this->_size - 4 - 1,
-            this->_color);
+    if (_pressed) {
+        boxColor(dash->screen, _x + 4, _y + 4, _x + _size - 4 - 1, _y + _size - 4 - 1,
+            _color.toUInt32());
     }
     
-    dash->putText(this->_x + 3 * this->_size / 2, this->_y + 2, this->_caption,
-        this->_size - 4, this->_color);
+    dash->putText(_x + 3 * _size / 2, _y + 2, _caption, _size - 4, _color);
 }
 
 bool SimplePushButton::handleEvent(Dashboard *dash, SDL_Event *event)

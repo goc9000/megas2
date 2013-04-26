@@ -40,9 +40,8 @@ void RS232Console::render(Dashboard *dash)
     int width = font_size + columns * char_width;
     int height = font_size + rows * char_height;
         
-    rectangleColor(dash->screen, x, y, 
-        x + width - 1, y + height - 1,
-        DashboardWidget::COLOR_BLACK);
+    rectangleColor(dash->screen, x, y,  x + width - 1, y + height - 1,
+        SDLColor::BLACK.toUInt32());
 }
 
 void RS232Console::onRS232Receive(uint8_t data)
