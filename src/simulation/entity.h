@@ -33,11 +33,15 @@ public:
     template<typename T>
     bool parseOptionalJsonParam(T& value, Json::Value &json_data, const char *param_name)
     {
+        bool parsed = false;
+        
         try {
-            return parse_optional_json_param(value, json_data, param_name);
+            parsed = parse_optional_json_param(value, json_data, param_name);
         } catch (exception& e) {
             fail("%s (for object '%s')", e.what(), type_name.c_str());
         }
+        
+        return parsed;
     }
 };
 
