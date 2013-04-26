@@ -13,18 +13,18 @@ PinInitData const PIN_INIT_DATA[LED_PIN_COUNT] = {
 Led::Led(const char *default_name)
     : Entity(default_name), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_lit = false;
+    _lit = false;
 }
 
 Led::Led(const char *default_name, Json::Value &json_data)
     : Entity(default_name, json_data), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_lit = false;
+    _lit = false;
 }
 
 void Led::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 {
-    this->_lit = value > SIMPLE_LED_LIGHTING_TRESHOLD;
+    _lit = value > SIMPLE_LED_LIGHTING_TRESHOLD;
 }
 
 SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
@@ -39,31 +39,19 @@ SimpleLed::SimpleLed(int x, int y, int size, int color, const char *caption)
 
 SimpleLed::SimpleLed(Json::Value &json_data) : Led("Simple LED", json_data)
 {
-    this->_size = 16;
-    this->_color = DashboardWidget::COLOR_BLACK;
-    this->_caption = "";
+    _size = 16;
+    _color = DashboardWidget::COLOR_BLACK;
+    _caption = "";
     
-    if (json_data.isMember("x")) {
-        this->_x = json_data["x"].asInt();
-    } else {
-        fail("Member 'x' required for SimpleLed widget");
-    }
-    if (json_data.isMember("y")) {
-        this->_y = json_data["y"].asInt();
-    } else {
-        fail("Member 'y' required for SimpleLed widget");
-    }
-    if (json_data.isMember("size")) {
-        this->_size = json_data["size"].asInt();
-    } else {
-        fail("Member 'size' required for SimpleLed widget");
-    }
+    parseJsonParam(_x, json_data, "x");
+    parseJsonParam(_y, json_data, "y");
+    parseJsonParam(_size, json_data, "size");
+    
     if (json_data.isMember("color")) {
-        this->_color = DashboardWidget::parseColor(json_data["color"]);
+        _color = DashboardWidget::parseColor(json_data["color"]);
     }
-    if (json_data.isMember("caption")) {
-        this->_caption = json_data["caption"].asString();
-    }
+    
+    parseOptionalJsonParam(_caption, json_data, "caption");
 }
 
 void SimpleLed::render(Dashboard *dash)

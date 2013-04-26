@@ -19,33 +19,15 @@ RS232Console::RS232Console(int x, int y, int rows, int columns, int font_size)
 RS232Console::RS232Console(Json::Value &json_data, EntityLookup *lookup)
     : Entity(DEFAULT_NAME, json_data)
 {
-    this->rows = 40;
-    this->columns = 20;
-    this->font_size = 10;
+    rows = 80;
+    columns = 25;
+    font_size = 10;
     
-    if (json_data.isMember("x")) {
-        x = json_data["x"].asInt();
-    } else {
-        fail("Member 'x' required for RS232Console widget");
-    }
-    if (json_data.isMember("y")) {
-        y = json_data["y"].asInt();
-    } else {
-        fail("Member 'y' required for RS232Console widget");
-    }
-    if (json_data.isMember("columns")) {
-        columns = json_data["columns"].asInt();
-    } else {
-        fail("Member 'columns' required for RS232Console widget");
-    }
-    if (json_data.isMember("rows")) {
-        rows = json_data["rows"].asInt();
-    } else {
-        fail("Member 'rows' required for RS232Console widget");
-    }
-    if (json_data.isMember("font_size")) {
-        font_size = json_data["font_size"].asInt();
-    }
+    parseJsonParam(x, json_data, "x");
+    parseJsonParam(y, json_data, "y");
+    parseOptionalJsonParam(columns, json_data, "columns");
+    parseOptionalJsonParam(rows, json_data, "rows");
+    parseOptionalJsonParam(font_size, json_data, "font_size");
 }
 
 void RS232Console::render(Dashboard *dash)

@@ -78,27 +78,19 @@ uint16_t compute_crc16(uint8_t *buffer, int length)
 SdCard::SdCard(const char *backing_file_name, unsigned capacity)
     : Entity(DEFAULT_NAME), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
 {
-    this->_init(backing_file_name, capacity);
+    _init(backing_file_name, capacity);
 }
 
 SdCard::SdCard(Json::Value &json_data)
     : Entity(DEFAULT_NAME, json_data), PinDevice(SDCARD_PIN_COUNT, PIN_INIT_DATA)
 {
-    const char *backing_file_name = NULL;
+    string backing_file_name;
     unsigned capacity = 0;
 
-    if (json_data.isMember("image")) {
-        backing_file_name = json_data["image"].asCString();
-    } else {
-        fail("Parameter 'image' required for SD card");
-    }
-    if (json_data.isMember("capacity")) {
-        capacity = json_data["capacity"].asUInt();
-    } else {
-        fail("Parameter 'capacity' required for SD card");
-    }
+    parseJsonParam(backing_file_name, json_data, "image");
+    parseJsonParam(capacity, json_data, "capacity");
 
-    this->_init(backing_file_name, capacity);
+    _init(backing_file_name.c_str(), capacity);
 }
 
 void SdCard::_init(const char *backing_file_name, unsigned capacity)

@@ -52,9 +52,9 @@ Enc28J60::Enc28J60(Json::Value &json_data)
     this->full_duplex_wired = true;
     this->link_up = true;
 
-    if (json_data.isMember("full_duplex")) {
-        this->setFullDuplexWired(json_data["full_duplex"].asBool());
-    }
+    bool bool_val;
+    if (parseOptionalJsonParam(bool_val, json_data, "full_duplex"))
+        this->setFullDuplexWired(bool_val);
     
     this->reset();
 }

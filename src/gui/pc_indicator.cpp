@@ -19,24 +19,13 @@ PCIndicator::PCIndicator(Mcu* mcu, int x, int y, int size, int color)
 PCIndicator::PCIndicator(Json::Value &json_data, EntityLookup *lookup)
     : Entity(DEFAULT_NAME, json_data)
 {
-    this->_size = 16;
-    this->_color = DashboardWidget::COLOR_BLACK;
+    _size = 16;
+    _color = DashboardWidget::COLOR_BLACK;
     
-    if (json_data.isMember("x")) {
-        this->_x = json_data["x"].asInt();
-    } else {
-        fail("Member 'x' required for PCIndicator widget");
-    }
-    if (json_data.isMember("y")) {
-        this->_y = json_data["y"].asInt();
-    } else {
-        fail("Member 'y' required for PCIndicator widget");
-    }
-    if (json_data.isMember("size")) {
-        this->_size = json_data["size"].asInt();
-    } else {
-        fail("Member 'size' required for PCIndicator widget");
-    }
+    parseJsonParam(_x, json_data, "x");
+    parseJsonParam(_y, json_data, "y");
+    parseJsonParam(_size, json_data, "size");
+    
     if (json_data.isMember("color")) {
         this->_color = DashboardWidget::parseColor(json_data["color"]);
     }

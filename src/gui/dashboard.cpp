@@ -12,12 +12,12 @@
 
 Dashboard::Dashboard(const char *bkgd_image_filename) : Entity(DEFAULT_NAME)
 {
-    this->_init(0, 0, bkgd_image_filename);
+    _init(0, 0, bkgd_image_filename);
 }
 
 Dashboard::Dashboard(int width, int height) : Entity(DEFAULT_NAME)
 {
-    this->_init(width, height, NULL);
+    _init(width, height, NULL);
 }
 
 Dashboard::Dashboard(Json::Value &json_data, EntityLookup *lookup)

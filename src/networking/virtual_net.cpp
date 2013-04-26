@@ -17,10 +17,8 @@
 #define DEFAULT_NAME "Virtual network"
 
 VirtualNetwork::VirtualNetwork(ipv4_addr_t ipv4_address)
-    : Entity(DEFAULT_NAME)
+    : VirtualNetwork(DEFAULT_VNET_NAME, ipv4_address)
 {
-    this->interface_name = DEFAULT_VNET_NAME;
-    this->ipv4_address = ipv4_address;
 }
 
 VirtualNetwork::VirtualNetwork(string interface_name, ipv4_addr_t ipv4_address)
@@ -29,23 +27,22 @@ VirtualNetwork::VirtualNetwork(string interface_name, ipv4_addr_t ipv4_address)
     this->interface_name = interface_name;
     this->ipv4_address = ipv4_address;
     
-    this->init();
+    init();
 }
 
 VirtualNetwork::VirtualNetwork(Json::Value &json_data, EntityLookup *lookup)
     : Entity(DEFAULT_NAME, json_data)
 {
-    this->interface_name = DEFAULT_VNET_NAME;
+    interface_name = DEFAULT_VNET_NAME;
     
-    if (json_data.isMember("interface_name"))
-        this->interface_name = json_data["interface_name"].asString();
-    
+    parseOptionalJsonParam(interface_name, json_data, "interface_name");
+        
     if (json_data.isMember("ipv4_address")) {
         this->ipv4_address = ipv4_addr_t(json_data["ipv4_address"]);
     } else
         fail("Missing 'ipv4_address' parameter for VirtualNetwork object");
     
-    this->init();
+    init();
     
     if (json_data.isMember("devices")) {
         if (!json_data["devices"].isArray()) {

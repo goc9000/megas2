@@ -14,19 +14,16 @@ using namespace std;
 
 Ds1307::Ds1307(uint8_t i2c_address) : Entity(DEFAULT_NAME)
 {
-    this->i2c_addr = i2c_address;
-    this->reset();
+    i2c_addr = i2c_address;
+    
+    reset();
 }
 
 Ds1307::Ds1307(Json::Value &json_data) : Entity(DEFAULT_NAME, json_data)
 {
-    if (json_data.isMember("i2c_address")) {
-        this->i2c_addr = json_data["i2c_address"].asInt();
-    } else {
-        fail("Attribute 'i2c_address' is required for DS1307");
-    }
+    parseJsonParam(i2c_addr, json_data, "i2c_address");
     
-    this->reset();
+    reset();
 }
 
 void Ds1307::act(int event)

@@ -19,23 +19,24 @@ extern PinInitData const MEGA32_PIN_INIT_DATA[MEGA32_PIN_COUNT];
 Atmega32::Atmega32() :
     Entity(DEFAULT_NAME), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
-    this->_init();
-    this->reset();
+    _init();
+    reset();
 }
 
 Atmega32::Atmega32(Json::Value &json_data) :
     Entity(DEFAULT_NAME, json_data), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
-    this->_init();
+    _init();
 
-    if (json_data.isMember("frequency")) {
-        this->setFrequency(json_data["frequency"].asUInt64());
-    }
-    if (json_data.isMember("firmware")) {
-        this->loadProgramFromElf(json_data["firmware"].asCString());
-    }
+    uint64_t frequency;
+    if (parseOptionalJsonParam(frequency, json_data, "frequency"))
+        setFrequency(frequency);
     
-    this->reset();
+    string firmware;
+    if (parseOptionalJsonParam(firmware, json_data, "firmware"))
+        loadProgramFromElf(firmware.c_str());
+    
+    reset();
 }
 
 void Atmega32::_init(void)

@@ -36,13 +36,13 @@ PushButton::PushButton(const char *default_name, Json::Value &json_data)
     parseOptionalJsonParam(_up_value, json_data, "up_value");
     parseOptionalJsonParam(_down_value, json_data, "down_value");
     
-    this->_setPressed(false);
+    _setPressed(false);
 }
 
 void PushButton::_setPressed(bool pressed)
 {
     this->_pressed = pressed;
-    this->_pins[PUSH_BUTTON_PIN_OUTPUT].write(this->_pressed ? this->_down_value : this->_up_value);
+    _pins[PUSH_BUTTON_PIN_OUTPUT].write(_pressed ? _down_value : _up_value);
 }
 
 void PushButton::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
@@ -52,44 +52,32 @@ void PushButton::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 SimplePushButton::SimplePushButton(int x, int y, int size, int color, const char *caption)
     : PushButton("Simple push button")
 {
-    this->_init(x, y, size, color, caption);
+    _init(x, y, size, color, caption);
 }
 
 SimplePushButton::SimplePushButton(int up_value, int down_value, int x, int y, int size,
     int color, const char *caption)
     : PushButton("Simple push button", up_value, down_value)
 {
-    this->_init(x, y, size, color, caption);
+    _init(x, y, size, color, caption);
 }
 
 SimplePushButton::SimplePushButton(Json::Value &json_data)
     : PushButton("Simple push button", json_data)
 {
-    this->_size = 16;
-    this->_color = DashboardWidget::COLOR_BLACK;
-    this->_caption = "";
+    _size = 16;
+    _color = DashboardWidget::COLOR_BLACK;
+    _caption = "";
     
-    if (json_data.isMember("x")) {
-        this->_x = json_data["x"].asInt();
-    } else {
-        fail("Member 'x' required for SimplePushButton widget");
-    }
-    if (json_data.isMember("y")) {
-        this->_y = json_data["y"].asInt();
-    } else {
-        fail("Member 'y' required for SimplePushButton widget");
-    }
-    if (json_data.isMember("size")) {
-        this->_size = json_data["size"].asInt();
-    } else {
-        fail("Member 'size' required for SimplePushButton widget");
-    }
+    parseJsonParam(_x, json_data, "x");
+    parseJsonParam(_y, json_data, "y");
+    parseJsonParam(_size, json_data, "size");
+    
     if (json_data.isMember("color")) {
-        this->_color = DashboardWidget::parseColor(json_data["color"]);
+        _color = DashboardWidget::parseColor(json_data["color"]);
     }
-    if (json_data.isMember("caption")) {
-        this->_caption = json_data["caption"].asString();
-    }
+    
+    parseOptionalJsonParam(_caption, json_data, "caption");
 }
 
 void SimplePushButton::_init(int x, int y, int size, int color, const char *caption)

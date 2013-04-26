@@ -44,7 +44,7 @@ public:
     }
     
     template<typename T>
-    typename enable_if<is_integral<T>::value, void>::type
+    typename enable_if<is_integral<T>::value && !is_same<T, bool>::value, void>::type
     parseJsonParamInternal(T& value, Json::Value &json_value, const char *param_name)
     {
         if (!json_value.isIntegral())
@@ -56,7 +56,7 @@ public:
             
             uint64_t widest_value = json_value.asUInt64();
             
-            if (widest_value > numeric_limits<T>::max())
+            if (widest_value > (uint64_t)numeric_limits<T>::max())
                 fail("Parameter '%s' must be in range[0..%llu]", param_name,
                     (uint64_t)numeric_limits<T>::max());
             
@@ -81,6 +81,16 @@ public:
             fail("Parameter '%s' must be a string", param_name);
     
         value = json_value.asString();
+    }
+    
+    template<typename T>
+    typename enable_if<is_same<T, bool>::value, void>::type
+    parseJsonParamInternal(T& value, Json::Value &json_value, const char *param_name)
+    {
+        if (!json_value.isBool())
+            fail("Parameter '%s' must be a boolean value", param_name);
+    
+        value = json_value.asBool();
     }
     
     template<typename T>
