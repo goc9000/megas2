@@ -95,7 +95,7 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
     string type = json_data["type"].asString();
 
     if (type == "Atmega32") {
-        return new Atmega32(json_data);
+        return new Atmega32(json_data, this);
     } else if (type == "Ds1307") {
         return new Ds1307(json_data);
     } else if (type == "SdCard") {

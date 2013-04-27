@@ -46,7 +46,7 @@ class Atmega32 : public Entity, public Mcu, public I2cDevice, public SpiDevice,
     friend void write_port_bit(Atmega32Core *core, uint8_t port, uint8_t bit, bool value);
 public:
     Atmega32();
-    Atmega32(Json::Value &json_data);
+    Atmega32(Json::Value &json_data, EntityLookup *lookup);
     
     void loadProgramFromElf(const char *filename);
     void setFrequency(uint64_t frequency);

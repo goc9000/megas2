@@ -23,8 +23,10 @@ Atmega32::Atmega32() :
     reset();
 }
 
-Atmega32::Atmega32(Json::Value &json_data) :
-    Entity(DEFAULT_NAME, json_data), PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
+Atmega32::Atmega32(Json::Value &json_data, EntityLookup *lookup) :
+    Entity(DEFAULT_NAME, json_data),
+    RS232Device(json_data, lookup),
+    PinDevice(MEGA32_PIN_COUNT, MEGA32_PIN_INIT_DATA)
 {
     _init();
 
