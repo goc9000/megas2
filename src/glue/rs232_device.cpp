@@ -22,39 +22,41 @@ RS232Device::RS232Device(Json::Value &json_data, EntityLookup *lookup)
             fail("Device '%s' not defined at this point", dev_id);
         }
 
-        this->rs232_peer = dynamic_cast<RS232Device *>(ent);
-        if (this->rs232_peer == NULL) {
+        RS232Device* peer = dynamic_cast<RS232Device *>(ent);
+        if (peer == NULL) {
             fail("Device '%s' is not an RS232 device", dev_id);
         }
+        
+        connectToRS232Peer(peer);
     }
 }
 
 void RS232Device::connectToRS232Peer(RS232Device *peer)
 {
-    if (peer == this->rs232_peer)
+    if (peer == rs232_peer)
         return;
 
-    if (this->rs232_peer != NULL) {
+    if (rs232_peer != NULL)
         this->disconnectFromRS232Peer();
-    }
 
-    this->rs232_peer = peer;
+    rs232_peer = peer;
+    
     peer->connectToRS232Peer(this);
 }
 
 void RS232Device::disconnectFromRS232Peer(void)
 {
-    if (this->rs232_peer) {
-        RS232Device *peer = this->rs232_peer;
-        this->rs232_peer = NULL;
+    if (rs232_peer) {
+        RS232Device *peer = rs232_peer;
+        rs232_peer = NULL;
         peer->disconnectFromRS232Peer();
     }
 }
 
 void RS232Device::rs232Send(uint8_t data)
 {
-    if (!this->rs232_peer)
+    if (!rs232_peer)
         fail("Attempted to send data via RS232 with no peer connected!");
         
-    this->rs232_peer->onRS232Receive(data);
+    rs232_peer->onRS232Receive(data);
 }
