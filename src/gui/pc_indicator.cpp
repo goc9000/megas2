@@ -25,10 +25,7 @@ PCIndicator::PCIndicator(Json::Value &json_data, EntityLookup *lookup)
     parseJsonParam(_x, json_data, "x");
     parseJsonParam(_y, json_data, "y");
     parseJsonParam(_size, json_data, "size");
-    
-    if (json_data.isMember("color")) {
-        _color = DashboardWidget::parseColor(json_data["color"]);
-    }
+    parseOptionalJsonParam(_color, json_data, "color");
     
     if (json_data.isMember("mcu")) {
         const char *dev_id = json_data["mcu"].asCString();

@@ -72,11 +72,7 @@ SimplePushButton::SimplePushButton(Json::Value &json_data)
     parseJsonParam(_x, json_data, "x");
     parseJsonParam(_y, json_data, "y");
     parseJsonParam(_size, json_data, "size");
-    
-    if (json_data.isMember("color")) {
-        _color = DashboardWidget::parseColor(json_data["color"]);
-    }
-    
+    parseOptionalJsonParam(_color, json_data, "color");
     parseOptionalJsonParam(_caption, json_data, "caption");
 }
 

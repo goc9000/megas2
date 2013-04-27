@@ -13,8 +13,6 @@ using namespace std;
 class DashboardWidget
 {
 public:
-    static SDLColor parseColor(Json::Value &json_data);
-
     virtual void render(Dashboard *dash) = 0;
     virtual bool handleEvent(Dashboard *dash, SDL_Event *event);
 };

@@ -9,6 +9,7 @@
 
 #include "glue/pin_val.h"
 #include "fail.h"
+#include "sdl_utils.h"
 
 using namespace std;
 
@@ -80,6 +81,34 @@ parse_json_param_internal(T& value, Json::Value &json_value, const char *param_n
     }
     
     fail("Pin value '%s' is not numeric, 'VCC' or 'Z'", json_value.asString().c_str());
+}
+
+template<typename T>
+typename enable_if<is_same<T, SDLColor>::value, void>::type
+parse_json_param_internal(T& value, Json::Value &json_value, const char *param_name)
+{
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t a = 255;
+    
+    if (json_value.isObject()) {
+        if (!json_value.isMember("r"))
+            fail("Required parameter 'r' is missing in color specification");
+        if (!json_value.isMember("g"))
+            fail("Required parameter 'g' is missing in color specification");
+        if (!json_value.isMember("b"))
+            fail("Required parameter 'b' is missing in color specification");
+        parse_json_param_internal(r, json_value["r"], "r");
+        parse_json_param_internal(g, json_value["g"], "g");
+        parse_json_param_internal(b, json_value["b"], "b");
+        
+        if (json_value.isMember("a"))
+            parse_json_param_internal(a, json_value["a"], "a");
+        
+        value = SDLColor(r, g, b, a);
+    } else
+        fail("Invalid color specification for parameter '%s'", param_name);
 }
 
 template<typename T>
