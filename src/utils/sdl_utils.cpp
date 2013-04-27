@@ -9,6 +9,7 @@ SDLRect::SDLRect(Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 }
 
 const SDLColor SDLColor::BLACK = SDLColor(0, 0, 0, 0xff);
+const SDLColor SDLColor::TRANSPARENT = SDLColor(0, 0, 0, 0);
 
 SDLColor::SDLColor(void) : SDLColor(0, 0, 0, 0xff)
 {
@@ -37,4 +38,14 @@ SDLColor::SDLColor(uint32_t rgba)
 uint32_t SDLColor::toUInt32(void) const
 {
     return (this->r << 24) + (this->g << 16) + (this->b << 8) + this->unused;
+}
+
+bool operator== (const SDLColor &a, const SDLColor &b)
+{
+    return (a.r == b.r) && (a.g == b.g) && (a.b == b.b) && (a.unused == b.unused);
+}
+
+bool operator!= (const SDLColor &a, const SDLColor &b)
+{
+    return (a.r != b.r) || (a.g != b.g) || (a.b != b.b) || (a.unused != b.unused);
 }

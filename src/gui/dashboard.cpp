@@ -10,6 +10,10 @@
 
 #define DEFAULT_NAME "Dashboard"
 
+// NB: We don't use SDLColor::BLACK here, lest we fall afoul of the SIOF
+const SDLColor Dashboard::DEFAULT_COLOR = SDLColor(0,0,0);
+const int Dashboard::DEFAULT_FONT_SIZE = 11;
+
 Dashboard::Dashboard(const char *bkgd_image_filename) : Entity(DEFAULT_NAME)
 {
     _init(0, 0, bkgd_image_filename);
@@ -249,4 +253,7 @@ void Dashboard::_init(int width, int height, const char *bkgd_filename)
     
     this->_font_filename = "";
     this->_mono_font_filename = "";
+    
+    color = Dashboard::DEFAULT_COLOR;
+    font_size = Dashboard::DEFAULT_FONT_SIZE;
 }

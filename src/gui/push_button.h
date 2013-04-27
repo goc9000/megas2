@@ -19,14 +19,13 @@ const pin_val_t PUSH_BUTTON_DEFAULT_UP_VALUE = 0.0;
 const pin_val_t PUSH_BUTTON_DEFAULT_DOWN_VALUE = PIN_VAL_VCC;
 
 
-class PushButton : public Entity, public DashboardWidget, public PinDevice
+class PushButton : public DashboardWidget, public PinDevice
 {
 public:
-    PushButton(const char *default_name);
-    PushButton(const char *default_name, pin_val_t up_value, pin_val_t down_value);
+    PushButton(const char *default_name, int x, int y);
+    PushButton(const char *default_name, pin_val_t up_value, pin_val_t down_value,
+        int x, int y);
     PushButton(const char *default_name, Json::Value &json_data);
-    
-    virtual void render(Dashboard *dash) = 0;
 protected:
     pin_val_t _up_value;
     pin_val_t _down_value;
@@ -39,20 +38,17 @@ protected:
 class SimplePushButton : public PushButton
 {
 public:
-    SimplePushButton(int x, int y, int size, SDLColor color, const char *caption);
-    SimplePushButton(int up_value, int down_value, int x, int y, int size, SDLColor color, const char *caption);
+    SimplePushButton(int x, int y, int size, const char *caption);
+    SimplePushButton(int up_value, int down_value, int x, int y, int size,
+        const char *caption);
     SimplePushButton(Json::Value &json_data);
     
-    virtual void render(Dashboard *dash);
+    virtual void render(Dashboard *dash, SDLColor color, SDLColor bg_color,
+        int font_size);
     virtual bool handleEvent(Dashboard *dash, SDL_Event *event);
 protected:
-    int _x;
-    int _y;
     int _size;
-    SDLColor _color;
     string _caption;
-    
-    void _init(int x, int y, int size, SDLColor color, const char *caption);
 };
 
 #endif

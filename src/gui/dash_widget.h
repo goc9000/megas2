@@ -6,16 +6,32 @@
 
 #include <json/json.h>
 
+#include "simulation/entity.h"
+
 class Dashboard;
 
 using namespace std;
 
-class DashboardWidget
+class DashboardWidget: public Entity
 {
 public:
-    virtual void render(Dashboard *dash) = 0;
+    DashboardWidget(const char *default_name, int x, int y);
+    DashboardWidget(const char *default_name, int x, int y, SDLColor color);
+    DashboardWidget(const char *default_name, Json::Value &json_data);
+
+    void render(Dashboard *dash);
+    virtual void render(Dashboard *dash, SDLColor color, SDLColor bg_color,
+        int font_size) = 0;
     virtual bool handleEvent(Dashboard *dash, SDL_Event *event);
+protected:
+    int x;
+    int y;
+    SDLColor color;
+    SDLColor bg_color;
+    int font_size;
+    
+    static const SDLColor COLOR_DEFAULT;
+    static const int FONT_SIZE_DEFAULT;
 };
 
 #endif
-

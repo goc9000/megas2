@@ -13,13 +13,11 @@ using namespace std;
 
 #define LED_PIN_INPUT 0
 
-class Led : public Entity, public DashboardWidget, public PinDevice
+class Led : public DashboardWidget, public PinDevice
 {
 public:
-    Led(const char *default_name);
+    Led(const char *default_name, int x, int y);
     Led(const char *default_name, Json::Value &json_data);
-    
-    virtual void render(Dashboard *dash) = 0;
 protected:
     bool _lit;
     
@@ -34,12 +32,10 @@ public:
     SimpleLed(int x, int y, int size, SDLColor color, const char *caption);
     SimpleLed(Json::Value &json_data);
     
-    virtual void render(Dashboard *dash);
+    virtual void render(Dashboard *dash, SDLColor color, SDLColor bg_color,
+        int font_size);
 protected:
-    int _x;
-    int _y;
     int _size;
-    SDLColor _color;
     string _caption;
 };
 

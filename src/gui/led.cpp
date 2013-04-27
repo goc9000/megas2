@@ -10,14 +10,14 @@ PinInitData const PIN_INIT_DATA[LED_PIN_COUNT] = {
     { "IN", PIN_MODE_INPUT, 0 }  // INPUT
 };
 
-Led::Led(const char *default_name)
-    : Entity(default_name), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
+Led::Led(const char *default_name, int x, int y)
+    : DashboardWidget(default_name, x, y), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
 {
     _lit = false;
 }
 
 Led::Led(const char *default_name, Json::Value &json_data)
-    : Entity(default_name, json_data), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
+    : DashboardWidget(default_name, json_data), PinDevice(LED_PIN_COUNT, PIN_INIT_DATA)
 {
     _lit = false;
 }
@@ -28,32 +28,33 @@ void Led::_onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value)
 }
 
 SimpleLed::SimpleLed(int x, int y, int size, SDLColor color, const char *caption)
-    : Led("Simple LED")
+    : Led("Simple LED", x, y)
 {
-    this->_x = x;
-    this->_y = y;
     this->_size = size;
-    this->_color = color;
+    this->color = color;
     this->_caption = caption;
 }
 
-SimpleLed::SimpleLed(Json::Value &json_data) : Led("Simple LED", json_data)
+SimpleLed::SimpleLed(Json::Value &json_data)
+    : Led("Simple LED", json_data)
 {
     _size = 16;
-    _color = SDLColor::BLACK;
     _caption = "";
     
-    parseJsonParam(_x, json_data, "x");
-    parseJsonParam(_y, json_data, "y");
     parseJsonParam(_size, json_data, "size");
-    parseOptionalJsonParam(_color, json_data, "color");    
     parseOptionalJsonParam(_caption, json_data, "caption");
 }
 
-void SimpleLed::render(Dashboard *dash)
+void SimpleLed::render(Dashboard *dash, SDLColor color, SDLColor bg_color,
+    int font_size)
 {
-    (_lit ? filledCircleColor : circleColor)(dash->screen,
-        _x + _size/2, _y + _size/2, _size / 2, _color.toUInt32());
+    if (_lit)
+        filledCircleColor(dash->screen, x + _size / 2, y + _size / 2,
+            _size / 2, color.toUInt32());
+    else
+        circleColor(dash->screen, x + _size / 2, y + _size / 2,
+            _size / 2, color.toUInt32());
     
-    dash->putText(_x + 3 * _size / 2, _y + 2, _caption, _size - 4, _color);
+    dash->putText(x + 3 * _size / 2, y + (_size - font_size) / 2, _caption,
+        font_size, color);
 }

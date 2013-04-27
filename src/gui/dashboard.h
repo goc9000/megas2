@@ -17,7 +17,14 @@ using namespace std;
 class Dashboard : public Entity, public SimulatedDevice
 {
 public:
+    static const SDLColor DEFAULT_COLOR;
+    static const int DEFAULT_FONT_SIZE;
+
     SDL_Surface *screen;
+
+    SDLColor color;
+    SDLColor bg_color;
+    int font_size;
 
     Dashboard(const char *bkgd_image_filename);
     Dashboard(int width, int height);

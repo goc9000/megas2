@@ -9,19 +9,16 @@
 
 using namespace std;
 
-class PCIndicator : public Entity, public DashboardWidget
+class PCIndicator : public DashboardWidget
 {
 public:
-    PCIndicator(Mcu *mcu, int x, int y, int size, SDLColor color);
+    PCIndicator(Mcu *mcu, int x, int y);
     PCIndicator(Json::Value &json_data, EntityLookup *lookup);
     
-    virtual void render(Dashboard *dash);
+    virtual void render(Dashboard *dash, SDLColor color, SDLColor bg_color,
+        int font_size);
 protected:
     Mcu *_mcu;
-    int _x;
-    int _y;
-    int _size;
-    SDLColor _color;
 };
 
 #endif

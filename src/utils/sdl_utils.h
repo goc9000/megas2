@@ -13,6 +13,8 @@ class SDLColor;
 
 class SDLColor : public SDL_Color
 {
+    friend bool operator== (const SDLColor &a, const SDLColor &b);
+    friend bool operator!= (const SDLColor &a, const SDLColor &b);
 public:
     SDLColor(void);
     SDLColor(uint8_t r, uint8_t g, uint8_t b);
@@ -22,6 +24,7 @@ public:
     uint32_t toUInt32(void) const;
     
     static const SDLColor BLACK;
+    static const SDLColor TRANSPARENT;
 };
 
 #endif
