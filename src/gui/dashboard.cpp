@@ -1,6 +1,7 @@
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL_image.h>
 
+#include "utils/cpp_macros.h"
 #include "utils/fail.h"
 #include "dashboard.h"
 
@@ -16,30 +17,34 @@ const int Dashboard::DEFAULT_FONT_SIZE = 11;
 
 Dashboard::Dashboard(const char *bkgd_image_filename) : Entity(DEFAULT_NAME)
 {
-    _init(0, 0, bkgd_image_filename);
+    init(0, 0, bkgd_image_filename);
 }
 
 Dashboard::Dashboard(int width, int height) : Entity(DEFAULT_NAME)
 {
-    _init(width, height, NULL);
+    init(width, height, NULL);
 }
 
 Dashboard::Dashboard(Json::Value &json_data, EntityLookup *lookup)
     : Entity(DEFAULT_NAME, json_data)
 {
-    if (json_data.isMember("background")) {
-        this->_init(0, 0, json_data["background"].asCString());
-    } else if (json_data.isMember("width") && json_data.isMember("height")) {
-        this->_init(json_data["width"].asInt(), json_data["height"].asInt(), NULL);
-    } else {
-        fail("Either 'background' or 'width' and 'height' attributes required for Dashboard object");
+    string bkgd_filename;
+    int width = 0;
+    int height = 0;
+    
+    if (parseOptionalJsonParam(bkgd_filename, json_data, "background"))
+        init(0, 0, bkgd_filename.c_str());
+    else {
+        parseJsonParam(width, json_data, "width");
+        parseJsonParam(height, json_data, "height");
+        init(width, height, NULL);
     }
     
     if (json_data.isMember("font")) {
-        this->setFont(json_data["font"].asCString());
+        setFont(json_data["font"].asCString());
     }
     if (json_data.isMember("monoFont")) {
-        this->setMonoFont(json_data["monoFont"].asCString());
+        setMonoFont(json_data["monoFont"].asCString());
     }
     if (json_data.isMember("widgets")) {
         if (!json_data["widgets"].isArray()) {
@@ -59,98 +64,107 @@ Dashboard::Dashboard(Json::Value &json_data, EntityLookup *lookup)
                 fail("Device '%s' is not a dashboard widget", dev_id);
             }
 
-            this->addWidget(as_widget);
+            addWidget(as_widget);
         }
     }
 }
 
 void Dashboard::addWidget(DashboardWidget *widget)
 {
-    for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
-        if (*it == widget)
-            return;
+    if (CONTAINS(widgets, widget))
+        return;
     
-    this->_widgets.push_back(widget);
+    widgets.push_back(widget);
 }
 
 void Dashboard::removeWidget(DashboardWidget *widget)
 {
-    for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
-        if (*it == widget) {
-            this->_widgets.erase(it);
-            return;
-        }
+    auto widget_it = FIND(widgets, widget);
+    
+    if (widget_it != widgets.end())
+        widgets.erase(widget_it);
 }
 
 void Dashboard::setFont(const char *font_filename)
 {
-    this->_font_filename = font_filename;
+    this->font_filename = font_filename;
+    
+    clearFontCaches();
 }
 
 void Dashboard::setMonoFont(const char *mono_font_filename)
 {
-    this->_mono_font_filename = mono_font_filename;
+    this->mono_font_filename = mono_font_filename;
+    
+    clearFontCaches();
 }
 
 TTF_Font * Dashboard::getFont(int size)
 {
-    if (this->_font_cache.find(size) != this->_font_cache.end()) {
-        return this->_font_cache[size];
-    }
+    if (font_cache.find(size) != font_cache.end())
+        return font_cache[size];
     
-    if (this->_font_filename == "") {
+    if (font_filename == "")
         fail("No font set for dashboard");
-    }
-    TTF_Font *font = TTF_OpenFont(this->_font_filename.c_str(), size);
-    if (!font) {
-        fail("Could not load dashboard font: %s", TTF_GetError());
-    }
     
-    this->_font_cache[size] = font;
+    TTF_Font *font = TTF_OpenFont(font_filename.c_str(), size);
+    if (!font)
+        fail("Could not load dashboard font: %s", TTF_GetError());
+    
+    font_cache[size] = font;
     
     return font;
 }
 
 TTF_Font * Dashboard::getMonoFont(int size)
 {
-    if (this->_mono_font_cache.find(size) != this->_mono_font_cache.end()) {
-        return this->_mono_font_cache[size];
-    }
+    if (mono_font_cache.find(size) != mono_font_cache.end())
+        return mono_font_cache[size];
     
-    if (this->_mono_font_filename == "") {
+    if (mono_font_filename == "")
         fail("No monospace font set for dashboard");
-    }
-    TTF_Font *font = TTF_OpenFont(this->_mono_font_filename.c_str(), size);
-    if (!font) {
-        fail("Could not load dashboard monospaced font: %s", TTF_GetError());
-    }
     
-    this->_mono_font_cache[size] = font;
+    TTF_Font *font = TTF_OpenFont(mono_font_filename.c_str(), size);
+    if (!font)
+        fail("Could not load dashboard monospaced font: %s", TTF_GetError());
+    
+    mono_font_cache[size] = font;
     
     return font;
 }
 
+void Dashboard::clearFontCaches(void)
+{
+    for (auto& item : font_cache)
+        TTF_CloseFont(item.second);
+    for (auto& item : mono_font_cache)
+        TTF_CloseFont(item.second);
+    
+    font_cache.clear();
+    mono_font_cache.clear();
+}
+
 void Dashboard::putText(int x, int y, const char *text, int size, SDLColor color)
 {
-    _putText(x, y, text, size, color, false);
+    putText(x, y, text, size, color, false);
 }
 
 void Dashboard::putText(int x, int y, const string& text, int size, SDLColor color)
 {
-    _putText(x, y, text.c_str(), size, color, false);
+    putText(x, y, text.c_str(), size, color, false);
 }
 
 void Dashboard::putMonoText(int x, int y, const char *text, int size, SDLColor color)
 {
-    _putText(x, y, text, size, color, true);
+    putText(x, y, text, size, color, true);
 }
 
 void Dashboard::putMonoText(int x, int y, const string& text, int size, SDLColor color)
 {
-    _putText(x, y, text.c_str(), size, color, true);
+    putText(x, y, text.c_str(), size, color, true);
 }
 
-void Dashboard::_putText(int x, int y, const char *text, int size, SDLColor color,
+void Dashboard::putText(int x, int y, const char *text, int size, SDLColor color,
     bool mono)
 {
     if (strlen(text) == 0)
@@ -172,12 +186,12 @@ void Dashboard::_putText(int x, int y, const char *text, int size, SDLColor colo
 
 void Dashboard::measureText(const string& text, int size, bool mono, int& width, int& height)
 {
-    this->measureText(text.c_str(), size, mono, width, height);
+    measureText(text.c_str(), size, mono, width, height);
 }
 
 void Dashboard::measureText(const char *text, int size, bool mono, int& width, int& height)
 {
-    TTF_Font *font = mono ? this->getMonoFont(size) : this->getFont(size);
+    TTF_Font *font = mono ? getMonoFont(size) : getFont(size);
     if (!font)
         return;
     
@@ -186,9 +200,9 @@ void Dashboard::measureText(const char *text, int size, bool mono, int& width, i
 
 void Dashboard::reset()
 {
-    if (this->simulation) {
-        this->simulation->unscheduleAll(this);
-        this->simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, this->simulation->time + ms_to_sim_time(20));
+    if (simulation) {
+        simulation->unscheduleAll(this);
+        simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, simulation->time + ms_to_sim_time(20));
     }    
 }
 
@@ -200,39 +214,37 @@ void Dashboard::act(int event)
         if (evt.type == SDL_QUIT)
             exit(EXIT_SUCCESS);
         
-        for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
-            if ((*it)->handleEvent(this, &evt))
+        for (auto &widget : widgets)
+            if (widget->handleEvent(this, &evt))
                 break;
     }
     
-    if (this->_background) {
-        SDL_BlitSurface(this->_background, NULL, this->screen, NULL);
-    } else {
-        boxColor(this->screen, 0, 0, this->screen->w, this->screen->h, 0x000000ff);
-    }
+    if (background)
+        SDL_BlitSurface(background, NULL, screen, NULL);
+    else
+        boxColor(screen, 0, 0, screen->w, screen->h, 0x000000ff);
     
-    for (vector<DashboardWidget *>::iterator it = this->_widgets.begin(); it != this->_widgets.end(); it++)
-        (*it)->render(this);
+    for (auto &widget : widgets)
+        widget->render(this);
     
-    SDL_Flip(this->screen);
+    SDL_Flip(screen);
 
-    if (this->simulation) {
-        this->simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, this->simulation->time + ms_to_sim_time(20));
+    if (simulation) {
+        simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, simulation->time + ms_to_sim_time(20));
     }
 }
 
-void Dashboard::_init(int width, int height, const char *bkgd_filename)
+void Dashboard::init(int width, int height, const char *bkgd_filename)
 {    
     if (bkgd_filename) {
-        this->_background = IMG_Load(bkgd_filename);
-        if (!this->_background)
+        background = IMG_Load(bkgd_filename);
+        if (!background)
             fail("Error loading dashboard background image: %s", IMG_GetError());
         
-        width = this->_background->w;
-        height = this->_background->h;
-    } else {
-        this->_background = NULL;
-    }
+        width = background->w;
+        height = background->h;
+    } else
+        background = NULL;
     
     TTF_Init();
  
@@ -242,8 +254,8 @@ void Dashboard::_init(int width, int height, const char *bkgd_filename)
     putenv(ENV2);
     SDL_Init(SDL_INIT_VIDEO);
     
-    this->screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-    if (!this->screen)
+    screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    if (!screen)
         fail("Could not initialize SDL display");
     atexit(SDL_Quit);
 
@@ -251,8 +263,8 @@ void Dashboard::_init(int width, int height, const char *bkgd_filename)
 
     SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
     
-    this->_font_filename = "";
-    this->_mono_font_filename = "";
+    font_filename = "";
+    mono_font_filename = "";
     
     color = Dashboard::DEFAULT_COLOR;
     font_size = Dashboard::DEFAULT_FONT_SIZE;

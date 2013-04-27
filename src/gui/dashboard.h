@@ -50,18 +50,19 @@ public:
     virtual void reset();
     virtual void act(int event);
 private:
-    vector<DashboardWidget *> _widgets;
+    vector<DashboardWidget *> widgets;
 
-    string _font_filename;
-    map<int, TTF_Font *> _font_cache;
-    string _mono_font_filename;
-    map<int, TTF_Font *> _mono_font_cache;
+    string font_filename;
+    map<int, TTF_Font *> font_cache;
+    string mono_font_filename;
+    map<int, TTF_Font *> mono_font_cache;
     
-    SDL_Surface *_background;
+    SDL_Surface *background;
     
-    void _putText(int x, int y, const char *text, int size, SDLColor color, bool mono);
+    void putText(int x, int y, const char *text, int size, SDLColor color, bool mono);
     
-    void _init(int width, int height, const char *bkgd_filename);
+    void init(int width, int height, const char *bkgd_filename);
+    void clearFontCaches(void);
 };
 
 #endif
