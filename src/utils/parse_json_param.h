@@ -2,6 +2,7 @@
 #define _H_PARSE_JSON_PARAM_H
 
 #include <string>
+#include <cstring>
 #include <limits>
 #include <type_traits>
 
@@ -107,6 +108,44 @@ parse_json_param_internal(T& value, Json::Value &json_value, const char *param_n
             parse_json_param_internal(a, json_value["a"], "a");
         
         value = SDLColor(r, g, b, a);
+    } else if (json_value.isArray()) {
+        int count = json_value.size();
+        
+        if (!((count == 3) || (count == 4)))
+            fail("Color specification array must contain 3 or 4 values");
+        
+        parse_json_param_internal(r, json_value[0], "color array[0]");
+        parse_json_param_internal(g, json_value[1], "color array[1]");
+        parse_json_param_internal(b, json_value[2], "color array[2]");
+        if (count == 4)
+            parse_json_param_internal(a, json_value[3], "color array[3]");
+        
+        value = SDLColor(r, g, b, a);
+    } else if (json_value.isString()) {
+        const char *text = json_value.asCString();
+        
+        try {
+            if (!*text)
+                throw;
+            if (*text == '#')
+                text++;
+            if ((strlen(text) != 6) && (strlen(text) != 8))
+                throw;
+            
+            unsigned chars_read = 0;
+            uint32_t rgba = 0;
+            
+            sscanf(text, "%x%n", &rgba, &chars_read);
+            if (chars_read != strlen(text))
+                throw;
+            
+            if (chars_read == 6)
+                rgba = (rgba << 8) + 0xff;
+            
+            value = SDLColor(rgba);
+        } catch (...) {
+            fail("'%s' is not a valid HTML color specification", json_value.asCString());
+        }
     } else
         fail("Invalid color specification for parameter '%s'", param_name);
 }
