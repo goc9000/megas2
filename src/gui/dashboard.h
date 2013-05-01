@@ -19,6 +19,7 @@ class Dashboard : public Entity, public SimulatedDevice
 public:
     static const SDLColor DEFAULT_COLOR;
     static const int DEFAULT_FONT_SIZE;
+    static const int FRAME_INTERVAL_MSEC;
 
     SDL_Surface *screen;
 

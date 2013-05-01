@@ -14,6 +14,7 @@
 // NB: We don't use SDLColor::BLACK here, lest we fall afoul of the SIOF
 const SDLColor Dashboard::DEFAULT_COLOR = SDLColor(0,0,0);
 const int Dashboard::DEFAULT_FONT_SIZE = 11;
+const int Dashboard::FRAME_INTERVAL_MSEC = 50;
 
 Dashboard::Dashboard(const char *bkgd_image_filename) : Entity(DEFAULT_NAME)
 {
@@ -229,9 +230,9 @@ void Dashboard::act(int event)
     
     SDL_Flip(screen);
 
-    if (simulation) {
-        simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, simulation->time + ms_to_sim_time(20));
-    }
+    if (simulation)
+        simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME,
+            simulation->time + ms_to_sim_time(Dashboard::FRAME_INTERVAL_MSEC));
 }
 
 void Dashboard::init(int width, int height, const char *bkgd_filename)
