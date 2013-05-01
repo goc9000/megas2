@@ -102,13 +102,12 @@ bool SimplePushButton::handleEvent(Dashboard *dash, SDL_Event *event)
     
     switch (event->type) {
         case SDL_MOUSEBUTTONDOWN:
-            if ((event->button.button = SDL_BUTTON_LEFT) && hit_test) {
+            if ((event->button.button == SDL_BUTTON_LEFT) && hit_test)
                 _setPressed(true);
-            }
-            return true;
+            break;
         case SDL_MOUSEBUTTONUP:
             _setPressed(false);
-            return false;
+            break;
     }
     
     return false;
