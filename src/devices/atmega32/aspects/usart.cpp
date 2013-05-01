@@ -53,11 +53,22 @@ void Atmega32::_usartHandleWrite(uint8_t port, int8_t bit, uint8_t value, uint8_
     switch (port) {
         case PORT_UBRRH:
             if (bit_is_set(value, B_URSEL)) {
-                this->ports[PORT_UBRRH] = prev_val;
-                this->_reg_UCSRC = value;
+                ports[PORT_UBRRH] = prev_val;
+                _reg_UCSRC = value;
             } else {
-                this->ports[PORT_UBRRH] = value & 0x0f;
+                ports[PORT_UBRRH] = value & 0x0f;
             }
+            break;
+        case PORT_UDR:
+            if (!bit_is_set(ports[PORT_UCSRA], B_UDRE))
+                fail("Tried to transmit on USART with data register not empty");
+            if (!bit_is_set(ports[PORT_UCSRB], B_TXEN))
+                fail("Tried to transmit on USART with transmitter disabled");
+            
+            rs232Send(value);
+            
+            set_bit(ports[PORT_UCSRA], B_TXC);
+            set_bit(ports[PORT_UCSRA], B_UDRE);
             break;
     }
 }

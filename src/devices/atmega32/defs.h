@@ -118,8 +118,33 @@ static char const * const PORT_NAMES[MEGA32_PORT_COUNT] = {
 #define B_SPE           6
 #define B_DORD          5
 #define B_MSTR          4
+// Bit values for UCSRA
+#define B_RXC           7
+#define B_TXC           6
+#define B_UDRE          5
+#define B_FE            4
+#define B_DOR           3
+#define B_PE            2
+#define B_U2X           1
+#define B_MPCM          0
+// Bit values for UCSRB
+#define B_RXCIE         7
+#define B_TXCIE         6
+#define B_UDRIE         5
+#define B_RXEN          4
+#define B_TXEN          3
+#define B_UCSZ2         2
+#define B_RXB8          1
+#define B_TXB8          0
 // Bit values for UCRSC
 #define B_URSEL         7
+#define B_UMSEL         6
+#define B_UPM1          5
+#define B_UPM0          4
+#define B_USBS          3
+#define B_UCSZ1         2
+#define B_UCSZ0         1
+#define B_UCPOL         0
 // Bit values for TCCR1A
 #define B_WGM11         1
 #define B_WGM10         0
