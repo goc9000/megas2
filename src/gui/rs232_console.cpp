@@ -150,8 +150,14 @@ void RS232Console::onRS232Receive(uint8_t data)
     if (stored_text.size() == 0)
         stored_text.push_back(string());
     
-    if (data == '\n')
-        stored_text.push_back(string());
-    else
-        stored_text[stored_text.size() - 1].push_back((char)data);
+    switch (data) {
+        case '\n':
+            stored_text.push_back(string());
+            break;
+        case '\r':
+            break;
+        default:
+            stored_text[stored_text.size() - 1].push_back((char)data);
+            break;
+    }
 }
