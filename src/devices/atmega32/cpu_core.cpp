@@ -222,7 +222,7 @@ static void do_add(Atmega32Core *core, uint8_t dest_reg, uint8_t value, bool car
     
     set_flag(core, FLAG_H, bit_is_set((d & value) | (value & ~result) | (~result & d), 3));
     set_flag(core, FLAG_C, bit_is_set((d & value) | (value & ~result) | (~result & d), 7));
-    set_flag(core, FLAG_V, (d & value & ~result) | (~d & ~value & result));
+    set_flag(core, FLAG_V, bit_is_set((d & value & ~result) | (~d & ~value & result), 7));
     set_flag(core, FLAG_N, bit_is_set(result, 7));
     set_flag(core, FLAG_Z, !result);
     set_flag(core, FLAG_S, get_flag(core, FLAG_N) ^ get_flag(core, FLAG_V));
@@ -237,7 +237,7 @@ static void do_cp_or_sub(Atmega32Core *core, uint8_t dest_reg, uint8_t value, bo
     
     set_flag(core, FLAG_H, bit_is_set((~d & value) | (value & result) | (result & ~d), 3));
     set_flag(core, FLAG_C, bit_is_set((~d & value) | (value & result) | (result & ~d), 7));
-    set_flag(core, FLAG_V, (d & ~value & ~result) | (~d & value & result));
+    set_flag(core, FLAG_V, bit_is_set((d & ~value & ~result) | (~d & value & result), 7));
     set_flag(core, FLAG_N, bit_is_set(result, 7));
     set_flag(core, FLAG_Z, !result & (!carry | get_flag(core, FLAG_Z)));
     set_flag(core, FLAG_S, get_flag(core, FLAG_N) ^ get_flag(core, FLAG_V));
