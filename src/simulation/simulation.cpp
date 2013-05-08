@@ -83,6 +83,11 @@ void Simulation::scheduleEvent(SimulatedDevice *device, int event, sim_time_t ti
 
 void Simulation::unscheduleAll(SimulatedDevice *device)
 {
+    event_queue.erase(remove_if(event_queue.begin(), event_queue.end(),
+            [device](const SimulationEventEntry& ev) {
+                return ev.device == device;
+            }),
+        event_queue.end());
 }
 
 void Simulation::run()
