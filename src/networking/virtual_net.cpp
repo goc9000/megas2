@@ -12,9 +12,20 @@
 
 #include "virtual_net.h"
 
+#include "utils/cpp_macros.h"
 #include "utils/fail.h"
 
 #define DEFAULT_NAME "Virtual network"
+
+VirtualNetwork::VirtualNetwork(void)
+    : VirtualNetwork(DEFAULT_VNET_NAME, ipv4_addr_t())
+{
+}
+
+VirtualNetwork::VirtualNetwork(string interface_name)
+    : VirtualNetwork(interface_name, ipv4_addr_t())
+{
+}
 
 VirtualNetwork::VirtualNetwork(ipv4_addr_t ipv4_address)
     : VirtualNetwork(DEFAULT_VNET_NAME, ipv4_address)
@@ -36,11 +47,7 @@ VirtualNetwork::VirtualNetwork(Json::Value &json_data, EntityLookup *lookup)
     interface_name = DEFAULT_VNET_NAME;
     
     parseOptionalJsonParam(interface_name, json_data, "interface_name");
-        
-    if (json_data.isMember("ipv4_address")) {
-        this->ipv4_address = ipv4_addr_t(json_data["ipv4_address"]);
-    } else
-        fail("Missing 'ipv4_address' parameter for VirtualNetwork object");
+    parseOptionalJsonParam(ipv4_address, json_data, "ipv4_address");
     
     init();
     
@@ -49,8 +56,8 @@ VirtualNetwork::VirtualNetwork(Json::Value &json_data, EntityLookup *lookup)
             fail("'devices' should be an array");
         }
 
-        for (Json::ValueIterator it = json_data["devices"].begin(); it != json_data["devices"].end(); it++) {
-            const char *dev_id = (*it).asCString();
+        for (auto& it : json_data["devices"]) {
+            const char *dev_id = it.asCString();
             Entity *ent = lookup->lookupEntity(dev_id);
             
             if (!ent) {
@@ -62,57 +69,57 @@ VirtualNetwork::VirtualNetwork(Json::Value &json_data, EntityLookup *lookup)
                 fail("Device '%s' is not a network device", dev_id);
             }
 
-            this->addDevice(as_net_dev);
+            addDevice(as_net_dev);
         }
     }
 }
 
 void VirtualNetwork::addDevice(NetworkDevice *device)
 {
-    lock_guard<recursive_mutex> guard(this->lock);
+    lock_guard<recursive_mutex> guard(lock);
     
-    if (find(this->devices.begin(), this->devices.end(), device) != this->devices.end())
+    if (CONTAINS(devices, device))
         return;
     
-    this->devices.push_back(device);
+    devices.push_back(device);
     device->connectToNetwork(this);
 }
 
 void VirtualNetwork::removeDevice(NetworkDevice *device)
 {
-    lock_guard<recursive_mutex> guard(this->lock);
+    lock_guard<recursive_mutex> guard(lock);
     
-    vector<NetworkDevice*>::iterator it = find(this->devices.begin(), this->devices.end(), device);
-    if (it != this->devices.end()) {
-        this->devices.erase(it);
+    if (CONTAINS(devices, device)) {
+        this->devices.erase(FIND(devices, device));
         device->disconnectFromNetwork();
     }
 }
 
 void VirtualNetwork::init(void)
 {
-    this->interface_fd = open("/dev/net/tun", O_RDWR);
-    if (this->interface_fd < 0)
+    interface_fd = open("/dev/net/tun", O_RDWR);
+    if (interface_fd < 0)
         fail("Could not open /dev/net/tun. Try running with superuser rights.");
- 
+    
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     
     ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-    strcpy(ifr.ifr_name, this->interface_name.c_str());
+    strcpy(ifr.ifr_name, interface_name.c_str());
 
-    if (ioctl(this->interface_fd, TUNSETIFF, &ifr) != 0)
+    if (ioctl(interface_fd, TUNSETIFF, &ifr) != 0)
         fail("Could not configure virtual Ethernet interface. Try running with root rights.");
     
-    this->interface_name = ifr.ifr_name;
+    interface_name = ifr.ifr_name;
     
-    this->setInterfaceIpv4(this->ipv4_address);
-    this->ifupdown(true);
+    if (!ipv4_address.isNull()) {
+        setInterfaceIpv4(ipv4_address);
+        ifupdown(true);
+    }
     
-    this->receive_frames_thread = thread(&VirtualNetwork::receiveFramesThreadCode, this);
+    receive_frames_thread = thread(&VirtualNetwork::receiveFramesThreadCode, this);
     
-    info("Virtual network '%s' accessible as %s at %s", this->id.c_str(),
-        ifr.ifr_name, this->ipv4_address.toString().c_str());
+    info("Virtual network '%s' accessible as %s", id.c_str(), ifr.ifr_name);
 }
 
 void VirtualNetwork::receiveFramesThreadCode(void)
@@ -120,7 +127,7 @@ void VirtualNetwork::receiveFramesThreadCode(void)
     uint8_t buffer[65536];
     
     while (true) {
-        int count = read(this->interface_fd, buffer, sizeof(buffer));
+        int count = read(interface_fd, buffer, sizeof(buffer));
         if (count <= 0)
             break;
     
@@ -129,11 +136,11 @@ void VirtualNetwork::receiveFramesThreadCode(void)
         frame.addFcs();
     
         try {
-            this->lock.lock();
-            for (auto& device : this->devices)
+            lock.lock();
+            for (auto& device : devices)
                 device->onReceiveFrame(frame);
         } catch (exception& e) {
-            this->lock.unlock();
+            lock.unlock();
             throw e;
         }
     }
@@ -148,7 +155,7 @@ void VirtualNetwork::sendFrame(const EthernetFrame& frame)
     int count;
     
     while (ptr < data_len) {
-        count = write(this->interface_fd, data + ptr, data_len - ptr);
+        count = write(interface_fd, data + ptr, data_len - ptr);
         if (count <= 0)
             break;
         
@@ -160,31 +167,31 @@ void VirtualNetwork::setInterfaceIpv4(ipv4_addr_t address)
 {
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    strcpy(ifr.ifr_name, this->interface_name.c_str());
+    strcpy(ifr.ifr_name, interface_name.c_str());
     
     struct sockaddr_in addr = address.toSockAddr();
     memcpy(&ifr.ifr_addr, &addr, sizeof(struct sockaddr));
 
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (ioctl(sock, SIOCSIFADDR, &ifr) < 0)
-        fail("Cannot set IP address for interface %s", this->interface_name.c_str());
+        fail("Cannot set IP address for interface %s", interface_name.c_str());
 }
 
 void VirtualNetwork::ifupdown(bool bring_up)
 {
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    strcpy(ifr.ifr_name, this->interface_name.c_str());
+    strcpy(ifr.ifr_name, interface_name.c_str());
     
     int sock = socket(AF_INET, SOCK_DGRAM, 0);    
     if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0)
-        fail("Cannot read flags for interface %s", this->interface_name.c_str());
+        fail("Cannot read flags for interface %s", interface_name.c_str());
 
     if (((bool)(ifr.ifr_flags & IFF_UP)) != bring_up) {
         ifr.ifr_flags = (ifr.ifr_flags & ~IFF_UP) | (IFF_UP * bring_up);
         
         if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0)
             fail("Cannot bring %s interface %s", bring_up ? "up" : "down",
-                this->interface_name.c_str());
+                interface_name.c_str());
     }
 }

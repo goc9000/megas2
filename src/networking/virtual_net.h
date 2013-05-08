@@ -18,13 +18,15 @@
 
 using namespace std;
 
-const string DEFAULT_VNET_NAME = "megnet%d";
+const string DEFAULT_VNET_NAME = "megasnet0";
 
 
 class VirtualNetwork : public Entity
 {
 public:
+    VirtualNetwork(void);
     VirtualNetwork(ipv4_addr_t ipv4_address);
+    VirtualNetwork(string interface_name);
     VirtualNetwork(string interface_name, ipv4_addr_t ipv4_address);
     VirtualNetwork(Json::Value &json_data, EntityLookup *lookup);
     
