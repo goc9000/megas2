@@ -32,6 +32,8 @@ struct ipv4_addr_t {
     ipv4_addr_t(void);
     ipv4_addr_t(Json::Value& json_data);
     
+    bool isNull(void) const;
+    
     string toString(void) const;
     struct sockaddr_in toSockAddr(void) const;
 } __attribute__((packed));
