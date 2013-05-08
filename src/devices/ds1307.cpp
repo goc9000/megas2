@@ -88,10 +88,7 @@ void Ds1307::init(bool init_with_current_time)
 void Ds1307::act(int event)
 {
     tick();
-
-    if (simulation) {
-        simulation->scheduleEvent(this, SIM_EVENT_TICK, simulation->time + sec_to_sim_time(1));
-    }
+    scheduleEventIn(SIM_EVENT_TICK, sec_to_sim_time(1));
 }
 
 void Ds1307::reset()
@@ -167,10 +164,8 @@ bool Ds1307::i2cQueryData(uint8_t &data)
 
 void Ds1307::resetDividerChain(void)
 {
-    if (simulation) {
-        simulation->unscheduleAll(this);
-        simulation->scheduleEvent(this, SIM_EVENT_TICK, simulation->time + sec_to_sim_time(1));
-    }
+    unscheduleAll();
+    scheduleEventIn(SIM_EVENT_TICK, sec_to_sim_time(1));
 }
 
 void Ds1307::tick(void)

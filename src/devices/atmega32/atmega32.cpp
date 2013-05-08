@@ -71,41 +71,37 @@ void Atmega32::loadProgramFromElf(const char *filename)
 
 void Atmega32::reset(void)
 {
-    memset(this->core.ram, 0, RAM_SIZE);
-    this->core.pc = 0;
+    memset(core.ram, 0, RAM_SIZE);
+    core.pc = 0;
     
-    this->cycle_count = 0;
+    cycle_count = 0;
     
-    this->_twiInit();
-    this->_spiInit();
-    this->_usartInit();
-    this->_timersInit();
-    this->_pinsInit();
-    this->_adcInit();
+    _twiInit();
+    _spiInit();
+    _usartInit();
+    _timersInit();
+    _pinsInit();
+    _adcInit();
 
-    if (this->simulation) {
-        this->simulation->unscheduleAll(this);
-        this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + this->clock_period);
-    }
+    unscheduleAll();
+    scheduleEventIn(SIM_EVENT_TICK, clock_period);
 }
 
 void Atmega32::act(int event)
 {
-    this->_handleIrqs();
+    _handleIrqs();
     
     switch (event) {
         case SIM_EVENT_TICK:        
-            this->_runTimers();
+            _runTimers();
             
-            atmega32_core_step(&this->core);
-            this->cycle_count++;
+            atmega32_core_step(&core);
+            cycle_count++;
 
-            if (this->simulation) {
-                this->simulation->scheduleEvent(this, SIM_EVENT_TICK, this->simulation->time + this->clock_period);
-            }
+            scheduleEventIn(SIM_EVENT_TICK, clock_period);
             break;
         case SIM_EVENT_ADC_COMPLETE_CONVERSION:
-            this->_completeAdcConversion();
+            _completeAdcConversion();
             break;
     }
 }

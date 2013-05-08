@@ -43,6 +43,7 @@ public:
     void runToTime(sim_time_t to_time);
 
     void scheduleEvent(SimulatedDevice *device, int event, sim_time_t time);
+    void scheduleEventIn(SimulatedDevice *device, int event, sim_time_t time);
     void unscheduleAll(SimulatedDevice *device);
 
     sim_time_t time;

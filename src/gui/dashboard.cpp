@@ -201,10 +201,8 @@ void Dashboard::measureText(const char *text, int size, bool mono, int& width, i
 
 void Dashboard::reset()
 {
-    if (simulation) {
-        simulation->unscheduleAll(this);
-        simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME, simulation->time + ms_to_sim_time(20));
-    }    
+    unscheduleAll();
+    scheduleEventIn(SIM_EVENT_DO_FRAME, ms_to_sim_time(20));
 }
 
 void Dashboard::act(int event)
@@ -230,9 +228,7 @@ void Dashboard::act(int event)
     
     SDL_Flip(screen);
 
-    if (simulation)
-        simulation->scheduleEvent(this, SIM_EVENT_DO_FRAME,
-            simulation->time + ms_to_sim_time(Dashboard::FRAME_INTERVAL_MSEC));
+    scheduleEventIn(SIM_EVENT_DO_FRAME, ms_to_sim_time(Dashboard::FRAME_INTERVAL_MSEC));
 }
 
 void Dashboard::init(int width, int height, const char *bkgd_filename)

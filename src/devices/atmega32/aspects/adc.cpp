@@ -118,8 +118,8 @@ void Atmega32::_startAdcConversion()
     int adc_prescaler_factor = max(2, (1 << (this->ports[PORT_ADCSRA] & 7)));
     sim_time_t adc_clock_period = this->clock_period * adc_prescaler_factor;
     
-    this->simulation->scheduleEvent(this, SIM_EVENT_ADC_COMPLETE_CONVERSION,
-        this->simulation->time + adc_clock_period * ADC_CYCLES_FOR_CONVERSION);
+    scheduleEventIn(SIM_EVENT_ADC_COMPLETE_CONVERSION,
+        adc_clock_period * ADC_CYCLES_FOR_CONVERSION);
 }
 
 void Atmega32::_completeAdcConversion()

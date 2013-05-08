@@ -64,11 +64,8 @@ void Enc28J60::reset()
     this->_initRegs();
     memset(this->eth_buffer, 0, E28J_ETH_BUFFER_SIZE);
     
-    if (this->simulation) {
-        this->simulation->unscheduleAll(this);
-        this->simulation->scheduleEvent(this, SIM_EVENT_RECEIVE_FRAMES,
-            this->simulation->time + DEFAULT_RECEIVE_FRAMES_INTERVAL);
-    }
+    unscheduleAll();
+    scheduleEventIn(SIM_EVENT_RECEIVE_FRAMES, DEFAULT_RECEIVE_FRAMES_INTERVAL);
 }
 
 void Enc28J60::setFullDuplexWired(bool wired)
@@ -103,12 +100,8 @@ void Enc28J60::act(int event)
 {
     switch (event) {
         case SIM_EVENT_RECEIVE_FRAMES:
-            this->doReceiveFrames();
-            
-            if (this->simulation) {
-                this->simulation->scheduleEvent(this, SIM_EVENT_RECEIVE_FRAMES,
-                    this->simulation->time + DEFAULT_RECEIVE_FRAMES_INTERVAL);
-            }
+            doReceiveFrames();
+            scheduleEventIn(SIM_EVENT_RECEIVE_FRAMES, DEFAULT_RECEIVE_FRAMES_INTERVAL);
             break;
     }
 }

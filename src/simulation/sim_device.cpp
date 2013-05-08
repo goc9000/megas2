@@ -30,3 +30,21 @@ void SimulatedDevice::setSimulation(Simulation *simulation)
 void SimulatedDevice::act(int event)
 {
 }
+
+void SimulatedDevice::scheduleEvent(int event, sim_time_t time)
+{
+    if (simulation)
+        simulation->scheduleEvent(this, event, time);
+}
+
+void SimulatedDevice::scheduleEventIn(int event, sim_time_t time)
+{
+    if (simulation)
+        simulation->scheduleEventIn(this, event, time);
+}
+
+void SimulatedDevice::unscheduleAll(void)
+{
+    if (simulation)
+        simulation->unscheduleAll(this);
+}

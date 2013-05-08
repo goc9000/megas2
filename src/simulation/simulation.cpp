@@ -81,6 +81,11 @@ void Simulation::scheduleEvent(SimulatedDevice *device, int event, sim_time_t ti
     }
 }
 
+void Simulation::scheduleEventIn(SimulatedDevice *device, int event, sim_time_t time)
+{
+    scheduleEvent(device, event, this->time + time);
+}
+
 void Simulation::unscheduleAll(SimulatedDevice *device)
 {
     event_queue.erase(remove_if(event_queue.begin(), event_queue.end(),
