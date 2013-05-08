@@ -9,8 +9,10 @@
 #include <json/json.h>
 
 #include "glue/pin_val.h"
+
 #include "fail.h"
 #include "sdl_utils.h"
+#include "net_utils.h"
 
 using namespace std;
 
@@ -81,7 +83,15 @@ parse_json_param_internal(T& value, Json::Value &json_value, const char *param_n
         return;
     }
     
-    fail("Pin value '%s' is not numeric, 'VCC' or 'Z'", json_value.asString().c_str());
+    fail("Pin value '%s' is not numeric, 'VCC' or 'Z' for parameter '%s'",
+        json_value.asString().c_str(), param_name);
+}
+
+template<typename T>
+typename enable_if<is_same<T, ipv4_addr_t>::value, void>::type
+parse_json_param_internal(T& value, Json::Value &json_value, const char *param_name)
+{
+    value = ipv4_addr_t(json_value);
 }
 
 template<typename T>
