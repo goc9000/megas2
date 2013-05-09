@@ -147,6 +147,8 @@ int RS232Console::maxScrollPosition(void)
 
 void RS232Console::onRS232Receive(uint8_t data)
 {
+    bool at_bottom = (scroll_position == maxScrollPosition());
+    
     if (stored_text.size() == 0)
         stored_text.push_back(string());
     
@@ -160,4 +162,7 @@ void RS232Console::onRS232Receive(uint8_t data)
             stored_text[stored_text.size() - 1].push_back((char)data);
             break;
     }
+    
+    if (at_bottom)
+        scroll_position = maxScrollPosition();
 }
