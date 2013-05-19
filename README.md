@@ -53,6 +53,13 @@ for simple projects, and this can be an impediment to the hackability that is
 inevitably required in these situations.
 
 
+Requirements
+------------
+
+* Optional but highly recommended: the `uml-utils` package for the `tunctl`
+  command, useful in setting up a virtual network.
+
+
 Limitations
 -----------
 
