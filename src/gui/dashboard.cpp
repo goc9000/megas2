@@ -70,6 +70,14 @@ Dashboard::Dashboard(Json::Value &json_data, EntityLookup *lookup)
     }
 }
 
+Dashboard::~Dashboard()
+{
+    clearFontCaches();
+    
+    if (background)
+        SDL_FreeSurface(background);
+}
+
 void Dashboard::addWidget(DashboardWidget *widget)
 {
     if (CONTAINS(widgets, widget))

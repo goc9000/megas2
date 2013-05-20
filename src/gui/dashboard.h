@@ -30,6 +30,7 @@ public:
     Dashboard(const char *bkgd_image_filename);
     Dashboard(int width, int height);
     Dashboard(Json::Value &json_data, EntityLookup *lookup);
+    ~Dashboard();
     
     void addWidget(DashboardWidget *widget);
     void removeWidget(DashboardWidget *widget);
