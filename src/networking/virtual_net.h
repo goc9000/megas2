@@ -31,6 +31,7 @@ public:
     VirtualNetwork(string interface_name);
     VirtualNetwork(string interface_name, ipv4_addr_t ipv4_address);
     VirtualNetwork(Json::Value &json_data, EntityLookup *lookup);
+    ~VirtualNetwork();
     
     void addDevice(NetworkDevice *device);
     void removeDevice(NetworkDevice *device);
@@ -45,6 +46,7 @@ protected:
     ipv4_addr_t ipv4_address;
     
     thread receive_frames_thread;
+    int shutdown_fds[2];
     recursive_mutex lock;
     
     vector<NetworkDevice *> devices;

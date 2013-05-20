@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <unistd.h>
+#include <poll.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <net/if.h>
@@ -80,6 +81,13 @@ VirtualNetwork::VirtualNetwork(Json::Value &json_data, EntityLookup *lookup)
     }
 }
 
+VirtualNetwork::~VirtualNetwork()
+{
+    close(shutdown_fds[1]);
+    
+    receive_frames_thread.join();
+}
+
 void VirtualNetwork::addDevice(NetworkDevice *device)
 {
     if (CONTAINS(devices, device))
@@ -99,6 +107,9 @@ void VirtualNetwork::removeDevice(NetworkDevice *device)
 
 void VirtualNetwork::init(void)
 {
+    if (pipe(shutdown_fds) < 0)
+        fail("Failed to create shutdown pipe!");
+    
     interface_fd = open("/dev/net/tun", O_RDWR);
     if (interface_fd < 0)
         fail("Could not open /dev/net/tun. Try running with superuser rights.");
@@ -126,9 +137,25 @@ void VirtualNetwork::init(void)
 
 void VirtualNetwork::receiveFramesThreadCode(void)
 {
+    struct pollfd fds[2];
     uint8_t buffer[65536];
     
+    fds[0].fd = interface_fd;
+    fds[0].events = POLL_IN;
+    fds[1].fd = shutdown_fds[0];
+    fds[1].events = POLL_HUP;
+    
     while (true) {
+        int status = poll(fds, 2, -1);
+        if (status < 0) {
+            warn("poll() returned < 0");
+            break;
+        }
+        if (fds[1].revents)
+            break;
+        if (!fds[0].revents)
+            continue;
+        
         int count = read(interface_fd, buffer, sizeof(buffer));
         if (count <= 0)
             break;
