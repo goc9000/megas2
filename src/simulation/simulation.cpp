@@ -27,10 +27,10 @@ Simulation::Simulation()
     sync_with_real_time = true;
 }
 
-Simulation::Simulation(SystemDescription *sys_desc)
+Simulation::Simulation(SystemDescription &sys_desc)
 {
-    for (auto& ent : sys_desc->entities) {
-        SimulatedDevice *as_sim_dev = dynamic_cast<SimulatedDevice *>(ent);
+    for (auto& ent : sys_desc.entities) {
+        auto as_sim_dev = dynamic_cast<SimulatedDevice *>(ent);
         if (as_sim_dev != NULL)
             addDevice(as_sim_dev);
     }

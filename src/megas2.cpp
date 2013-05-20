@@ -15,13 +15,13 @@
 const char *param_sys_desc_file = NULL;
 bool param_do_benchmark = false;
 
-void run_benchmark(Simulation *sim)
+void run_benchmark(Simulation &sim)
 {
     struct timespec t0, t1;
 
-    sim->sync_with_real_time = false;
+    sim.sync_with_real_time = false;
     clock_gettime(CLOCK_MONOTONIC, &t0);
-    sim->runToTime(sec_to_sim_time(BENCHMARK_SECONDS));
+    sim.runToTime(sec_to_sim_time(BENCHMARK_SECONDS));
     clock_gettime(CLOCK_MONOTONIC, &t1);
     
     int64_t sim_elapsed = BENCHMARK_SECONDS * 1000000000LL;
@@ -68,10 +68,10 @@ int main(int argc, char **argv)
         process_args(argc, argv);
 
         SystemDescription sys_desc(param_sys_desc_file);
-        Simulation sim(&sys_desc);
+        Simulation sim(sys_desc);
         
         if (param_do_benchmark) {
-            run_benchmark(&sim);
+            run_benchmark(sim);
         } else {
             sim.run();
         }

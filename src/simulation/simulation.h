@@ -34,7 +34,7 @@ public:
 class Simulation {
 public:
     Simulation();
-    Simulation(SystemDescription *sys_desc);
+    Simulation(SystemDescription &sys_desc);
     
     void addDevice(SimulatedDevice *device);
     void removeDevice(SimulatedDevice *device);
