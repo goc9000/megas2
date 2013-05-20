@@ -5,11 +5,13 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <deque>
 
 #include <json/json.h>
 
 #include "simulation/entity.h"
 #include "simulation/entity_lookup.h"
+#include "simulation/sim_device.h"
 #include "networking/net_device.h"
 
 #include "eth_frame.h"
@@ -21,7 +23,7 @@ using namespace std;
 const string DEFAULT_VNET_NAME = "megasnet0";
 
 
-class VirtualNetwork : public Entity
+class VirtualNetwork : public Entity, public SimulatedDevice
 {
 public:
     VirtualNetwork(void);
@@ -34,6 +36,9 @@ public:
     void removeDevice(NetworkDevice *device);
     
     void sendFrame(const EthernetFrame& frame);
+    
+    void reset();
+    void act(int event);
 protected:
     string interface_name;
     int interface_fd;
@@ -43,6 +48,7 @@ protected:
     recursive_mutex lock;
     
     vector<NetworkDevice *> devices;
+    deque<EthernetFrame> pending_frames;
 
     void init(void);
     void setInterfaceIpv4(ipv4_addr_t address);

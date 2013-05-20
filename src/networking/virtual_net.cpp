@@ -15,6 +15,12 @@
 #include "utils/cpp_macros.h"
 #include "utils/fail.h"
 
+
+#define SIM_EVENT_CHECK_FRAMES         1
+
+const sim_time_t DEFAULT_CHECK_FRAMES_INTERVAL = ms_to_sim_time(10);
+
+
 #define DEFAULT_NAME "Virtual network"
 
 VirtualNetwork::VirtualNetwork(void)
@@ -76,8 +82,6 @@ VirtualNetwork::VirtualNetwork(Json::Value &json_data, EntityLookup *lookup)
 
 void VirtualNetwork::addDevice(NetworkDevice *device)
 {
-    lock_guard<recursive_mutex> guard(lock);
-    
     if (CONTAINS(devices, device))
         return;
     
@@ -87,8 +91,6 @@ void VirtualNetwork::addDevice(NetworkDevice *device)
 
 void VirtualNetwork::removeDevice(NetworkDevice *device)
 {
-    lock_guard<recursive_mutex> guard(lock);
-    
     if (CONTAINS(devices, device)) {
         this->devices.erase(FIND(devices, device));
         device->disconnectFromNetwork();
@@ -135,14 +137,38 @@ void VirtualNetwork::receiveFramesThreadCode(void)
         frame.padTo(64);
         frame.addFcs();
     
-        try {
+        lock.lock();
+        pending_frames.push_back(frame);
+        lock.unlock();
+    }
+}
+
+void VirtualNetwork::reset(void)
+{
+    unscheduleAll();
+    scheduleEventIn(SIM_EVENT_CHECK_FRAMES, DEFAULT_CHECK_FRAMES_INTERVAL);
+}
+
+void VirtualNetwork::act(int event)
+{
+    EthernetFrame frame;
+    
+    if (event == SIM_EVENT_CHECK_FRAMES) {
+        while (true) {
             lock.lock();
+            if (pending_frames.empty()) {
+                lock.unlock();
+                break;
+            }
+            frame = pending_frames.front();
+            pending_frames.pop_front();
+            lock.unlock();
+        
             for (auto& device : devices)
                 device->onReceiveFrame(frame);
-        } catch (exception& e) {
-            lock.unlock();
-            throw e;
         }
+        
+        scheduleEventIn(SIM_EVENT_CHECK_FRAMES, DEFAULT_CHECK_FRAMES_INTERVAL);
     }
 }
 
