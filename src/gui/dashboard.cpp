@@ -210,8 +210,9 @@ void Dashboard::act(int event)
     SDL_Event evt;
     
     while (SDL_PollEvent(&evt)) {
-        if (evt.type == SDL_QUIT)
-            exit(EXIT_SUCCESS);
+        if (evt.type == SDL_QUIT) {
+            endSimulation();
+        }
         
         for (auto &widget : widgets)
             if (widget->handleEvent(this, &evt))

@@ -140,6 +140,16 @@ void Simulation::runToTime(sim_time_t to_time)
             next_real_sync_time = time + ms_to_sim_time(1);
         }
         
-        evt.device->act(evt.event_id);
+        if (evt.device) {
+            evt.device->act(evt.event_id);
+        } else { // System event
+            if (evt.event_id == SIM_EVENT_END)
+                break;
+        }
     }
+}
+
+void Simulation::end()
+{
+    scheduleEventIn(NULL, SIM_EVENT_END, 0);
 }

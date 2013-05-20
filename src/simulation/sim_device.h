@@ -13,6 +13,8 @@ public:
 protected:
     Simulation *simulation;
     
+    void endSimulation(void);
+    
     void scheduleEvent(int event, sim_time_t time);
     void scheduleEventIn(int event, sim_time_t time);
     void unscheduleAll(void);

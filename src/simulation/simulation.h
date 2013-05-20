@@ -10,6 +10,8 @@ using namespace std;
 
 #define SIM_TIME_NEVER 0x0fffffffffffffffLL
 
+#define SIM_EVENT_END  -1
+
 typedef int64_t sim_time_t;
 
 #define ns_to_sim_time(x) (x)
@@ -41,6 +43,8 @@ public:
 
     void run();
     void runToTime(sim_time_t to_time);
+    
+    void end();
 
     void scheduleEvent(SimulatedDevice *device, int event, sim_time_t time);
     void scheduleEventIn(SimulatedDevice *device, int event, sim_time_t time);

@@ -28,8 +28,6 @@ void run_benchmark(Simulation &sim)
     int64_t real_elapsed = timespec_delta_ns(&t1, &t0);
 
     printf("Unsynced speed: %d%%\n", (int)(100LL*sim_elapsed/real_elapsed));
-
-    exit(EXIT_SUCCESS);
 }
 
 void show_help()

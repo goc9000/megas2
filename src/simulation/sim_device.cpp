@@ -31,6 +31,12 @@ void SimulatedDevice::act(int event)
 {
 }
 
+void SimulatedDevice::endSimulation()
+{
+    if (simulation)
+        simulation->end();
+}
+
 void SimulatedDevice::scheduleEvent(int event, sim_time_t time)
 {
     if (simulation)
