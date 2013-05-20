@@ -54,9 +54,14 @@ static inline bool bcd_read(uint8_t bcd_value, uint8_t &dec_value, uint8_t min, 
 }
 
 
-Ds1307::Ds1307(uint8_t i2c_address) : Entity(DEFAULT_NAME)
+Ds1307::Ds1307(uint8_t i2c_address) : Ds1307(i2c_address, string())
+{
+}
+
+Ds1307::Ds1307(uint8_t i2c_address, string backing_file_name) : Entity(DEFAULT_NAME)
 {
     i2c_addr = i2c_address;
+    this->backing_file_name = backing_file_name;
     
     init(true);
 }
@@ -65,16 +70,26 @@ Ds1307::Ds1307(Json::Value &json_data) : Entity(DEFAULT_NAME, json_data)
 {
     bool init_with_current_time = true;
     
+    backing_file_name = string();
+    
     parseJsonParam(i2c_addr, json_data, "i2c_address");
+    parseOptionalJsonParam(backing_file_name, json_data, "nvram_file");
     parseOptionalJsonParam(init_with_current_time, json_data, "init_with_current_time");
     
     init(init_with_current_time);
 }
 
+Ds1307::~Ds1307()
+{
+    saveNVRAM();
+}
+
 void Ds1307::init(bool init_with_current_time)
 {
     resetNVRAM();
-    // TODO: check & load from backing file
+    
+    if (loadNVRAM())
+        saveNVRAM();
     
     if (init_with_current_time) {
         setTime(time(NULL));
@@ -290,10 +305,38 @@ void Ds1307::resetNVRAM(void)
     nvram[REG_CONTROL] = 0x03;
 }
 
-void Ds1307::loadNVRAM(void)
+bool Ds1307::loadNVRAM(void)
 {
+    if (backing_file_name == "")
+        return false;
+    
+    FILE *file = fopen(backing_file_name.c_str(), "rb");
+    if (!file)
+        return false;
+    if (fseek(file, 0, SEEK_END) < 0)
+        fail("Cannot seek in DS1307 NVRAM file '%s'", backing_file_name.c_str());
+    if (ftell(file) != 64)
+        fail("DS1307 NVRAM file has incorrect size (!= 64 bytes)");
+    
+    if ((fseek(file, 0, SEEK_SET) < 0) || (fread(nvram, 64, 1, file) != 1))
+        fail("Error reading DS1307 NVRAM file");
+    if (!getTimeAndCheck())
+        fail("DS1307 NVRAM file is corrupt");
+    
+    fclose(file);
+    
+    return true;
 }
 
 void Ds1307::saveNVRAM(void)
 {
+    if (backing_file_name == "")
+        return;
+    
+    FILE *file = fopen(backing_file_name.c_str(), "wb");
+    if (!file || (fwrite(nvram, 64, 1, file) != 1)) {
+        warn("Cannot save DS1307 backing file '%s'", backing_file_name.c_str());
+        return;
+    }
+    fclose(file);
 }

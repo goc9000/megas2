@@ -14,7 +14,9 @@
 class Ds1307 : public Entity, public I2cDevice, public SimulatedDevice {
 public:
     Ds1307(uint8_t i2c_address);
+    Ds1307(uint8_t i2c_address, string backing_file_name);
     Ds1307(Json::Value &json_data);
+    ~Ds1307();
     
     virtual void reset();
     virtual void act(int event);
@@ -36,13 +38,15 @@ private:
     uint8_t nvram[DS1307_NVRAM_SIZE];
     uint8_t cached_time[7];
     
+    string backing_file_name;
+    
     void init(bool init_with_current_time);
     void tick(void);
     void setTime(time_t unix_time);
     bool getTime(time_t &unix_time);
     time_t getTimeAndCheck(void);
     void resetNVRAM(void);
-    void loadNVRAM(void);
+    bool loadNVRAM(void);
     void saveNVRAM(void);
     void resetDividerChain(void);
 };
