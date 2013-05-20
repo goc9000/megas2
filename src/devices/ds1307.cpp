@@ -94,6 +94,7 @@ void Ds1307::act(int event)
 void Ds1307::reset()
 {
     i2c_listening = false;
+    time_modified = false;
     reg_pointer = 0;
     
     resetDividerChain();
@@ -102,11 +103,24 @@ void Ds1307::reset()
 void Ds1307::i2cReceiveStart()
 {
     i2c_listening = false;
+    time_modified = false;
 }
 
 void Ds1307::i2cReceiveStop()
 {
     i2c_listening = false;
+    
+    if (time_modified) {
+        time_t time_val = getTimeAndCheck();
+        
+        struct tm date = *localtime(&time_val);
+        
+        info("RTC time modified: %04d-%02d-%02d %02d:%02d:%02d",
+            1900 + date.tm_year, date.tm_mon + 1, date.tm_mday,
+            date.tm_hour, date.tm_min, date.tm_sec);
+        
+        time_modified = false;
+    }
 }
 
 bool Ds1307::i2cReceiveAddress(uint8_t address, bool write)
@@ -138,6 +152,9 @@ bool Ds1307::i2cReceiveData(uint8_t data)
     } else {
         if (reg_pointer == REG_SECONDS)
             resetDividerChain();
+            
+        if (reg_pointer < REG_CONTROL)
+            time_modified = true;
         
         nvram[reg_pointer++] = data;
         
@@ -173,15 +190,7 @@ void Ds1307::tick(void)
     if (bit_is_set(nvram[REG_SECONDS], B_CH))
         return;
     
-    time_t time_val;
-    
-    bool valid = getTime(time_val);
-    time_val++;
-    setTime(time_val);
-    
-    if (!valid)
-        fail("Invalid RTC time value: %02x %02x %02x %02x %02x %02x %02x",
-            nvram[0], nvram[1], nvram[2], nvram[3], nvram[4], nvram[5], nvram[6]);
+    setTime(getTimeAndCheck() + 1);
 }
 
 void Ds1307::setTime(time_t unix_time)
@@ -213,6 +222,20 @@ void Ds1307::setTime(time_t unix_time)
     } else {
         nvram[REG_DAY] = 1 + cal_time.tm_wday;
     }
+}
+
+time_t Ds1307::getTimeAndCheck(void)
+{
+    time_t time_val;
+    
+    bool valid = getTime(time_val);
+    
+    if (!valid) {
+        fail("Invalid RTC time value: %02x %02x %02x %02x %02x %02x %02x",
+            nvram[0], nvram[1], nvram[2], nvram[3], nvram[4], nvram[5], nvram[6]);
+    }
+    
+    return time_val;
 }
 
 bool Ds1307::getTime(time_t &unix_time)

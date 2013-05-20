@@ -31,6 +31,8 @@ private:
     bool receiving_address;
     uint8_t reg_pointer;
     
+    bool time_modified;
+    
     uint8_t nvram[DS1307_NVRAM_SIZE];
     uint8_t cached_time[7];
     
@@ -38,6 +40,7 @@ private:
     void tick(void);
     void setTime(time_t unix_time);
     bool getTime(time_t &unix_time);
+    time_t getTimeAndCheck(void);
     void resetNVRAM(void);
     void loadNVRAM(void);
     void saveNVRAM(void);
