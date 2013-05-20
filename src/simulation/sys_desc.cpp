@@ -29,64 +29,64 @@ using namespace std;
 
 SystemDescription::SystemDescription()
 {
-    this->_init();
 }
 
 SystemDescription::SystemDescription(Json::Value &json_data)
 {
-    this->_init();
-    this->_initFromJson(json_data);
+    initFromJson(json_data);
 }
 
 SystemDescription::SystemDescription(const char *filename)
 {
     Json::Value json_data;
 
-    this->_init();
-    
     ifstream infile(filename);
     if (!infile.is_open()) {
         fail("Cannot open system description file '%s'", filename);
     }
     infile >> json_data;
     
-    this->_initFromJson(json_data);
+    initFromJson(json_data);
+}
+
+SystemDescription::~SystemDescription()
+{
+    while (!entities.empty()) {
+        delete entities.back();
+        entities.pop_back();
+    }
 }
 
 Entity * SystemDescription::lookupEntity(const char *id)
 {
-    for (vector<Entity *>::iterator it = this->entities.begin(); it != this->entities.end(); it++)
-        if ((*it)->id == id)
-            return *it;
+    for (auto& entity : entities)
+        if (entity->id == id)
+            return entity;
 
     return NULL;
 }
 
-void SystemDescription::_init()
-{
-}
-
-void SystemDescription::_initFromJson(Json::Value &json_data)
+void SystemDescription::initFromJson(Json::Value &json_data)
 {
     if (json_data.isMember("entities")) {
-        this->_initEntitiesFromJson(json_data["entities"]);
+        initEntitiesFromJson(json_data["entities"]);
     }
 }
 
-void SystemDescription::_initEntitiesFromJson(Json::Value &json_data)
+void SystemDescription::initEntitiesFromJson(Json::Value &json_data)
 {
     if (!json_data.isArray()) {
         fail("'entities' should be an array");
     }
 
-    for (Json::ValueIterator it = json_data.begin(); it != json_data.end(); it++) {
-        Entity *ent = this->_parseEntity(*it);
-        this->entities.push_back(ent);
-        this->_parseEntityConnections(ent, *it);
+    for (auto& json_val : json_data) {
+        Entity *ent = parseEntity(json_val);
+        entities.push_back(ent);
+        parseEntityConnections(ent, json_val);
     }
 }
 
-Entity * SystemDescription::_parseEntity(Json::Value &json_data)
+Entity * SystemDescription::parseEntity(Json::Value &json_data)
 {
     if (!json_data.isMember("type")) {
         fail("Entity object lacks member 'type'");
@@ -129,7 +129,7 @@ Entity * SystemDescription::_parseEntity(Json::Value &json_data)
     return NULL;
 }
 
-void SystemDescription::_parseEntityConnections(Entity *entity, Json::Value &json_data)
+void SystemDescription::parseEntityConnections(Entity *entity, Json::Value &json_data)
 {
     if (!json_data.isMember("connect"))
         return;
@@ -154,6 +154,6 @@ void SystemDescription::_parseEntityConnections(Entity *entity, Json::Value &jso
         wire->addDevicePin(pin1);
         wire->addDevicePin(pin2);
         
-        this->entities.push_back(wire);
+        entities.push_back(wire);
     }
 }

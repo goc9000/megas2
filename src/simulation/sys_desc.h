@@ -16,16 +16,16 @@ public:
     SystemDescription();
     SystemDescription(const char *filename);
     SystemDescription(Json::Value &json_data);
+    ~SystemDescription();
 
     virtual Entity * lookupEntity(const char *id);
 
     vector<Entity *> entities;
 private:
-    void _init();
-    void _initFromJson(Json::Value &json_data);
-    void _initEntitiesFromJson(Json::Value &json_data);
-    Entity * _parseEntity(Json::Value &json_data);
-    void _parseEntityConnections(Entity *entity, Json::Value &json_data);
+    void initFromJson(Json::Value &json_data);
+    void initEntitiesFromJson(Json::Value &json_data);
+    Entity * parseEntity(Json::Value &json_data);
+    void parseEntityConnections(Entity *entity, Json::Value &json_data);
 };
 
 #endif
