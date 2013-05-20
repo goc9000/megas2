@@ -50,25 +50,25 @@ private:
     bool crc_enabled;
     uint16_t block_size;
 
-    void _init(const char *backing_file_name, unsigned capacity);
+    void init(const char *backing_file_name, unsigned capacity);
     
     virtual void _onPinChanged(int pin_id, pin_val_t value, pin_val_t old_value);
     
     virtual void _onSpiSlaveSelect(bool select);
-    uint8_t _handleSpiData(uint8_t data);
-    uint8_t _handleCommandInIdle(uint8_t data);
-    uint8_t _handleReceivingCommand(uint8_t data);
-    uint8_t _handleResponding(uint8_t data);
-    uint8_t _handleRespondingWithData(uint8_t data);
-    uint8_t _handleReceivingWriteData(uint8_t data);
+    uint8_t handleSpiData(uint8_t data);
+    uint8_t handleCommandInIdle(uint8_t data);
+    uint8_t handleReceivingCommand(uint8_t data);
+    uint8_t handleResponding(uint8_t data);
+    uint8_t handleRespondingWithData(uint8_t data);
+    uint8_t handleReceivingWriteData(uint8_t data);
     
-    void _execCommand(uint8_t command, uint32_t param);
-    void _execAppCommand(uint8_t command, uint32_t param);
-    void _prepareR1Response();
-    void _prepareDataResponse(bool crc_error, bool write_error);
-    void _readBlockFromBackingFile(uint8_t *buffer, unsigned offset, unsigned length);
-    bool _writeBlockToBackingFile(uint8_t *buffer, unsigned offset, unsigned length);
-    void _expandBackingFile(unsigned minimum_size);
+    void execCommand(uint8_t command, uint32_t param);
+    void execAppCommand(uint8_t command, uint32_t param);
+    void prepareR1Response();
+    void prepareDataResponse(bool crc_error, bool write_error);
+    void readBlockFromBackingFile(uint8_t *buffer, unsigned offset, unsigned length);
+    bool writeBlockToBackingFile(uint8_t *buffer, unsigned offset, unsigned length);
+    void expandBackingFile(unsigned minimum_size);
 };
 
 #endif
