@@ -317,11 +317,8 @@ bool Ds1307::loadNVRAM(void)
         fail("Cannot seek in DS1307 NVRAM file '%s'", backing_file_name.c_str());
     if (ftell(file) != 64)
         fail("DS1307 NVRAM file has incorrect size (!= 64 bytes)");
-    
     if ((fseek(file, 0, SEEK_SET) < 0) || (fread(nvram, 64, 1, file) != 1))
         fail("Error reading DS1307 NVRAM file");
-    if (!getTimeAndCheck())
-        fail("DS1307 NVRAM file is corrupt");
     
     fclose(file);
     
